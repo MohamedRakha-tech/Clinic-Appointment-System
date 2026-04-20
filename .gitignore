@@ -1,0 +1,11 @@
+# Environment variables
+.env
+clinic/.env
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+.venv/
+venv/
