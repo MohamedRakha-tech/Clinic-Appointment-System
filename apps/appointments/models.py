@@ -1,5 +1,6 @@
 from django.db import models
 from apps.accounts.models import User, PatientProfile, DoctorProfile
+from apps.scheduling.models import AppointmentSlot
 
 # ─────────────────────────────────────────────
 # APPOINTMENTS
@@ -39,7 +40,7 @@ class Appointment(models.Model):
         db_table = "appointments"
         constraints = [
             models.CheckConstraint(
-                check=models.Q(scheduled_end__gt=models.F("scheduled_start")),
+                condition=models.Q(scheduled_end__gt=models.F("scheduled_start")),
                 name="chk_appointment_time",
             ),
         ]
@@ -88,7 +89,7 @@ class AppointmentRescheduleHistory(models.Model):
     class Meta:
         db_table = "appointment_reschedule_history"
         indexes  = [
-            models.Index(fields=["appointment"], name="idx_reschedule_history_appointment"),
+            models.Index(fields=["appointment"], name="idx_resched_hist_appt"),
         ]
 
     def __str__(self):

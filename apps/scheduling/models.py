@@ -31,11 +31,11 @@ class DoctorWeeklySchedule(models.Model):
                 name="uniq_doctor_weekly_schedule",
             ),
             models.CheckConstraint(
-                check=models.Q(day_of_week__lte=6),
+                condition=models.Q(day_of_week__lte=6),
                 name="chk_day_of_week",
             ),
             models.CheckConstraint(
-                check=models.Q(end_time__gt=models.F("start_time")),
+                condition=models.Q(end_time__gt=models.F("start_time")),
                 name="chk_schedule_time",
             ),
         ]
@@ -99,7 +99,7 @@ class AppointmentSlot(models.Model):
                 name="uniq_doctor_slot",
             ),
             models.CheckConstraint(
-                check=models.Q(end_datetime__gt=models.F("start_datetime")),
+                condition=models.Q(end_datetime__gt=models.F("start_datetime")),
                 name="chk_slot_time",
             ),
         ]

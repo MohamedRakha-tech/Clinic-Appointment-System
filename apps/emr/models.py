@@ -51,7 +51,7 @@ class RequestedTest(models.Model):
     class Meta:
         db_table = "requested_tests"
         indexes  = [
-            models.Index(fields=["consultation_record"], name="idx_requested_tests_consultation"),
+            models.Index(fields=["consultation_record"], name="idx_req_tests_consult"),
         ]
 
     def __str__(self):
