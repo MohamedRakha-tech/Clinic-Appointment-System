@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Check In - Clinic{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Patient Check In</h3>
+                </div>
+                <div class="card-body">
+                    {% if error %}
+                        <div class="alert alert-danger" role="alert">
+                            {{ error }}
+                        </div>
+                    {% endif %}
+
+                    <div class="mb-4">
+                        <h5>Appointment Details</h5>
+                        <table class="table table-sm">
+                            <tr>
+                                <th>Patient:</th>
+                                <td>{{ appointment.patient.user.get_full_name }}</td>
+                            </tr>
+                            <tr>
+                                <th>Doctor:</th>
+                                <td>Dr. {{ appointment.doctor.user.get_full_name }}</td>
+                            </tr>
+                            <tr>
+                                <th>Appointment Code:</th>
+                                <td><strong>{{ appointment.appointment_code }}</strong></td>
+                            </tr>
+                            <tr>
+                                <th>Status:</th>
+                                <td><span class="badge bg-info">{{ appointment.get_status_display }}</span></td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                            {% for error in form.non_field_errors %}
+                                <div class="alert alert-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.confirmation }}
+                                <label class="form-check-label" for="{{ form.confirmation.id_for_label }}">
+                                    I confirm this patient is present and ready for check-in
+                                </label>
+                            </div>
+                            {% if form.confirmation.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.confirmation.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                Check In Patient
+                            </button>
+                            <a href="{% url 'queueing:reception_queue' %}" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,5 +1,5 @@
 from django.db import models
-from apps.accounts.models import User, DoctorProfile
+from accounts.models import User, DoctorProfile
 # ─────────────────────────────────────────────
 # DOCTOR SCHEDULING
 # ─────────────────────────────────────────────

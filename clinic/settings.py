@@ -43,15 +43,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'apps.accounts',
-    'apps.appointments',
-    'apps.common',
-    'apps.dashboard',
-    'apps.emr',
-    'apps.notifications',
-    'apps.queueing',
-    'apps.reports',
-    'apps.scheduling',
+    'accounts',
+    'appointments',
+    'dashboard',
+    'emr',
+    'notifications',
+    'queueing',
+    'reports',
+    'scheduling',
     
 ]
 

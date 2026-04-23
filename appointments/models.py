@@ -1,6 +1,6 @@
 from django.db import models
-from apps.accounts.models import User, PatientProfile, DoctorProfile
-from apps.scheduling.models import AppointmentSlot
+from accounts.models import User, PatientProfile, DoctorProfile
+from scheduling.models import AppointmentSlot
 
 # ─────────────────────────────────────────────
 # APPOINTMENTS
