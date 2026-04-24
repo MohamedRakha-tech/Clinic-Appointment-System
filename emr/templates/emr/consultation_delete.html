@@ -12,11 +12,11 @@
                 </div>
                 <div class="card-body">
                     <div class="alert alert-warning" role="alert">
-                        <strong>⚠️ Warning:</strong> This action cannot be undone.
+                        <strong>Warning:</strong> This action cannot be undone.
                     </div>
 
                     <p class="mb-3">
-                        Are you sure you want to delete the consultation record for 
+                        Are you sure you want to delete the consultation record for
                         <strong>{{ consultation.appointment.patient.user.get_full_name }}</strong>?
                     </p>
 
@@ -33,7 +33,7 @@
                             <button type="submit" class="btn btn-danger btn-lg">
                                 Yes, Delete Consultation
                             </button>
-                            <a href="{% url 'emr:detail' consultation.id %}" 
+                            <a href="{% url 'emr:detail' consultation.id %}"
                                class="btn btn-outline-secondary">
                                 Cancel
                             </a>

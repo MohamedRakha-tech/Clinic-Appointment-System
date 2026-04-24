@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}My Consultations - Clinic{% endblock %}
+{% block topbar_subtitle %}Clinical Hub{% endblock %}
+{% block topbar_role %}Role: Doctor{% endblock %}
+
+{% block extra_css %}
+<style>
+    .list-shell {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .hero-card {
+        background: linear-gradient(125deg, #ffffff 0%, #f7fbff 60%, #ebf4fb 100%);
+        border: 1px solid #d9e6f3;
+        border-radius: 1rem;
+        padding: 1rem;
+        box-shadow: 0 8px 24px rgba(15, 55, 110, 0.06);
+    }
+
+    .hero-title {
+        margin: 0;
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: #152129;
+    }
+
+    .hero-subtitle {
+        margin: .2rem 0 0;
+        color: #5f6975;
+        font-size: .92rem;
+    }
+
+    .hero-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .5rem;
+    }
+
+    .pill {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: .27rem .65rem;
+        font-size: .76rem;
+        font-weight: 700;
+        letter-spacing: .02em;
+    }
+
+    .pill.total {
+        background: #e8f4ff;
+        color: #0b4ea2;
+    }
+
+    .pill.doctor {
+        background: #e8f8ef;
+        color: #1c7a48;
+    }
+
+    .records-card {
+        background: #fff;
+        border: 1px solid #dde8f4;
+        border-radius: 1rem;
+        box-shadow: 0 8px 24px rgba(15, 55, 110, 0.06);
+        overflow: hidden;
+    }
+
+    .records-head {
+        padding: .95rem 1rem;
+        border-bottom: 1px solid #e3edf7;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .8rem;
+    }
+
+    .records-title {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 800;
+        color: #193040;
+    }
+
+    .table-shell {
+        overflow-x: auto;
+    }
+
+    .table-theme {
+        margin-bottom: 0;
+        min-width: 820px;
+        --bs-table-bg: transparent;
+    }
+
+    .table-theme thead th {
+        background: #f6f9fd;
+        border-bottom: 1px solid #dce9f4;
+        color: #526170;
+        font-size: .74rem;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        font-weight: 800;
+        padding: .82rem 1rem;
+    }
+
+    .table-theme tbody td {
+        border-color: #edf3f8;
+        color: #263441;
+        padding: .95rem 1rem;
+        vertical-align: middle;
+    }
+
+    .table-theme tbody tr:hover {
+        background: #fbfdff;
+    }
+
+    .patient-name {
+        font-weight: 700;
+        color: #162733;
+        margin-bottom: .1rem;
+    }
+
+    .muted-mini {
+        color: #6d7784;
+        font-size: .82rem;
+    }
+
+    .code-pill {
+        display: inline-flex;
+        border-radius: 999px;
+        background: #edf6ff;
+        color: #0b4ea2;
+        padding: .22rem .55rem;
+        font-weight: 700;
+        font-size: .76rem;
+    }
+
+    .diag-snippet {
+        max-width: 340px;
+        color: #364655;
+        font-size: .92rem;
+    }
+
+    .action-row {
+        display: flex;
+        gap: .45rem;
+        flex-wrap: wrap;
+    }
+
+    .empty-state {
+        padding: 2rem 1.2rem;
+        text-align: center;
+    }
+
+    .empty-title {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #193040;
+    }
+
+    .empty-copy {
+        margin: .3rem 0 0;
+        color: #667280;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="list-shell">
+    <div class="hero-card d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+            <h3 class="hero-title">Consultation Timeline</h3>
+            <p class="hero-subtitle">Review, continue, and manage your clinical notes quickly.</p>
+        </div>
+        <div class="hero-meta">
+            <span class="pill total">Total Records: {{ consultations|length }}</span>
+            <span class="pill doctor">Dr. {{ doctor.user.first_name|default:doctor.user.username }}</span>
+        </div>
+    </div>
+
+    <div class="records-card">
+        <div class="records-head">
+            <h4 class="records-title">My Consultation Records</h4>
+        </div>
+
+        {% if consultations %}
+        <div class="table-shell">
+            <table class="table table-theme align-middle">
+                <thead>
+                    <tr>
+                        <th>Patient</th>
+                        <th>Appointment</th>
+                        <th>Date</th>
+                        <th>Diagnosis Snapshot</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for consultation in consultations %}
+                    <tr>
+                        <td>
+                            <div class="patient-name">{{ consultation.appointment.patient.user.get_full_name|default:consultation.appointment.patient.user.username }}</div>
+                            <div class="muted-mini">{{ consultation.appointment.patient.gender|default:"Gender N/A" }}</div>
+                        </td>
+                        <td>
+                            <span class="code-pill">{{ consultation.appointment.appointment_code }}</span>
+                        </td>
+                        <td>
+                            <div>{{ consultation.appointment.scheduled_start|date:"d M Y" }}</div>
+                            <div class="muted-mini">{{ consultation.appointment.scheduled_start|date:"H:i" }}</div>
+                        </td>
+                        <td>
+                            <div class="diag-snippet">{{ consultation.diagnosis|truncatewords:10 }}</div>
+                        </td>
+                        <td>
+                            <div class="action-row">
+                                <a href="{% url 'emr:detail' consultation.id %}" class="btn btn-sm btn-primary">Open</a>
+                                <a href="{% url 'emr:edit' consultation.id %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <h5 class="empty-title">No consultations yet</h5>
+            <p class="empty-copy">Completed consultation records will appear here once you finalize sessions.</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

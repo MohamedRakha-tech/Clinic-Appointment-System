@@ -44,6 +44,7 @@ class EMRService:
             doctor=doctor,
             diagnosis=data.get('diagnosis', ''),
             notes=data.get('notes', ''),
+            requested_tests=data.get('requested_tests', ''),
             summary_for_patient=data.get('summary_for_patient', ''),
         )
 
@@ -62,6 +63,7 @@ class EMRService:
         # Update fields
         consultation.diagnosis = data.get('diagnosis', consultation.diagnosis)
         consultation.notes = data.get('notes', consultation.notes)
+        consultation.requested_tests = data.get('requested_tests', consultation.requested_tests)
         consultation.summary_for_patient = data.get('summary_for_patient', consultation.summary_for_patient)
         consultation.save()
 
@@ -229,6 +231,7 @@ class ConsultationUpdateView(View):
         return render(request, 'emr/consultation_form.html', {
             'form': form,
             'consultation': consultation,
+            'appointment': consultation.appointment,
             'action': 'Edit',
         })
 
@@ -261,6 +264,7 @@ class ConsultationUpdateView(View):
                 return render(request, 'emr/consultation_form.html', {
                     'form': form,
                     'consultation': consultation,
+                    'appointment': consultation.appointment,
                     'action': 'Edit',
                     'error': str(e),
                 })
@@ -268,6 +272,7 @@ class ConsultationUpdateView(View):
         return render(request, 'emr/consultation_form.html', {
             'form': form,
             'consultation': consultation,
+            'appointment': consultation.appointment,
             'action': 'Edit',
         })
 

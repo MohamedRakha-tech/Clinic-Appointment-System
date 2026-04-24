@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}My Queue - Clinic{% endblock %}
+{% block topbar_subtitle %}Today's Queue{% endblock %}
+{% block topbar_role %}Role: Doctor{% endblock %}
+
+{% block extra_css %}
+<style>
+    .queue-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(260px, .8fr);
+        gap: 1rem;
+    }
+
+    .card-shell {
+        background: #fff;
+        border: 1px solid #dde8f4;
+        border-radius: 1rem;
+        box-shadow: 0 8px 24px rgba(15, 55, 110, 0.06);
+    }
+
+    .hero-card {
+        background: linear-gradient(130deg, #0d4d99 0%, #0e67a3 100%);
+        color: #fff;
+        border-radius: 1rem;
+        padding: 1rem 1.1rem;
+    }
+
+    .hero-kicker {
+        text-transform: uppercase;
+        font-weight: 700;
+        letter-spacing: .08em;
+        font-size: .72rem;
+        opacity: .85;
+        margin-bottom: .3rem;
+    }
+
+    .hero-title {
+        margin: 0;
+        font-weight: 800;
+        font-size: 1.45rem;
+    }
+
+    .mini-stat {
+        display: grid;
+        gap: .25rem;
+        padding: .95rem;
+    }
+
+    .mini-stat .label {
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        font-size: .7rem;
+        color: #687a8b;
+        font-weight: 700;
+    }
+
+    .mini-stat .value {
+        font-size: 1.7rem;
+        font-weight: 800;
+        color: #182b3b;
+        line-height: 1;
+    }
+
+    .queue-table th {
+        font-size: .78rem;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        color: #5f7488;
+    }
+
+    .queue-table td {
+        color: #24384a;
+        vertical-align: middle;
+    }
+
+    .order-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 42px;
+        height: 28px;
+        border-radius: 999px;
+        background: #e7f3ff;
+        color: #0b4ea2;
+        font-weight: 800;
+        font-size: .83rem;
+    }
+
+    .wait-chip {
+        display: inline-block;
+        background: #fff5e9;
+        color: #925d11;
+        border-radius: 999px;
+        padding: .18rem .55rem;
+        font-size: .78rem;
+        font-weight: 700;
+    }
+
+    @media (max-width: 1199px) {
+        .queue-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-grid gap-3">
+    <section class="queue-grid">
+        <div class="hero-card">
+            <p class="hero-kicker">Current Session</p>
+            <h3 class="hero-title">Dr. {{ doctor.user.first_name|default:doctor.user.username }} {{ doctor.user.last_name }}</h3>
+            <p class="mb-0 mt-2 opacity-75">{{ queue_entries|length }} checked-in patient{{ queue_entries|length|pluralize }} waiting for consultation.</p>
+        </div>
+
+        <div class="card-shell mini-stat">
+            <div class="label">Waiting Now</div>
+            <div class="value">{{ queue_entries|length }}</div>
+            <div class="small text-muted">Queue updates automatically after reception check-in.</div>
+        </div>
+    </section>
+
+    <section class="card-shell overflow-hidden">
+        <div class="px-4 py-3 border-bottom d-flex justify-content-between align-items-center">
+            <h4 class="h6 fw-bold mb-0">Active Waiting List</h4>
+            <span class="badge text-bg-success">Live</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 queue-table">
+                <thead class="table-light">
+                    <tr>
+                        <th class="px-4">Order</th>
+                        <th>Patient</th>
+                        <th>Check-In</th>
+                        <th>Waiting Time</th>
+                        <th class="text-end pe-4">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in queue_entries %}
+                    <tr>
+                        <td class="px-4"><span class="order-pill">#{{ entry.queue_number }}</span></td>
+                        <td>
+                            <div class="fw-semibold">{{ entry.appointment.patient.user.first_name|default:entry.appointment.patient.user.username }} {{ entry.appointment.patient.user.last_name }}</div>
+                            <small class="text-muted">{{ entry.appointment.appointment_code }}</small>
+                        </td>
+                        <td>{{ entry.checked_in_at|time:"H:i" }}</td>
+                        <td><span class="wait-chip">{{ entry.checked_in_at|timesince }} ago</span></td>
+                        <td class="text-end pe-4">
+                            <a href="{% url 'emr:create' entry.appointment.id %}" class="btn btn-sm btn-primary">Start Consultation</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">No checked-in patients yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}

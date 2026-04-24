@@ -1,0 +1,351 @@
+{% extends "base.html" %}
+
+{% block title %}{% if action == 'Create' %}Current Consultation{% else %}Edit Consultation{% endif %} - Clinic{% endblock %}
+{% block topbar_subtitle %}Clinical Hub{% endblock %}
+{% block topbar_role %}Role: Doctor{% endblock %}
+
+{% block extra_css %}
+<style>
+    .consult-shell {
+        display: grid;
+        grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+        gap: 1.1rem;
+    }
+
+    .consult-main,
+    .consult-side {
+        display: grid;
+        gap: 1rem;
+        align-content: start;
+    }
+
+    .patient-hero {
+        background: linear-gradient(125deg, #ffffff 0%, #f7fbff 60%, #ebf4fb 100%);
+        border: 1px solid #d9e6f3;
+        border-radius: 1rem;
+        padding: 1rem;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 1rem;
+    }
+
+    .patient-avatar {
+        width: 64px;
+        height: 64px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        background: #0a6f8b;
+        color: #fff;
+        font-size: 1.4rem;
+        font-weight: 700;
+        box-shadow: 0 8px 20px rgba(10, 111, 139, 0.25);
+    }
+
+    .patient-meta h3 {
+        margin: 0;
+        font-weight: 800;
+        font-size: 1.55rem;
+        color: #152129;
+    }
+
+    .meta-row {
+        margin-top: .25rem;
+        color: #5f6975;
+        font-size: .92rem;
+    }
+
+    .pill-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .45rem;
+        margin-top: .55rem;
+    }
+
+    .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        border-radius: 999px;
+        padding: .2rem .55rem;
+        font-size: .72rem;
+        font-weight: 700;
+        letter-spacing: .01em;
+    }
+
+    .pill.id {
+        background: #e7f3ff;
+        color: #0b4ea2;
+    }
+
+    .pill.status {
+        background: #e8f8ef;
+        color: #1c7a48;
+    }
+
+    .panel-card {
+        background: #fff;
+        border: 1px solid #dde8f4;
+        border-radius: 1rem;
+        box-shadow: 0 8px 24px rgba(15, 55, 110, 0.06);
+        padding: 1rem;
+    }
+
+    .panel-title {
+        margin: 0 0 .8rem;
+        font-size: 1.03rem;
+        font-weight: 800;
+        color: #193040;
+        letter-spacing: .01em;
+    }
+
+    .label-mini {
+        font-size: .72rem;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: #5f6975;
+        margin-bottom: .42rem;
+    }
+
+    .editor-like {
+        border: 1px solid #d6e3f1;
+        border-radius: .75rem;
+        overflow: hidden;
+    }
+
+    .toolbar {
+        background: #f6f9fd;
+        border-bottom: 1px solid #dbe8f4;
+        padding: .35rem .55rem;
+        display: flex;
+        gap: .5rem;
+        color: #4f6274;
+        font-size: .82rem;
+        font-weight: 700;
+    }
+
+    .editor-like textarea,
+    .editor-like input[type="text"] {
+        border: none;
+        border-radius: 0;
+    }
+
+    .editor-like textarea:focus,
+    .editor-like input[type="text"]:focus {
+        box-shadow: none;
+    }
+
+    .tests-list {
+        display: grid;
+        gap: .55rem;
+        margin-bottom: .75rem;
+    }
+
+    .test-option {
+        display: grid;
+        grid-template-columns: 20px 1fr;
+        align-items: start;
+        gap: .5rem;
+        color: #33424f;
+        font-size: .94rem;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        border-radius: 999px;
+        padding: .35rem .7rem;
+        background: #eaf7f0;
+        color: #207047;
+        font-weight: 700;
+        font-size: .8rem;
+    }
+
+    .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .55rem;
+    }
+
+    .btn-finish {
+        border: none;
+        border-radius: .72rem;
+        padding: .72rem 1rem;
+        font-weight: 800;
+        background: linear-gradient(120deg, #0d4d99 0%, #106ca4 100%);
+        color: #fff;
+    }
+
+    .btn-finish:hover {
+        color: #fff;
+        filter: brightness(1.05);
+    }
+
+    .visually-collapsed {
+        position: absolute;
+        left: -9999px;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+    }
+
+    @media (max-width: 1199px) {
+        .consult-shell {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="consult-shell">
+    <section class="consult-main">
+        {% if error %}
+        <div class="alert alert-danger mb-0">{{ error }}</div>
+        {% endif %}
+
+        {% if form.non_field_errors %}
+            {% for item in form.non_field_errors %}
+            <div class="alert alert-danger mb-0">{{ item }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="patient-hero">
+            <div class="patient-avatar">
+                <span>{{ appointment.patient.user.first_name|default:appointment.patient.user.username|first|upper }}</span>
+            </div>
+            <div class="patient-meta">
+                <h3>
+                    {{ appointment.patient.user.first_name|default:appointment.patient.user.username }}
+                    {{ appointment.patient.user.last_name }}
+                </h3>
+                <div class="meta-row">
+                    {% if appointment.patient.date_of_birth %}DOB: {{ appointment.patient.date_of_birth|date:"d M Y" }}{% else %}DOB: N/A{% endif %}
+                    <span class="mx-2">|</span>
+                    {{ appointment.patient.gender|default:"Gender N/A" }}
+                </div>
+                <div class="pill-row">
+                    <span class="pill id">Patient ID: {{ appointment.appointment_code }}</span>
+                    <span class="pill status">{{ appointment.get_status_display }}</span>
+                </div>
+            </div>
+        </div>
+
+        <form method="post" id="consultationForm" class="consult-main">
+            {% csrf_token %}
+
+            <div class="panel-card">
+                <h4 class="panel-title">Clinical Evaluation</h4>
+                {% for field in form.visible_fields %}
+                    {% if field.name == 'diagnosis' or field.name == 'notes' %}
+                    <div class="mb-3">
+                        <div class="label-mini">{{ field.label }}</div>
+                        <div class="editor-like">
+                            {% if field.name == 'diagnosis' %}
+                            <div class="toolbar"><span>B</span><span>I</span><span>List</span></div>
+                            {% endif %}
+                            {{ field }}
+                        </div>
+                        {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors }}</div>{% endif %}
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            <div class="panel-card">
+                <h4 class="panel-title">Summary For Patient</h4>
+                {% for field in form.visible_fields %}
+                    {% if field.name == 'summary_for_patient' %}
+                    <div class="editor-like">
+                        {{ field }}
+                    </div>
+                    {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors }}</div>{% endif %}
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </form>
+    </section>
+
+    <aside class="consult-side">
+        <div class="panel-card">
+            <h4 class="panel-title">Laboratory Orders</h4>
+            <div class="tests-list">
+                <label class="test-option"><input class="form-check-input test-check" type="checkbox" value="Complete Blood Count (CBC)"> <span>Complete Blood Count (CBC)</span></label>
+                <label class="test-option"><input class="form-check-input test-check" type="checkbox" value="HbA1c Glycated Hemoglobin"> <span>HbA1c Glycated Hemoglobin</span></label>
+                <label class="test-option"><input class="form-check-input test-check" type="checkbox" value="Lipid Panel"> <span>Lipid Panel</span></label>
+                <label class="test-option"><input class="form-check-input test-check" type="checkbox" value="Liver Function Test (LFT)"> <span>Liver Function Test (LFT)</span></label>
+                <label class="test-option"><input class="form-check-input test-check" type="checkbox" value="Urinalysis"> <span>Urinalysis</span></label>
+            </div>
+            <input type="text" id="extraTestInput" class="form-control" placeholder="Other specialized tests...">
+            {% for field in form.visible_fields %}
+                {% if field.name == 'requested_tests' %}
+                <div class="visually-collapsed">{{ field }}</div>
+                {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors }}</div>{% endif %}
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <div class="panel-card">
+            <h4 class="panel-title">Consultation Status</h4>
+            <span class="status-badge"><span>●</span><span>Session Active</span></span>
+            <div class="small text-muted mt-2">Started: {{ appointment.scheduled_start|date:"H:i" }}</div>
+            <hr>
+            <div class="actions">
+                <button type="submit" form="consultationForm" class="btn-finish">
+                    {% if action == 'Create' %}Finalize Consultation{% else %}Save Consultation{% endif %}
+                </button>
+                <a href="{% if consultation %}{% url 'emr:detail' consultation.id %}{% else %}{% url 'emr:list' %}{% endif %}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </div>
+    </aside>
+</div>
+
+<script>
+    (function () {
+        const sourceField = document.getElementById('{{ form.requested_tests.id_for_label }}');
+        const checks = document.querySelectorAll('.test-check');
+        const otherInput = document.getElementById('extraTestInput');
+
+        if (!sourceField) {
+            return;
+        }
+
+        function parseExistingValue() {
+            const raw = (sourceField.value || '').split(',').map(item => item.trim()).filter(Boolean);
+            const selectedSet = new Set(raw);
+
+            checks.forEach((check) => {
+                if (selectedSet.has(check.value)) {
+                    check.checked = true;
+                    selectedSet.delete(check.value);
+                }
+            });
+
+            if (selectedSet.size > 0) {
+                otherInput.value = Array.from(selectedSet).join(', ');
+            }
+        }
+
+        function syncRequestedTests() {
+            const selected = Array.from(checks)
+                .filter(check => check.checked)
+                .map(check => check.value);
+
+            const custom = (otherInput.value || '').trim();
+            if (custom) {
+                selected.push(custom);
+            }
+
+            sourceField.value = selected.join(', ');
+        }
+
+        parseExistingValue();
+        syncRequestedTests();
+
+        checks.forEach(check => check.addEventListener('change', syncRequestedTests));
+        otherInput.addEventListener('input', syncRequestedTests);
+    })();
+</script>
+{% endblock %}

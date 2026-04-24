@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}Queue Monitor - Clinic{% endblock %}
+{% block topbar_subtitle %}Queue Management{% endblock %}
+{% block topbar_role %}Role: Receptionist{% endblock %}
+
+{% block extra_css %}
+<style>
+    .monitor-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: .8rem;
+    }
+
+    .metric-card {
+        background: #fff;
+        border: 1px solid #dde8f4;
+        border-radius: .9rem;
+        box-shadow: 0 8px 22px rgba(15, 55, 110, 0.06);
+        padding: .9rem;
+    }
+
+    .metric-label {
+        font-size: .72rem;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        color: #677b8f;
+        font-weight: 700;
+        margin-bottom: .25rem;
+    }
+
+    .metric-value {
+        font-size: 1.45rem;
+        font-weight: 800;
+        color: #16293a;
+        line-height: 1.1;
+    }
+
+    .doctor-columns {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 1rem;
+    }
+
+    .doctor-card {
+        background: #fff;
+        border: 1px solid #dce9f6;
+        border-radius: 1rem;
+        box-shadow: 0 10px 24px rgba(15, 55, 110, 0.06);
+        overflow: hidden;
+    }
+
+    .doctor-head {
+        background: linear-gradient(130deg, #f6fbff 0%, #eef6ff 100%);
+        border-bottom: 1px solid #dbe8f4;
+        padding: .95rem 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: .8rem;
+    }
+
+    .doctor-name {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 800;
+        color: #1a3040;
+    }
+
+    .queue-badge {
+        background: #e7f3ff;
+        color: #0b4ea2;
+        border-radius: 999px;
+        padding: .25rem .6rem;
+        font-size: .75rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .queue-list {
+        padding: .8rem;
+        display: grid;
+        gap: .55rem;
+    }
+
+    .queue-item {
+        border: 1px solid #dfebf7;
+        background: #f9fcff;
+        border-radius: .8rem;
+        padding: .65rem .75rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: .6rem;
+    }
+
+    .q-order {
+        background: #0b4ea2;
+        color: #fff;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: .75rem;
+        padding: .2rem .5rem;
+    }
+
+    @media (max-width: 991px) {
+        .monitor-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-grid gap-3">
+    <section class="monitor-grid">
+        <div class="metric-card">
+            <div class="metric-label">Doctor Streams</div>
+            <div class="metric-value">{{ doctors_queue|length }}</div>
+            <div class="small text-muted">Doctors with active queue entries</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Monitor Status</div>
+            <div class="metric-value">Live</div>
+            <div class="small text-muted">Updates based on checked-in patients</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Scope</div>
+            <div class="metric-value">Today</div>
+            <div class="small text-muted">Daily reception monitoring board</div>
+        </div>
+    </section>
+
+    {% if doctors_queue %}
+    <section class="doctor-columns">
+        {% for doctor_id, data in doctors_queue.items %}
+        <article class="doctor-card">
+            <div class="doctor-head">
+                <div>
+                    <h4 class="doctor-name">Dr. {{ data.doctor.user.first_name|default:data.doctor.user.username }} {{ data.doctor.user.last_name }}</h4>
+                    <small class="text-muted">{{ data.doctor.specialization|default:"General Practice" }}</small>
+                </div>
+                <span class="queue-badge">{{ data.queue|length }} waiting</span>
+            </div>
+
+            <div class="queue-list">
+                {% for entry in data.queue %}
+                <div class="queue-item">
+                    <div>
+                        <div class="fw-semibold">{{ entry.appointment.patient.user.first_name|default:entry.appointment.patient.user.username }} {{ entry.appointment.patient.user.last_name }}</div>
+                        <small class="text-muted">{{ entry.appointment.appointment_code }} | {{ entry.checked_in_at|time:"H:i" }}</small>
+                    </div>
+                    <span class="q-order">#{{ entry.queue_number }}</span>
+                </div>
+                {% empty %}
+                <p class="text-muted mb-0 px-2">No patients in queue.</p>
+                {% endfor %}
+            </div>
+        </article>
+        {% endfor %}
+    </section>
+    {% else %}
+    <div class="alert alert-info mb-0">No patients checked in today.</div>
+    {% endif %}
+</div>
+{% endblock %}
