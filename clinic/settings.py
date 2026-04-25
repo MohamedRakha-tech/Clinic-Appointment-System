@@ -71,7 +71,8 @@ ROOT_URLCONF = 'clinic.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        # 'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'], 
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -94,7 +95,7 @@ DATABASES = {
         'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.mysql'),
         'NAME': os.getenv('DB_NAME', 'clinic_db'),
         'USER': os.getenv('DB_USER', 'root'),
-        # 'PASSWORD': os.getenv('DB_PASSWORD', '1122'),
+        'PASSWORD': os.getenv('DB_PASSWORD', '1122'),
         'HOST': os.getenv('DB_HOST', '127.0.0.1'),
         'PORT': os.getenv('DB_PORT', '3306'),
     }

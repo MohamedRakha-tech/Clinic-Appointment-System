@@ -1,0 +1,325 @@
+{% extends "base.html" %}
+{% block title %}Book Appointment — Clinical Sanctuary{% endblock %}
+
+{% block nav_appointments %}bg-white text-primary font-bold shadow-sm{% endblock %}
+
+{% block content %}
+{# ── Page header + stepper ──────────────────────────────────────── #}
+<div class="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-6">
+  <div>
+    <h2 class="text-3xl font-extrabold tracking-tight text-on-surface mb-1">Schedule Consultation</h2>
+    <p class="text-on-surface-variant font-medium">Complete the steps below to reserve your clinical session.</p>
+  </div>
+
+  {# Step indicator #}
+  <div class="flex items-center space-x-3 bg-surface-container-low px-6 py-3 rounded-full self-start">
+    {% for step_num, label in steps %}
+    <div class="flex items-center {% if not forloop.last %}space-x-3{% endif %}">
+      <div class="flex items-center space-x-2 {% if step_num != current_step %}opacity-40{% endif %}">
+        <span class="w-6 h-6 rounded-full {% if step_num == current_step %}bg-primary text-white{% elif step_num < current_step %}bg-tertiary-fixed text-on-tertiary-fixed{% else %}bg-outline-variant text-on-surface{% endif %} text-xs flex items-center justify-center font-bold">
+          {% if step_num < current_step %}<span class="material-symbols-outlined text-[14px] fill-icon">check</span>{% else %}{{ step_num }}{% endif %}
+        </span>
+        <span class="text-xs font-bold uppercase tracking-widest {% if step_num == current_step %}text-primary{% endif %}">{{ label }}</span>
+      </div>
+      {% if not forloop.last %}
+      <div class="w-6 h-px bg-outline-variant/30 mx-1"></div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<form method="post" action="{% url 'appointments:book_appointment' %}" id="booking-form">
+{% csrf_token %}
+<input type="hidden" name="step" value="{{ current_step }}">
+{% if selected_doctor_id %}<input type="hidden" name="doctor_id" value="{{ selected_doctor_id }}">{% endif %}
+{% if selected_date %}<input type="hidden" name="date" value="{{ selected_date }}">{% endif %}
+
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+  {# ── LEFT COLUMN ─────────────────────────────────────────────── #}
+  <div class="lg:col-span-8 space-y-10">
+
+    {# STEP 1: Doctor selection #}
+    {% if current_step == 1 %}
+    <section>
+      <h3 class="text-[11px] font-black text-on-surface-variant uppercase tracking-[0.15em] mb-5">Step 1 — Choose Specialist</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {% for doctor in doctors %}
+        <button type="submit" name="doctor_id" value="{{ doctor.id }}"
+                class="text-left bg-surface-container-lowest p-5 rounded-2xl cursor-pointer transition-all
+                  {% if selected_doctor_id == doctor.id|stringformat:'s' %}border-2 border-primary ring-4 ring-primary/5{% else %}border border-transparent hover:border-outline-variant hover:shadow-lg{% endif %}">
+          <div class="flex items-start space-x-4">
+            <div class="w-14 h-14 rounded-xl bg-surface-container overflow-hidden flex-shrink-0 flex items-center justify-center text-xl font-black text-primary bg-primary-fixed">
+              {{ doctor.user.first_name|first }}{{ doctor.user.last_name|first }}
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between">
+                <h4 class="text-base font-bold text-on-surface truncate">Dr. {{ doctor.user.get_full_name }}</h4>
+                {% if selected_doctor_id == doctor.id|stringformat:'s' %}
+                <span class="material-symbols-outlined text-primary fill-icon text-[20px]">check_circle</span>
+                {% endif %}
+              </div>
+              <p class="text-sm font-semibold text-secondary mb-2">{{ doctor.specialty }}</p>
+              <div class="flex items-center text-xs text-on-surface-variant space-x-3">
+                <span class="flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[14px]">work</span>
+                  {% if doctor.experience_years %}{{ doctor.experience_years }}y exp{% else %}Experienced{% endif %}
+                </span>
+                <span class="flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[14px]">payments</span>
+                  ${{ doctor.consultation_fee|default:"50" }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </button>
+        {% empty %}
+        <div class="col-span-2 py-16 text-center text-on-surface-variant">
+          <span class="material-symbols-outlined text-5xl mb-3 block opacity-30">person_search</span>
+          <p class="font-medium">No doctors available right now.</p>
+        </div>
+        {% endfor %}
+      </div>
+      <input type="hidden" name="step" value="1">
+    </section>
+    {% endif %}
+
+    {# STEP 2: Date picker #}
+    {% if current_step == 2 %}
+    <section>
+      <h3 class="text-[11px] font-black text-on-surface-variant uppercase tracking-[0.15em] mb-5">Step 2 — Pick a Date</h3>
+      <div class="bg-surface-container-low p-6 rounded-2xl">
+        {% if available_dates %}
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          {% for date in available_dates %}
+          <button type="submit" name="selected_date" value="{{ date|date:'Y-m-d' }}"
+                  class="p-3 text-center rounded-lg border transition-all
+                    {% if selected_date == date|date:'Y-m-d' %}bg-primary text-white border-primary{% else %}bg-white border-outline hover:border-primary hover:bg-primary/5{% endif %}">
+            <div class="text-sm font-bold">{{ date|date:'M d' }}</div>
+            <div class="text-xs opacity-70">{{ date|date:'l' }}</div>
+          </button>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-8 text-on-surface-variant">
+          <span class="material-symbols-outlined text-4xl mb-3 block opacity-30">calendar_today</span>
+          <p class="font-medium">No available dates in the next 30 days.</p>
+          <p class="text-sm mt-2">Please try a different doctor.</p>
+        </div>
+        {% endif %}
+        <input type="hidden" name="step" value="2">
+      </div>
+    </section>
+    {% endif %}
+
+    {# STEP 3: Time slot #}
+    {% if current_step == 3 %}
+    <section>
+      <h3 class="text-[11px] font-black text-on-surface-variant uppercase tracking-[0.15em] mb-5">Step 3 — Choose Time Slot</h3>
+      {% if available_slots %}
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-w-lg">
+        {% for slot in available_slots %}
+        <button type="submit" name="slot_id" value="{{ slot.id }}"
+                class="py-3 px-4 rounded-xl text-sm font-bold text-center transition-all
+                  {% if selected_slot_id == slot.id|stringformat:'s' %}bg-primary text-white shadow-lg shadow-primary/20{% else %}border border-outline-variant/30 text-on-surface hover:bg-surface-container-high{% endif %}">
+          {{ slot.start_datetime|time:"g:i A" }}
+        </button>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="max-w-lg p-6 bg-surface-container-low rounded-2xl flex items-center space-x-4">
+        <span class="material-symbols-outlined text-outline text-3xl">event_busy</span>
+        <div>
+          <p class="font-bold text-on-surface">No available slots on {{ selected_date }}</p>
+          <p class="text-sm text-on-surface-variant">Please select a different date.</p>
+        </div>
+      </div>
+      {% endif %}
+      <input type="hidden" name="step" value="3">
+    </section>
+    {% endif %}
+
+    {# STEP 4: Confirmation #}
+    {% if current_step == 4 %}
+    <section>
+      <h3 class="text-[11px] font-black text-on-surface-variant uppercase tracking-[0.15em] mb-5">Step 4 — Confirm Appointment</h3>
+      <div class="bg-surface-container-low p-6 rounded-2xl space-y-4">
+        <div class="flex items-center space-x-4">
+          <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+            <span class="material-symbols-outlined text-primary">person</span>
+          </div>
+          <div>
+            <p class="font-bold text-on-surface">{{ selected_doctor.user.get_full_name }}</p>
+            <p class="text-sm text-on-surface-variant">{{ selected_doctor.specialty }}</p>
+          </div>
+        </div>
+        
+        <div class="flex items-center space-x-4">
+          <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+            <span class="material-symbols-outlined text-primary">event</span>
+          </div>
+          <div>
+            <p class="font-bold text-on-surface">{{ selected_slot.start_datetime|date:"F d, Y" }}</p>
+            <p class="text-sm text-on-surface-variant">{{ selected_slot.start_datetime|time:"g:i A" }} - {{ selected_slot.end_datetime|time:"g:i A" }}</p>
+          </div>
+        </div>
+        
+        <div class="mt-6">
+          <label class="block text-sm font-medium text-on-surface mb-2">Notes (Optional)</label>
+          <textarea name="notes" rows="3"
+                    class="w-full border border-outline-variant/30 rounded-lg px-4 py-3 text-sm text-on-surface placeholder-outline-variant/60 resize-none focus:ring-2 focus:ring-primary/20"
+                    placeholder="Any additional information for the doctor..."></textarea>
+        </div>
+        
+        <div class="pt-4">
+          <button type="submit" class="w-full bg-primary text-white py-3 px-6 rounded-xl font-bold hover:bg-primary/90 transition-colors">
+            Confirm Appointment
+          </button>
+        </div>
+      </div>
+      <input type="hidden" name="step" value="4">
+    </section>
+    {% endif %}
+
+  {# Navigation buttons #}
+    {% if current_step > 1 %}
+    <div class="flex justify-between items-center mt-8">
+      <button type="button" onclick="history.back()" class="px-6 py-3 border border-outline-variant rounded-xl font-medium text-on-surface hover:bg-surface-container transition-colors">
+        ← Back
+      </button>
+    </div>
+    {% endif %}
+
+  </div>{# /left col #}
+
+  {# ── RIGHT SIDEBAR: Booking summary ──────────────────────────── #}
+  <aside class="lg:col-span-4 sticky top-24 space-y-5">
+    <h3 class="text-[11px] font-black text-on-surface-variant uppercase tracking-[0.15em]">Booking Summary</h3>
+
+    <div class="glass-panel p-7 rounded-3xl shadow-2xl border border-white/40 space-y-5">
+      {# Doctor row #}
+      <div class="flex items-center space-x-4 pb-5 border-b border-outline-variant/10">
+        <div class="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center font-black text-primary text-sm flex-shrink-0">
+          {% if selected_doctor %}{{ selected_doctor.user.first_name|first }}{{ selected_doctor.user.last_name|first }}
+          {% else %}?{% endif %}
+        </div>
+        <div>
+          <p class="text-[10px] font-black text-secondary uppercase tracking-widest">Specialist</p>
+          <h5 class="text-base font-bold text-on-surface">
+            {% if selected_doctor %}Dr. {{ selected_doctor.user.get_full_name }}{% else %}Not selected{% endif %}
+          </h5>
+          {% if selected_doctor %}<p class="text-xs text-on-surface-variant">{{ selected_doctor.specialization }}</p>{% endif %}
+        </div>
+      </div>
+
+      {# Date #}
+      <div class="flex items-start space-x-4">
+        <div class="w-10 h-10 rounded-xl bg-surface-container-high flex items-center justify-center text-primary flex-shrink-0">
+          <span class="material-symbols-outlined text-[20px]">event</span>
+        </div>
+        <div>
+          <p class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest">Date</p>
+          <p class="text-sm font-bold text-on-surface">
+            {% if selected_date %}{{ selected_date }}{% else %}<span class="opacity-40">Not selected</span>{% endif %}
+          </p>
+        </div>
+      </div>
+
+      {# Time #}
+      <div class="flex items-start space-x-4">
+        <div class="w-10 h-10 rounded-xl bg-surface-container-high flex items-center justify-center text-primary flex-shrink-0">
+          <span class="material-symbols-outlined text-[20px]">schedule</span>
+        </div>
+        <div>
+          <p class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest">Time Slot</p>
+          <p class="text-sm font-bold text-on-surface" id="summary-time">
+            {% if selected_slot %}{{ selected_slot.start_time|time:"g:i A" }} – {{ selected_slot.end_time|time:"g:i A" }}
+            {% else %}<span class="opacity-40">Not selected</span>{% endif %}
+          </p>
+        </div>
+      </div>
+
+      {# Fee #}
+      {% if selected_doctor %}
+      <div class="pt-4 border-t border-outline-variant/20 flex justify-between items-center">
+        <span class="text-sm font-medium text-on-surface-variant">Consultation Fee</span>
+        <span class="text-xl font-black text-on-surface">${{ selected_doctor.consultation_fee }}</span>
+      </div>
+      {% endif %}
+
+      {# CTA #}
+      <button type="submit"
+              class="w-full py-4 bg-gradient-to-b from-primary-container to-primary text-white rounded-xl font-bold shadow-lg shadow-primary/30 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center space-x-2
+              {% if not selected_slot %}opacity-50 cursor-not-allowed{% endif %}"
+              {% if not selected_slot %}disabled{% endif %}>
+        {% if current_step < 3 %}
+        <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+        <span>Continue</span>
+        {% else %}
+        <span class="material-symbols-outlined fill-icon text-[18px]">lock</span>
+        <span>Confirm Booking</span>
+        {% endif %}
+      </button>
+
+      <p class="text-[10px] text-center text-on-surface-variant font-medium italic">
+        Secure booking powered by ClinicOS Trust
+      </p>
+    </div>
+
+    {# Emergency card #}
+    <div class="p-5 bg-surface-container-low rounded-2xl">
+      <div class="flex items-center space-x-2 mb-2">
+        <span class="material-symbols-outlined text-error text-[18px]">emergency</span>
+        <h6 class="text-sm font-bold text-on-surface">Need immediate help?</h6>
+      </div>
+      <p class="text-xs text-on-surface-variant leading-relaxed mb-3">
+        For medical emergencies call our 24/7 priority line.
+      </p>
+      <a href="tel:+15550009111" class="text-xs font-black text-primary uppercase tracking-widest hover:underline">
+        +1 (555) 000-911
+      </a>
+    </div>
+  </aside>
+
+</div>{# /grid #}
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Calendar day selection
+document.querySelectorAll('.cal-day').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.cal-day').forEach(b => {
+      b.classList.remove('bg-primary','text-white','shadow-md');
+      b.classList.add('hover:bg-surface-container-highest','text-on-surface');
+    });
+    btn.classList.add('bg-primary','text-white','shadow-md');
+    btn.classList.remove('hover:bg-surface-container-highest','text-on-surface');
+    document.getElementById('selected-date-input').value = btn.dataset.date;
+    // Auto-submit to load slots
+    document.getElementById('booking-form').submit();
+  });
+});
+
+// Slot selection highlight
+document.querySelectorAll('.slot-radio').forEach(radio => {
+  radio.addEventListener('change', () => {
+    document.querySelectorAll('.slot-btn').forEach(b => {
+      b.classList.remove('bg-primary','text-white','shadow-lg','shadow-primary/20');
+      b.classList.add('border','border-outline-variant/30','text-on-surface');
+    });
+    radio.nextElementSibling.classList.add('bg-primary','text-white','shadow-lg','shadow-primary/20');
+    radio.nextElementSibling.classList.remove('border','border-outline-variant/30','text-on-surface');
+  });
+});
+
+// Doctor card selection
+document.querySelectorAll('input[name="doctor_id"]').forEach(radio => {
+  radio.addEventListener('change', () => {
+    document.getElementById('booking-form').submit();
+  });
+});
+</script>
+{% endblock %}

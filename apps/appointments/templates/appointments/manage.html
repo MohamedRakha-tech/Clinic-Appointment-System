@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+{% block title %}Appointment Management — Clinical Sanctuary{% endblock %}
+{% block nav_appointments %}bg-white text-primary font-bold shadow-sm{% endblock %}
+
+{% block content %}
+
+{# ── Page header + KPI cards ───────────────────────────────────── #}
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-5">
+  <div>
+    <h2 class="text-3xl font-black tracking-tight text-on-surface mb-1">Appointment Management</h2>
+    <p class="text-on-surface-variant font-medium">Overview for {{ today|date:"l, F j, Y" }}</p>
+  </div>
+
+  <div class="flex flex-wrap gap-4">
+    {% for stat in stats %}
+    <div class="bg-surface-container-lowest px-5 py-4 rounded-2xl shadow-sm border border-outline-variant/10 flex items-center space-x-4 min-w-[140px]">
+      <div class="w-10 h-10 rounded-xl {{ stat.bg }} flex items-center justify-center">
+        <span class="material-symbols-outlined text-[20px] {{ stat.icon_color }}">{{ stat.icon }}</span>
+      </div>
+      <div>
+        <p class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest">{{ stat.label }}</p>
+        <p class="text-2xl font-black text-on-surface">{{ stat.value }}</p>
+      </div>
+    </div>
+    {% endfor %}
+    {# Fallback if no stats passed from view #}
+    {% if not stats %}
+    <div class="bg-surface-container-lowest px-5 py-4 rounded-2xl shadow-sm border border-outline-variant/10 flex items-center space-x-4">
+      <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+        <span class="material-symbols-outlined text-[20px] text-primary">calendar_month</span>
+      </div>
+      <div>
+        <p class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest">Total Today</p>
+        <p class="text-2xl font-black text-on-surface">{{ total_today|default:0 }}</p>
+      </div>
+    </div>
+    <div class="bg-surface-container-lowest px-5 py-4 rounded-2xl shadow-sm border border-outline-variant/10 flex items-center space-x-4">
+      <div class="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center">
+        <span class="material-symbols-outlined text-[20px] text-secondary">how_to_reg</span>
+      </div>
+      <div>
+        <p class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest">Checked In</p>
+        <p class="text-2xl font-black text-on-surface">{{ checked_in_today|default:0 }}</p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{# ── Filters ───────────────────────────────────────────────────── #}
+<form method="get" id="filter-form">
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
+
+  {# Filter card #}
+  <div class="lg:col-span-3 bg-surface-container-low p-5 rounded-2xl flex flex-wrap items-end gap-5">
+    <div class="flex-1 min-w-[180px]">
+      <label class="block text-[10px] font-black text-on-surface-variant uppercase tracking-widest mb-2">Doctor</label>
+      <select name="doctor" onchange="document.getElementById('filter-form').submit()"
+              class="w-full input-underline rounded-t-lg px-4 py-2.5 text-sm font-medium focus:ring-0 appearance-none">
+        <option value="">All Practitioners</option>
+        {% for doc in doctors %}
+        <option value="{{ doc.id }}" {% if request.GET.doctor == doc.id|stringformat:'s' %}selected{% endif %}>
+          Dr. {{ doc.user.get_full_name }} — {{ doc.specialization }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="flex-1 min-w-[200px]">
+      <label class="block text-[10px] font-black text-on-surface-variant uppercase tracking-widest mb-2">Status</label>
+      <div class="flex flex-wrap gap-2">
+        {% for s_value, s_label, s_class in status_filters %}
+        <a href="?{% if request.GET.doctor %}doctor={{ request.GET.doctor }}&{% endif %}status={{ s_value }}&date={{ request.GET.date }}"
+           class="px-3 py-1.5 rounded-full text-xs font-bold transition-all
+             {% if request.GET.status == s_value %}{{ s_class }}{% else %}bg-surface-container-highest text-on-surface-variant hover:opacity-80{% endif %}">
+          {{ s_label }}
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="w-44">
+      <label class="block text-[10px] font-black text-on-surface-variant uppercase tracking-widest mb-2">Date</label>
+      <input type="date" name="date" value="{{ request.GET.date|default:today_str }}"
+             onchange="document.getElementById('filter-form').submit()"
+             class="w-full input-underline rounded-t-lg px-4 py-2.5 text-sm font-medium focus:ring-0">
+    </div>
+  </div>
+
+  {# Bulk ops card #}
+  <div class="bg-primary/5 p-5 rounded-2xl flex flex-col justify-between border border-primary/10">
+    <p class="text-[10px] font-black text-primary uppercase tracking-widest mb-4">Bulk Operations</p>
+    <button type="submit" name="bulk_action" value="no_show"
+            onclick="return confirm('Mark all selected checked-in patients as no-show?')"
+            class="w-full bg-surface-container-lowest hover:bg-error-container hover:text-on-error-container text-error border border-error/20 py-3 rounded-xl text-sm font-black transition-all flex items-center justify-center space-x-2">
+      <span class="material-symbols-outlined text-[18px]">person_off</span>
+      <span>Mark as No-Show</span>
+    </button>
+    <button type="submit" name="bulk_action" value="confirm"
+            class="mt-2 w-full bg-surface-container-lowest hover:bg-tertiary-fixed text-on-tertiary-fixed border border-tertiary-fixed/40 py-3 rounded-xl text-sm font-black transition-all flex items-center justify-center space-x-2">
+      <span class="material-symbols-outlined text-[18px]">check_circle</span>
+      <span>Confirm Selected</span>
+    </button>
+  </div>
+</div>
+</form>
+
+{# ── Main table ────────────────────────────────────────────────── #}
+<form method="post" id="bulk-form">
+{% csrf_token %}
+<input type="hidden" name="bulk_action" id="bulk-action-input" value="">
+
+<div class="bg-surface-container-lowest rounded-3xl shadow-[0_8px_32px_rgba(20,29,35,0.06)] overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="w-full text-left">
+      <thead>
+        <tr class="bg-surface-container-low">
+          <th class="px-6 py-4 w-10">
+            <input type="checkbox" id="select-all" class="rounded border-outline-variant text-primary focus:ring-primary">
+          </th>
+          <th class="px-6 py-4 text-[11px] font-black text-on-surface-variant uppercase tracking-widest">Date & Time</th>
+          <th class="px-6 py-4 text-[11px] font-black text-on-surface-variant uppercase tracking-widest">Patient</th>
+          <th class="px-6 py-4 text-[11px] font-black text-on-surface-variant uppercase tracking-widest">Doctor</th>
+          <th class="px-6 py-4 text-[11px] font-black text-on-surface-variant uppercase tracking-widest">Status</th>
+          <th class="px-6 py-4 text-[11px] font-black text-on-surface-variant uppercase tracking-widest text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-surface-container">
+
+        {% for appt in appointments %}
+        <tr class="hover:bg-surface-bright transition-colors group">
+
+          <td class="px-6 py-5">
+            <input type="checkbox" name="appointment_ids" value="{{ appt.id }}"
+                   class="row-checkbox rounded border-outline-variant text-primary focus:ring-primary">
+          </td>
+
+          {# Date + time #}
+          <td class="px-6 py-5">
+            <div class="flex flex-col">
+              <span class="font-bold text-on-surface">{{ appt.date|date:"M j, Y" }}</span>
+              <span class="text-sm text-on-surface-variant font-medium">
+                {{ appt.start_time|time:"g:i A" }} – {{ appt.end_time|time:"g:i A" }}
+              </span>
+            </div>
+          </td>
+
+          {# Patient #}
+          <td class="px-6 py-5">
+            <div class="flex items-center space-x-3">
+              <div class="w-9 h-9 rounded-full bg-secondary-fixed/40 flex items-center justify-center font-black text-on-secondary-fixed text-xs flex-shrink-0">
+                {{ appt.patient.user.first_name|first }}{{ appt.patient.user.last_name|first }}
+              </div>
+              <div>
+                <p class="font-bold text-on-surface text-sm">{{ appt.patient.user.get_full_name }}</p>
+                <p class="text-xs text-on-surface-variant">{{ appt.patient.user.phone }}</p>
+              </div>
+            </div>
+          </td>
+
+          {# Doctor #}
+          <td class="px-6 py-5">
+            <p class="font-bold text-on-surface text-sm">Dr. {{ appt.doctor.user.get_full_name }}</p>
+            <p class="text-xs font-bold text-primary uppercase tracking-tight">{{ appt.doctor.specialization }}</p>
+          </td>
+
+          {# Status #}
+          <td class="px-6 py-5">
+            <span class="badge-{{ appt.status|lower }} px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide">
+              {{ appt.get_status_display }}
+            </span>
+          </td>
+
+          {# Quick actions #}
+          <td class="px-6 py-5">
+            <div class="flex justify-end items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <a href="{% url 'appointments:detail' appt.id %}"
+                 class="p-2 bg-surface-container-high text-on-surface rounded-lg hover:scale-110 transition-transform" title="View">
+                <span class="material-symbols-outlined text-[16px]">open_in_new</span>
+              </a>
+
+              {% if appt.status == 'REQUESTED' %}
+              <form method="post" action="{% url 'appointments:transition' appt.id %}" class="inline">
+                {% csrf_token %}
+                <input type="hidden" name="new_status" value="CONFIRMED">
+                <button type="submit" class="p-2 bg-tertiary-fixed text-on-tertiary-fixed rounded-lg hover:scale-110 transition-transform" title="Confirm">
+                  <span class="material-symbols-outlined text-[16px]">check</span>
+                </button>
+              </form>
+              {% endif %}
+
+              {% if appt.status == 'CONFIRMED' %}
+              <form method="post" action="{% url 'appointments:transition' appt.id %}" class="inline">
+                {% csrf_token %}
+                <input type="hidden" name="new_status" value="CHECKED_IN">
+                <button type="submit" class="p-2 bg-secondary-fixed text-on-secondary-fixed rounded-lg hover:scale-110 transition-transform" title="Check In">
+                  <span class="material-symbols-outlined text-[16px]">how_to_reg</span>
+                </button>
+              </form>
+              <form method="post" action="{% url 'appointments:transition' appt.id %}" class="inline">
+                {% csrf_token %}
+                <input type="hidden" name="new_status" value="NO_SHOW">
+                <button type="submit" class="p-2 bg-surface-container-highest text-on-surface-variant rounded-lg hover:scale-110 transition-transform" title="No Show">
+                  <span class="material-symbols-outlined text-[16px]">person_off</span>
+                </button>
+              </form>
+              {% endif %}
+
+              {% if appt.status in 'REQUESTED,CONFIRMED' %}
+              <a href="{% url 'appointments:reschedule' appt.id %}"
+                 class="p-2 bg-surface-container-highest text-on-surface rounded-lg hover:scale-110 transition-transform" title="Reschedule">
+                <span class="material-symbols-outlined text-[16px]">event_repeat</span>
+              </a>
+              <a href="{% url 'appointments:cancel' appt.id %}"
+                 class="p-2 bg-error-container text-on-error-container rounded-lg hover:scale-110 transition-transform" title="Cancel">
+                <span class="material-symbols-outlined text-[16px]">close</span>
+              </a>
+              {% endif %}
+            </div>
+          </td>
+
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="px-6 py-20 text-center">
+            <span class="material-symbols-outlined text-5xl text-on-surface-variant/20 block mb-4">calendar_today</span>
+            <p class="font-bold text-on-surface mb-1">No appointments found</p>
+            <p class="text-sm text-on-surface-variant">Try adjusting your filters.</p>
+          </td>
+        </tr>
+        {% endfor %}
+
+      </tbody>
+    </table>
+  </div>
+
+  {# Pagination #}
+  {% if appointments.has_other_pages %}
+  <div class="px-6 py-4 bg-surface-container-low flex items-center justify-between">
+    <p class="text-sm text-on-surface-variant">
+      Showing {{ appointments.start_index }}–{{ appointments.end_index }} of {{ appointments.paginator.count }}
+    </p>
+    <div class="flex items-center space-x-1">
+      {% if appointments.has_previous %}
+      <a href="?page={{ appointments.previous_page_number }}&{{ request.GET.urlencode }}"
+         class="p-2 rounded-lg hover:bg-surface-container transition-colors">
+        <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+      </a>
+      {% endif %}
+      {% for num in appointments.paginator.page_range %}
+      <a href="?page={{ num }}&{{ request.GET.urlencode }}"
+         class="w-8 h-8 rounded-lg text-sm font-bold flex items-center justify-center transition-colors
+           {% if num == appointments.number %}bg-primary text-white{% else %}hover:bg-surface-container text-on-surface-variant{% endif %}">
+        {{ num }}
+      </a>
+      {% endfor %}
+      {% if appointments.has_next %}
+      <a href="?page={{ appointments.next_page_number }}&{{ request.GET.urlencode }}"
+         class="p-2 rounded-lg hover:bg-surface-container transition-colors">
+        <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+      </a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Select all checkbox
+const selectAll = document.getElementById('select-all');
+const rowBoxes  = document.querySelectorAll('.row-checkbox');
+if (selectAll) {
+  selectAll.addEventListener('change', () => {
+    rowBoxes.forEach(cb => cb.checked = selectAll.checked);
+  });
+}
+</script>
+{% endblock %}

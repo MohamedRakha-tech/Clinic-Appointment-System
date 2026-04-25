@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}Confirm Booking — Clinical Sanctuary{% endblock %}
+{% block nav_appointments %}bg-white text-primary font-bold shadow-sm{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+
+  {# Breadcrumb #}
+  <nav class="flex items-center space-x-2 text-xs text-on-surface-variant mb-8">
+    <a href="{% url 'appointments:list' %}" class="hover:text-primary transition-colors">Appointments</a>
+    <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+    <a href="{% url 'appointments:book' %}" class="hover:text-primary transition-colors">Book</a>
+    <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+    <span class="font-bold text-on-surface">Confirm</span>
+  </nav>
+
+  <div class="mb-8">
+    <h2 class="text-3xl font-extrabold tracking-tight text-on-surface mb-1">Confirm Your Booking</h2>
+    <p class="text-on-surface-variant">Please review the details below before confirming.</p>
+  </div>
+
+  {# Main summary card #}
+  <div class="bg-surface-container-lowest rounded-3xl shadow-[0_8px_32px_rgba(20,29,35,0.06)] overflow-hidden mb-5">
+
+    {# Doctor header band #}
+    <div class="bg-surface-container-low px-8 py-6 flex items-center space-x-5">
+      <div class="w-16 h-16 rounded-2xl bg-primary-fixed flex items-center justify-center text-xl font-black text-primary flex-shrink-0">
+        {{ appointment.doctor.user.first_name|first }}{{ appointment.doctor.user.last_name|first }}
+      </div>
+      <div>
+        <p class="text-[10px] font-black text-secondary uppercase tracking-[0.15em] mb-1">Your Specialist</p>
+        <h3 class="text-xl font-black text-on-surface">Dr. {{ appointment.doctor.user.get_full_name }}</h3>
+        <p class="text-sm font-semibold text-secondary">{{ appointment.doctor.specialization }}</p>
+      </div>
+      <div class="ml-auto">
+        <span class="px-4 py-1.5 rounded-full bg-surface-variant text-on-surface-variant text-xs font-bold uppercase tracking-wider">
+          Pending Confirmation
+        </span>
+      </div>
+    </div>
+
+    {# Detail rows #}
+    <div class="px-8 py-6 space-y-5">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+
+        <div class="flex items-start space-x-4">
+          <div class="w-10 h-10 rounded-xl bg-surface-container-high flex items-center justify-center text-primary flex-shrink-0">
+            <span class="material-symbols-outlined text-[20px]">event</span>
+          </div>
+          <div>
+            <p class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest mb-0.5">Date</p>
+            <p class="text-base font-bold text-on-surface">{{ appointment.date|date:"l, F j, Y" }}</p>
+          </div>
+        </div>
+
+        <div class="flex items-start space-x-4">
+          <div class="w-10 h-10 rounded-xl bg-surface-container-high flex items-center justify-center text-primary flex-shrink-0">
+            <span class="material-symbols-outlined text-[20px]">schedule</span>
+          </div>
+          <div>
+            <p class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest mb-0.5">Time</p>
+            <p class="text-base font-bold text-on-surface">
+              {{ appointment.start_time|time:"g:i A" }} – {{ appointment.end_time|time:"g:i A" }}
+            </p>
+          </div>
+        </div>
+
+        <div class="flex items-start space-x-4">
+          <div class="w-10 h-10 rounded-xl bg-surface-container-high flex items-center justify-center text-primary flex-shrink-0">
+            <span class="material-symbols-outlined text-[20px]">person</span>
+          </div>
+          <div>
+            <p class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest mb-0.5">Patient</p>
+            <p class="text-base font-bold text-on-surface">{{ appointment.patient.user.get_full_name }}</p>
+          </div>
+        </div>
+
+        <div class="flex items-start space-x-4">
+          <div class="w-10 h-10 rounded-xl bg-surface-container-high flex items-center justify-center text-primary flex-shrink-0">
+            <span class="material-symbols-outlined text-[20px]">payments</span>
+          </div>
+          <div>
+            <p class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest mb-0.5">Fee</p>
+            <p class="text-base font-bold text-on-surface">${{ appointment.doctor.consultation_fee }}</p>
+          </div>
+        </div>
+      </div>
+
+      {# Reason #}
+      <div class="pt-5 border-t border-outline-variant/10">
+        <p class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest mb-2">Reason for Visit</p>
+        <p class="text-sm text-on-surface leading-relaxed">{{ appointment.reason }}</p>
+      </div>
+    </div>
+
+    {# Cancellation policy footer #}
+    <div class="bg-surface-container-low px-8 py-4 flex items-start space-x-3">
+      <span class="material-symbols-outlined text-secondary text-[18px] mt-0.5">info</span>
+      <p class="text-xs text-on-surface-variant leading-relaxed">
+        You can cancel or reschedule up to <strong class="text-on-surface">24 hours</strong> before your appointment at no charge.
+        Late cancellations may incur a fee.
+      </p>
+    </div>
+  </div>
+
+  {# Action buttons #}
+  <form method="post" action="{% url 'appointments:confirm' appointment.id %}">
+    {% csrf_token %}
+    <div class="flex items-center gap-4">
+      <a href="{% url 'appointments:book' %}"
+         class="flex-1 py-4 border border-outline-variant/30 text-on-surface rounded-xl font-bold text-center hover:bg-surface-container-high transition-all text-sm">
+        ← Go Back
+      </a>
+      <button type="submit"
+              class="flex-1 py-4 bg-gradient-to-b from-primary-container to-primary text-white rounded-xl font-bold shadow-lg shadow-primary/30 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center space-x-2 text-sm">
+        <span class="material-symbols-outlined fill-icon text-[18px]">lock</span>
+        <span>Confirm Booking</span>
+      </button>
+    </div>
+  </form>
+
+</div>
+{% endblock %}

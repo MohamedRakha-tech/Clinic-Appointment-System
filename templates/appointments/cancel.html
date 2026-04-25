@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}Cancel Appointment — Clinical Sanctuary{% endblock %}
+{% block nav_appointments %}bg-white text-primary font-bold shadow-sm{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto">
+
+  {# Breadcrumb #}
+  <nav class="flex items-center space-x-2 text-xs text-on-surface-variant mb-8">
+    <a href="{% url 'appointments:list' %}" class="hover:text-primary transition-colors">Appointments</a>
+    <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+    <a href="{% url 'appointments:detail' appointment.id %}" class="hover:text-primary transition-colors">
+      #{{ appointment.id }}
+    </a>
+    <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+    <span class="font-bold text-error">Cancel</span>
+  </nav>
+
+  {# Warning header #}
+  <div class="flex items-start space-x-4 p-6 bg-error-container/40 border border-error/20 rounded-2xl mb-8">
+    <span class="material-symbols-outlined text-error text-[28px] flex-shrink-0 mt-0.5">warning</span>
+    <div>
+      <h2 class="text-xl font-extrabold text-on-surface mb-1">Cancel this appointment?</h2>
+      <p class="text-sm text-on-surface-variant leading-relaxed">
+        This action will free the time slot and cannot be undone.
+        You can rebook at any time.
+      </p>
+    </div>
+  </div>
+
+  {# Appointment summary card #}
+  <div class="bg-surface-container-lowest rounded-2xl shadow-[0_4px_20px_rgba(20,29,35,0.05)] overflow-hidden mb-6">
+    <div class="bg-surface-container-low px-6 py-4">
+      <h3 class="text-[11px] font-black text-on-surface-variant uppercase tracking-widest">Appointment Being Cancelled</h3>
+    </div>
+    <div class="px-6 py-5 space-y-4">
+      <div class="flex items-center space-x-4">
+        <div class="w-12 h-12 rounded-2xl bg-primary-fixed flex items-center justify-center font-black text-primary flex-shrink-0">
+          {{ appointment.doctor.user.first_name|first }}{{ appointment.doctor.user.last_name|first }}
+        </div>
+        <div>
+          <p class="font-bold text-on-surface">Dr. {{ appointment.doctor.user.get_full_name }}</p>
+          <p class="text-xs font-semibold text-secondary">{{ appointment.doctor.specialization }}</p>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4 pt-3 border-t border-outline-variant/10">
+        <div>
+          <p class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest mb-1">Date</p>
+          <p class="text-sm font-bold text-on-surface">{{ appointment.date|date:"M j, Y" }}</p>
+        </div>
+        <div>
+          <p class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest mb-1">Time</p>
+          <p class="text-sm font-bold text-on-surface">{{ appointment.start_time|time:"g:i A" }}</p>
+        </div>
+        <div>
+          <p class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest mb-1">Status</p>
+          <span class="badge-{{ appointment.status|lower }} px-3 py-1 rounded-full text-xs font-bold uppercase">
+            {{ appointment.get_status_display }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# Cancel form #}
+  <form method="post" action="{% url 'appointments:cancel' appointment.id %}">
+    {% csrf_token %}
+
+    <div class="mb-6">
+      <label class="block text-[11px] font-black text-on-surface-variant uppercase tracking-[0.15em] mb-3">
+        Reason for Cancellation <span class="text-error">*</span>
+      </label>
+      <div class="grid grid-cols-1 gap-2 mb-4">
+        {% for value, label in cancel_reasons %}
+        <label class="flex items-center space-x-3 p-4 bg-surface-container-lowest rounded-xl border border-outline-variant/20 cursor-pointer hover:border-primary/30 hover:bg-surface-container-low transition-all group">
+          <input type="radio" name="cancel_reason_preset" value="{{ value }}"
+                 class="text-primary focus:ring-primary border-outline-variant">
+          <span class="text-sm font-medium text-on-surface group-hover:text-on-surface">{{ label }}</span>
+        </label>
+        {% endfor %}
+        <label class="flex items-center space-x-3 p-4 bg-surface-container-lowest rounded-xl border border-outline-variant/20 cursor-pointer hover:border-primary/30 hover:bg-surface-container-low transition-all group">
+          <input type="radio" name="cancel_reason_preset" value="other"
+                 class="text-primary focus:ring-primary border-outline-variant" id="other-radio">
+          <span class="text-sm font-medium text-on-surface">Other…</span>
+        </label>
+      </div>
+      <textarea name="reason" id="other-reason" rows="3"
+                class="w-full input-underline rounded-lg px-4 py-3 text-sm text-on-surface placeholder-outline-variant/60 resize-none focus:ring-0 hidden"
+                placeholder="Please describe your reason…"></textarea>
+    </div>
+
+    <div class="flex items-center gap-4">
+      <a href="{% url 'appointments:detail' appointment.id %}"
+         class="flex-1 py-4 border border-outline-variant/30 text-on-surface rounded-xl font-bold text-sm text-center hover:bg-surface-container-high transition-all">
+        Keep Appointment
+      </a>
+      <button type="submit"
+              class="flex-1 py-4 bg-error text-white rounded-xl font-bold text-sm shadow-md flex items-center justify-center space-x-2 hover:opacity-90 active:scale-95 transition-all">
+        <span class="material-symbols-outlined text-[18px]">close</span>
+        <span>Cancel Appointment</span>
+      </button>
+    </div>
+  </form>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const otherRadio  = document.getElementById('other-radio');
+const otherArea   = document.getElementById('other-reason');
+
+document.querySelectorAll('input[name="cancel_reason_preset"]').forEach(radio => {
+  radio.addEventListener('change', () => {
+    if (radio.value === 'other') {
+      otherArea.classList.remove('hidden');
+      otherArea.required = true;
+    } else {
+      otherArea.classList.add('hidden');
+      otherArea.required = false;
+    }
+  });
+});
+</script>
+{% endblock %}

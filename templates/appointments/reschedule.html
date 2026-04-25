@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+{% block title %}Reschedule Appointment — Clinical Sanctuary{% endblock %}
+{% block nav_appointments %}bg-white text-primary font-bold shadow-sm{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl">
+
+  {# Breadcrumb #}
+  <nav class="flex items-center space-x-2 text-xs text-on-surface-variant mb-8">
+    <a href="{% url 'appointments:list' %}" class="hover:text-primary transition-colors">Appointments</a>
+    <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+    <a href="{% url 'appointments:detail' appointment.id %}" class="hover:text-primary transition-colors">
+      Appointment #{{ appointment.id }}
+    </a>
+    <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+    <span class="font-bold text-on-surface">Reschedule</span>
+  </nav>
+
+  <div class="mb-8">
+    <h2 class="text-3xl font-extrabold tracking-tight text-on-surface mb-1">Reschedule Appointment</h2>
+    <p class="text-on-surface-variant font-medium">Choose a new date and time with Dr. {{ appointment.doctor.user.get_full_name }}.</p>
+  </div>
+
+  {# Current appointment reminder #}
+  <div class="flex items-center space-x-4 bg-surface-container-low border border-outline-variant/10 rounded-2xl px-6 py-4 mb-8">
+    <span class="material-symbols-outlined text-secondary text-[22px]">event_repeat</span>
+    <div>
+      <p class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest mb-0.5">Current Appointment</p>
+      <p class="font-bold text-on-surface">
+        {{ appointment.date|date:"l, F j, Y" }} · {{ appointment.start_time|time:"g:i A" }}
+      </p>
+    </div>
+    <span class="ml-auto badge-{{ appointment.status|lower }} px-3 py-1 rounded-full text-xs font-bold uppercase">
+      {{ appointment.get_status_display }}
+    </span>
+  </div>
+
+  <form method="post" id="reschedule-form">
+    {% csrf_token %}
+    <input type="hidden" name="new_slot_id" id="new-slot-id" value="{{ selected_slot_id }}">
+    <input type="hidden" name="new_date" id="new-date-input" value="{{ selected_date }}">
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+      {# ── LEFT ──────────────────────────────────────────────── #}
+      <div class="lg:col-span-8 space-y-8">
+
+        {# Calendar #}
+        <div>
+          <h3 class="text-[11px] font-black text-on-surface-variant uppercase tracking-[0.15em] mb-5">Select New Date</h3>
+          <div class="bg-surface-container-low p-6 rounded-2xl max-w-sm">
+            <div class="flex items-center justify-between mb-5">
+              <h4 class="font-bold text-on-surface">{{ calendar_month }}</h4>
+              <div class="flex space-x-1">
+                <button type="button" class="p-1.5 hover:bg-surface-container-highest rounded-lg transition-colors">
+                  <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+                </button>
+                <button type="button" class="p-1.5 hover:bg-surface-container-highest rounded-lg transition-colors">
+                  <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+                </button>
+              </div>
+            </div>
+            <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-black text-on-surface-variant uppercase tracking-widest mb-3">
+              {% for d in weekday_labels %}<span>{{ d }}</span>{% endfor %}
+            </div>
+            <div class="grid grid-cols-7 gap-1 text-center">
+              {% for day in calendar_days %}
+              {% if day.empty %}
+              <span class="p-2 opacity-0 text-xs">.</span>
+              {% elif day.past %}
+              <span class="p-2 text-xs opacity-20 text-on-surface-variant">{{ day.day }}</span>
+              {% elif not day.available %}
+              <span class="p-2 text-xs opacity-30 text-on-surface-variant line-through">{{ day.day }}</span>
+              {% else %}
+              <button type="button"
+                      class="cal-day p-2 text-xs font-bold rounded-lg transition-all
+                        {% if selected_date == day.date_str %}bg-primary text-white shadow-md
+                        {% elif day.date_str == appointment.date|date:'Y-m-d' %}ring-2 ring-outline-variant text-on-surface-variant line-through opacity-50
+                        {% else %}hover:bg-surface-container-highest text-on-surface{% endif %}"
+                      data-date="{{ day.date_str }}"
+                      {% if day.date_str == appointment.date|date:'Y-m-d' %}title="Current date" disabled{% endif %}>
+                {{ day.day }}
+              </button>
+              {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        {# Slots #}
+        {% if available_slots %}
+        <div>
+          <h3 class="text-[11px] font-black text-on-surface-variant uppercase tracking-[0.15em] mb-5">
+            Available Slots — {{ selected_date }}
+          </h3>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-w-lg">
+            {% for slot in available_slots %}
+            <button type="button"
+                    class="slot-btn py-3 px-4 rounded-xl text-sm font-bold transition-all
+                      {% if selected_slot_id == slot.id|stringformat:'s' %}bg-primary text-white shadow-lg shadow-primary/20
+                      {% else %}border border-outline-variant/30 text-on-surface hover:bg-surface-container-high{% endif %}"
+                    data-slot-id="{{ slot.id }}"
+                    data-start="{{ slot.start_time|time:'g:i A' }}"
+                    data-end="{{ slot.end_time|time:'g:i A' }}">
+              {{ slot.start_time|time:"g:i A" }}
+            </button>
+            {% endfor %}
+          </div>
+        </div>
+        {% elif selected_date %}
+        <div class="p-5 bg-surface-container-low rounded-2xl flex items-center space-x-3 max-w-sm">
+          <span class="material-symbols-outlined text-outline">event_busy</span>
+          <p class="text-sm font-medium text-on-surface">No slots available on this date.</p>
+        </div>
+        {% endif %}
+
+        {# Reason #}
+        <div class="max-w-lg">
+          <label class="block text-[11px] font-black text-on-surface-variant uppercase tracking-[0.15em] mb-3">
+            Reason for Rescheduling <span class="text-error">*</span>
+          </label>
+          <textarea name="reason" rows="3" required
+                    class="w-full input-underline rounded-lg px-4 py-3 text-sm text-on-surface placeholder-outline-variant/60 resize-none focus:ring-0"
+                    placeholder="e.g. Schedule conflict, travel, etc.">{{ form.reason.value|default:'' }}</textarea>
+        </div>
+      </div>
+
+      {# ── RIGHT: summary ────────────────────────────────────── #}
+      <aside class="lg:col-span-4 sticky top-24">
+        <h3 class="text-[11px] font-black text-on-surface-variant uppercase tracking-[0.15em] mb-5">New Booking Summary</h3>
+        <div class="glass-panel p-7 rounded-3xl shadow-2xl border border-white/40 space-y-5">
+
+          <div class="flex items-center space-x-4 pb-5 border-b border-outline-variant/10">
+            <div class="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center font-black text-primary flex-shrink-0">
+              {{ appointment.doctor.user.first_name|first }}{{ appointment.doctor.user.last_name|first }}
+            </div>
+            <div>
+              <p class="text-[10px] font-black text-secondary uppercase tracking-widest">Doctor</p>
+              <h5 class="font-bold text-on-surface">Dr. {{ appointment.doctor.user.get_full_name }}</h5>
+              <p class="text-xs text-on-surface-variant">{{ appointment.doctor.specialization }}</p>
+            </div>
+          </div>
+
+          <div class="flex items-start space-x-4">
+            <div class="w-10 h-10 rounded-xl bg-surface-container-high flex items-center justify-center text-primary flex-shrink-0">
+              <span class="material-symbols-outlined text-[20px]">event</span>
+            </div>
+            <div>
+              <p class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest">New Date</p>
+              <p class="text-sm font-bold text-on-surface" id="summary-date">
+                {% if selected_date %}{{ selected_date }}{% else %}<span class="opacity-40">Not selected</span>{% endif %}
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-start space-x-4">
+            <div class="w-10 h-10 rounded-xl bg-surface-container-high flex items-center justify-center text-primary flex-shrink-0">
+              <span class="material-symbols-outlined text-[20px]">schedule</span>
+            </div>
+            <div>
+              <p class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest">New Time</p>
+              <p class="text-sm font-bold text-on-surface" id="summary-time">
+                {% if selected_slot %}{{ selected_slot.start_time|time:"g:i A" }} – {{ selected_slot.end_time|time:"g:i A" }}
+                {% else %}<span class="opacity-40">Not selected</span>{% endif %}
+              </p>
+            </div>
+          </div>
+
+          <button type="submit" id="submit-btn"
+                  class="w-full py-4 bg-gradient-to-b from-primary-container to-primary text-white rounded-xl font-bold shadow-lg shadow-primary/30 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center space-x-2
+                  {% if not selected_slot_id %}opacity-50 cursor-not-allowed{% endif %}"
+                  {% if not selected_slot_id %}disabled{% endif %}>
+            <span class="material-symbols-outlined text-[18px]">event_repeat</span>
+            <span>Confirm Reschedule</span>
+          </button>
+          <a href="{% url 'appointments:detail' appointment.id %}"
+             class="block text-center text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors">
+            Cancel
+          </a>
+        </div>
+      </aside>
+
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const slotIdInput = document.getElementById('new-slot-id');
+const summaryTime = document.getElementById('summary-time');
+const summaryDate = document.getElementById('summary-date');
+const submitBtn   = document.getElementById('submit-btn');
+const dateInput   = document.getElementById('new-date-input');
+
+document.querySelectorAll('.cal-day:not([disabled])').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.cal-day').forEach(b => {
+      b.classList.remove('bg-primary','text-white','shadow-md');
+      b.classList.add('hover:bg-surface-container-highest','text-on-surface');
+    });
+    btn.classList.add('bg-primary','text-white','shadow-md');
+    btn.classList.remove('hover:bg-surface-container-highest','text-on-surface');
+    dateInput.value = btn.dataset.date;
+    summaryDate.textContent = btn.dataset.date;
+    // Submit form to reload slots
+    document.getElementById('reschedule-form').submit();
+  });
+});
+
+document.querySelectorAll('.slot-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.slot-btn').forEach(b => {
+      b.classList.remove('bg-primary','text-white','shadow-lg','shadow-primary/20');
+      b.classList.add('border','border-outline-variant/30','text-on-surface');
+    });
+    btn.classList.add('bg-primary','text-white','shadow-lg','shadow-primary/20');
+    btn.classList.remove('border','border-outline-variant/30','text-on-surface');
+    slotIdInput.value = btn.dataset.slotId;
+    summaryTime.textContent = btn.dataset.start + ' – ' + btn.dataset.end;
+    submitBtn.disabled = false;
+    submitBtn.classList.remove('opacity-50','cursor-not-allowed');
+  });
+});
+</script>
+{% endblock %}

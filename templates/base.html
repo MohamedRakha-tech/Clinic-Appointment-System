@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}Clinical Sanctuary{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "error": "#ba1a1a",
+            "background": "#f6faff",
+            "primary-container": "#0056b3",
+            "surface": "#f6faff",
+            "on-primary": "#ffffff",
+            "surface-container-highest": "#dbe4ed",
+            "on-error": "#ffffff",
+            "on-tertiary": "#ffffff",
+            "secondary-fixed": "#a4eeff",
+            "primary-fixed": "#d7e2ff",
+            "on-background": "#141d23",
+            "tertiary": "#004c17",
+            "tertiary-container": "#006722",
+            "on-error-container": "#93000a",
+            "secondary": "#006877",
+            "surface-variant": "#dbe4ed",
+            "on-primary-container": "#bbd0ff",
+            "surface-container": "#e6eff8",
+            "tertiary-fixed-dim": "#66df75",
+            "secondary-container": "#75e7fe",
+            "on-primary-fixed": "#001a40",
+            "on-surface": "#141d23",
+            "tertiary-fixed": "#83fc8e",
+            "on-tertiary-fixed": "#002106",
+            "primary": "#003f87",
+            "outline": "#727784",
+            "surface-container-low": "#ecf5fe",
+            "surface-bright": "#f6faff",
+            "surface-container-lowest": "#ffffff",
+            "on-secondary": "#ffffff",
+            "surface-dim": "#d2dbe4",
+            "outline-variant": "#c2c6d4",
+            "error-container": "#ffdad6",
+            "on-surface-variant": "#424752",
+            "surface-container-high": "#e0e9f2",
+            "on-secondary-fixed": "#001f25",
+            "on-tertiary-fixed-variant": "#00531a",
+          },
+          borderRadius: {
+            DEFAULT: "0.125rem", lg: "0.375rem", xl: "0.5rem", "2xl": "1rem", "3xl": "1.5rem", full: "9999px"
+          },
+          fontFamily: { sans: ["Inter", "sans-serif"] }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    .fill-icon { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    .glass-panel { background: rgba(255,255,255,0.85); backdrop-filter: blur(24px); }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    /* Bottom-only border input style */
+    .input-underline {
+      background: #e0e9f2;
+      border: none;
+      border-bottom: 2px solid #c2c6d4;
+      border-radius: 0.375rem 0.375rem 0 0;
+      transition: border-color 0.15s;
+    }
+    .input-underline:focus { outline: none; border-bottom-color: #003f87; }
+    /* Appointment status badges */
+    .badge-requested   { background:#dbe4ed; color:#424752; }
+    .badge-confirmed   { background:#d7e2ff; color:#004491; }
+    .badge-checked_in  { background:#a4eeff; color:#001f25; }
+    .badge-completed   { background:#83fc8e; color:#002106; }
+    .badge-cancelled   { background:#ffdad6; color:#93000a; }
+    .badge-no_show     { background:#ffdad6; color:#93000a; }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-background text-on-background min-h-screen flex overflow-hidden">
+
+{# ── Sidebar ───────────────────────────────────────────────────────── #}
+<aside class="hidden md:flex flex-col h-screen w-64 bg-[#f0f4f8] p-4 space-y-1 fixed left-0 top-0 z-40 flex-shrink-0">
+  <div class="flex items-center space-x-3 mb-8 px-2">
+    <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white">
+      <span class="material-symbols-outlined text-[20px]">health_and_safety</span>
+    </div>
+    <div>
+      <h1 class="text-base font-black text-on-surface leading-none">Sanctuary Health</h1>
+      <p class="text-[10px] uppercase tracking-widest text-primary font-bold opacity-70">Precision Care</p>
+    </div>
+  </div>
+
+  <nav class="flex-1 space-y-1">
+    {% block sidebar_nav %}
+    {% if user_role == 'admin' %}
+    <a href="{% block admin_url_dashboard %}/admin_panel/{% endblock %}"
+       class="flex items-center space-x-3 px-3 py-2.5 rounded-xl {% block admin_nav_dashboard %}text-on-surface hover:bg-white/60{% endblock %} transition-all text-sm font-medium">
+      <span class="material-symbols-outlined text-[20px]">dashboard</span>
+      <span>Admin Dashboard</span>
+    </a>
+    <a href="{% block admin_url_appointments %}/api/appointments/{% endblock %}"
+       class="flex items-center space-x-3 px-3 py-2.5 rounded-xl {% block admin_nav_appointments %}text-on-surface hover:bg-white/60{% endblock %} transition-all text-sm font-medium">
+      <span class="material-symbols-outlined text-[20px]">calendar_today</span>
+      <span>All Appointments</span>
+    </a>
+    <a href="{% block admin_url_patients %}/api/accounts/patients/{% endblock %}"
+       class="flex items-center space-x-3 px-3 py-2.5 rounded-xl {% block admin_nav_patients %}text-on-surface hover:bg-white/60{% endblock %} transition-all text-sm font-medium">
+      <span class="material-symbols-outlined text-[20px]">group</span>
+      <span>Patients</span>
+    </a>
+    <a href="{% block admin_url_doctors %}/api/accounts/doctors/{% endblock %}"
+       class="flex items-center space-x-3 px-3 py-2.5 rounded-xl {% block admin_nav_doctors %}text-on-surface hover:bg-white/60{% endblock %} transition-all text-sm font-medium">
+      <span class="material-symbols-outlined text-[20px]">medical_services</span>
+      <span>Doctors</span>
+    </a>
+    <a href="{% block admin_url_reports %}/reports/{% endblock %}"
+       class="flex items-center space-x-3 px-3 py-2.5 rounded-xl {% block admin_nav_reports %}text-on-surface hover:bg-white/60{% endblock %} transition-all text-sm font-medium">
+      <span class="material-symbols-outlined text-[20px]">analytics</span>
+      <span>Reports</span>
+    </a>
+{% elif user_role == 'doctor' %}
+    <a href="{% block doctor_url_dashboard %}/doctors/{% endblock %}"
+       class="flex items-center space-x-3 px-3 py-2.5 rounded-xl {% block doctor_nav_dashboard %}text-on-surface hover:bg-white/60{% endblock %} transition-all text-sm font-medium">
+      <span class="material-symbols-outlined text-[20px]">dashboard</span>
+      <span>My Dashboard</span>
+    </a>
+    <a href="{% block doctor_url_appointments %}/api/appointments/{% endblock %}"
+       class="flex items-center space-x-3 px-3 py-2.5 rounded-xl {% block doctor_nav_appointments %}text-on-surface hover:bg-white/60{% endblock %} transition-all text-sm font-medium">
+      <span class="material-symbols-outlined text-[20px]">calendar_today</span>
+      <span>My Schedule</span>
+    </a>
+    <a href="{% block doctor_url_schedule %}/api/scheduling/{% endblock %}"
+       class="flex items-center space-x-3 px-3 py-2.5 rounded-xl {% block doctor_nav_schedule %}text-on-surface hover:bg-white/60{% endblock %} transition-all text-sm font-medium">
+      <span class="material-symbols-outlined text-[20px]">event_note</span>
+      <span>Manage Schedule</span>
+    </a>
+    <a href="{% block doctor_url_patients %}/api/accounts/patients/{% endblock %}"
+       class="flex items-center space-x-3 px-3 py-2.5 rounded-xl {% block doctor_nav_patients %}text-on-surface hover:bg-white/60{% endblock %} transition-all text-sm font-medium">
+      <span class="material-symbols-outlined text-[20px]">group</span>
+      <span>My Patients</span>
+    </a>
+{% elif user_role == 'receptionist' %}
+    <a href="{% block receptionist_url_dashboard %}/reception/{% endblock %}"
+       class="flex items-center space-x-3 px-3 py-2.5 rounded-xl {% block receptionist_nav_dashboard %}text-on-surface hover:bg-white/60{% endblock %} transition-all text-sm font-medium">
+      <span class="material-symbols-outlined text-[20px]">dashboard</span>
+      <span>Reception Desk</span>
+    </a>
+    <a href="{% block receptionist_url_appointments %}/api/appointments/{% endblock %}"
+       class="flex items-center space-x-3 px-3 py-2.5 rounded-xl {% block receptionist_nav_appointments %}text-on-surface hover:bg-white/60{% endblock %} transition-all text-sm font-medium">
+      <span class="material-symbols-outlined text-[20px]">calendar_today</span>
+      <span>Appointments</span>
+    </a>
+    <a href="{% block receptionist_url_patients %}/api/accounts/patients/{% endblock %}"
+       class="flex items-center space-x-3 px-3 py-2.5 rounded-xl {% block receptionist_nav_patients %}text-on-surface hover:bg-white/60{% endblock %} transition-all text-sm font-medium">
+      <span class="material-symbols-outlined text-[20px]">group</span>
+      <span>Patients</span>
+    </a>
+    <a href="{% block receptionist_url_schedule %}/api/scheduling/{% endblock %}"
+       class="flex items-center space-x-3 px-3 py-2.5 rounded-xl {% block receptionist_nav_schedule %}text-on-surface hover:bg-white/60{% endblock %} transition-all text-sm font-medium">
+      <span class="material-symbols-outlined text-[20px]">event_note</span>
+      <span>Schedule Management</span>
+    </a>
+{% elif user_role == 'patient' %}
+    <a href="{% block patient_url_dashboard %}/patients/{% endblock %}"
+       class="flex items-center space-x-3 px-3 py-2.5 rounded-xl {% block patient_nav_dashboard %}text-on-surface hover:bg-white/60{% endblock %} transition-all text-sm font-medium">
+      <span class="material-symbols-outlined text-[20px]">dashboard</span>
+      <span>My Dashboard</span>
+    </a>
+    <a href="{% block patient_url_appointments %}/api/appointments/{% endblock %}"
+       class="flex items-center space-x-3 px-3 py-2.5 rounded-xl {% block patient_nav_appointments %}text-on-surface hover:bg-white/60{% endblock %} transition-all text-sm font-medium">
+      <span class="material-symbols-outlined text-[20px]">calendar_today</span>
+      <span>My Appointments</span>
+    </a>
+    <a href="{% block patient_url_profile %}/api/accounts/profile/{% endblock %}"
+       class="flex items-center space-x-3 px-3 py-2.5 rounded-xl {% block patient_nav_profile %}text-on-surface hover:bg-white/60{% endblock %} transition-all text-sm font-medium">
+      <span class="material-symbols-outlined text-[20px]">person</span>
+      <span>My Profile</span>
+    </a>
+{% else %}
+    <a href="{% block default_url_dashboard %}/accounts/{% endblock %}"
+       class="flex items-center space-x-3 px-3 py-2.5 rounded-xl {% block default_nav_dashboard %}text-on-surface hover:bg-white/60{% endblock %} transition-all text-sm font-medium">
+      <span class="material-symbols-outlined text-[20px]">dashboard</span>
+      <span>Dashboard</span>
+    </a>
+    <a href="{% block default_url_appointments %}/api/appointments/{% endblock %}"
+       class="flex items-center space-x-3 px-3 py-2.5 rounded-xl {% block default_nav_appointments %}text-on-surface hover:bg-white/60{% endblock %} transition-all text-sm font-medium">
+      <span class="material-symbols-outlined text-[20px]">calendar_today</span>
+      <span>Appointments</span>
+    </a>
+{% endif %}
+    {% endblock %}
+  </nav>
+
+  {% block sidebar_cta %}
+  <a href="{% url 'appointments:book_appointment' %}"
+     class="mx-1 py-3 bg-gradient-to-b from-primary-container to-primary text-white rounded-xl font-bold text-sm shadow-md flex items-center justify-center space-x-2 hover:scale-[0.98] transition-transform">
+    <span class="material-symbols-outlined text-[18px]">add</span>
+    <span>New Appointment</span>
+  </a>
+  {% endblock %}
+
+  <div class="pt-3 border-t border-outline-variant/20 space-y-1 mt-2">
+    <a href="#" class="flex items-center space-x-3 px-3 py-2 rounded-xl text-on-surface hover:bg-white/60 text-sm font-medium transition-all">
+      <span class="material-symbols-outlined text-[20px]">contact_support</span>
+      <span>Support</span>
+    </a>
+    <a href="/logout/" class="flex items-center space-x-3 px-3 py-2 rounded-xl text-error hover:bg-error-container/20 text-sm font-medium transition-all">
+      <span class="material-symbols-outlined text-[20px]">logout</span>
+      <span>Sign Out</span>
+    </a>
+  </div>
+</aside>
+
+{# ── Main ──────────────────────────────────────────────────────────── #}
+<main class="flex-1 flex flex-col md:ml-64 h-screen overflow-y-auto no-scrollbar">
+
+  {# Top bar #}
+  <header class="sticky top-0 z-50 flex justify-between items-center w-full px-8 h-16 bg-[#f6faff]">
+    <div class="flex items-center space-x-5">
+      <span class="text-lg font-bold tracking-tight text-on-surface">Clinical Sanctuary</span>
+      <div class="hidden lg:flex items-center space-x-2 bg-surface-container-low px-4 py-2 rounded-full">
+        <span class="material-symbols-outlined text-outline text-[18px]">search</span>
+        <input type="text" placeholder="Search patients, doctors…"
+               class="bg-transparent border-none focus:ring-0 text-sm w-56 placeholder-outline text-on-surface"/>
+      </div>
+    </div>
+    <div class="flex items-center space-x-4">
+      <span class="hidden sm:block text-xs font-semibold text-on-surface-variant uppercase tracking-wider">
+        {{ request.user.role|default:"User"|title }}
+      </span>
+      <button class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors">
+        <span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+      </button>
+      <div class="w-8 h-8 rounded-full bg-surface-container-highest overflow-hidden border-2 border-primary/20 flex items-center justify-center text-xs font-black text-primary">
+        {{ request.user.first_name|default:""|first }}{{ request.user.last_name|default:""|first }}
+      </div>
+    </div>
+  </header>
+
+  {# Flash messages #}
+  {% if messages %}
+  <div class="px-8 pt-4 space-y-2">
+    {% for message in messages %}
+    <div class="flex items-center space-x-3 px-5 py-3 rounded-xl text-sm font-medium
+      {% if message.tags == 'error' %}bg-error-container text-on-error-container
+      {% elif message.tags == 'success' %}bg-tertiary-fixed text-on-tertiary-fixed
+      {% else %}bg-primary-fixed text-on-primary-fixed{% endif %}">
+      <span class="material-symbols-outlined text-[18px]">
+        {% if message.tags == 'error' %}error{% elif message.tags == 'success' %}check_circle{% else %}info{% endif %}
+      </span>
+      <span>{{ message }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {# Page content #}
+  <div class="flex-1 p-8">
+    {% block content %}{% endblock %}
+  </div>
+
+</main>
+
+{% block extra_js %}{% endblock %}
+</body>
+</html>

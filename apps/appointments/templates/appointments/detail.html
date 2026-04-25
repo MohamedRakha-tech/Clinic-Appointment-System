@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+{% block title %}Appointment #{{ appointment.id }} — Clinical Sanctuary{% endblock %}
+{% block nav_appointments %}bg-white text-primary font-bold shadow-sm{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl">
+
+  {# Breadcrumb #}
+  <nav class="flex items-center space-x-2 text-xs text-on-surface-variant mb-8">
+    <a href="{% url 'appointments:list' %}" class="hover:text-primary transition-colors">Appointments</a>
+    <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+    <span class="font-bold text-on-surface">Appointment #{{ appointment.id }}</span>
+  </nav>
+
+  {# ── Header strip ──────────────────────────────────────────── #}
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-5 mb-8">
+    <div>
+      <div class="flex items-center gap-3 mb-2">
+        <h2 class="text-3xl font-extrabold tracking-tight text-on-surface">Appointment Detail</h2>
+        <span class="badge-{{ appointment.status|lower }} px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">
+          {{ appointment.get_status_display }}
+        </span>
+      </div>
+      <p class="text-on-surface-variant font-medium">{{ appointment.date|date:"l, F j, Y" }} · {{ appointment.start_time|time:"g:i A" }} – {{ appointment.end_time|time:"g:i A" }}</p>
+    </div>
+
+    {# Action buttons based on status + role #}
+    <div class="flex items-center gap-3 flex-wrap">
+      {% if appointment.status in 'REQUESTED,CONFIRMED' %}
+        {% if user.role == 'patient' or user.role == 'receptionist' or user.role == 'admin' %}
+        <a href="{% url 'appointments:reschedule' appointment.id %}"
+           class="flex items-center space-x-2 px-5 py-2.5 bg-surface-container-high text-on-surface rounded-xl font-bold text-sm hover:bg-surface-container-highest transition-all">
+          <span class="material-symbols-outlined text-[18px]">event_repeat</span>
+          <span>Reschedule</span>
+        </a>
+        <a href="{% url 'appointments:cancel' appointment.id %}"
+           class="flex items-center space-x-2 px-5 py-2.5 bg-error-container text-on-error-container rounded-xl font-bold text-sm hover:opacity-90 transition-all">
+          <span class="material-symbols-outlined text-[18px]">close</span>
+          <span>Cancel</span>
+        </a>
+        {% endif %}
+      {% endif %}
+
+      {% if appointment.status == 'REQUESTED' and user.role in 'receptionist,admin' %}
+      <form method="post" action="{% url 'appointments:transition' appointment.id %}">
+        {% csrf_token %}
+        <input type="hidden" name="new_status" value="CONFIRMED">
+        <button type="submit"
+                class="flex items-center space-x-2 px-5 py-2.5 bg-gradient-to-b from-primary-container to-primary text-white rounded-xl font-bold text-sm shadow-md hover:scale-[1.02] transition-all">
+          <span class="material-symbols-outlined text-[18px]">check</span>
+          <span>Confirm</span>
+        </button>
+      </form>
+      {% endif %}
+
+      {% if appointment.status == 'CONFIRMED' and user.role in 'receptionist,admin' %}
+      <form method="post" action="{% url 'appointments:transition' appointment.id %}">
+        {% csrf_token %}
+        <input type="hidden" name="new_status" value="CHECKED_IN">
+        <button type="submit"
+                class="flex items-center space-x-2 px-5 py-2.5 bg-secondary text-white rounded-xl font-bold text-sm shadow-md hover:opacity-90 transition-all">
+          <span class="material-symbols-outlined text-[18px]">how_to_reg</span>
+          <span>Check In Patient</span>
+        </button>
+      </form>
+      {% endif %}
+
+      {% if appointment.status == 'CONFIRMED' and user.role in 'receptionist,admin' %}
+      <form method="post" action="{% url 'appointments:transition' appointment.id %}">
+        {% csrf_token %}
+        <input type="hidden" name="new_status" value="NO_SHOW">
+        <button type="submit"
+                class="flex items-center space-x-2 px-5 py-2.5 bg-surface-container-highest text-on-surface-variant rounded-xl font-bold text-sm hover:opacity-90 transition-all">
+          <span class="material-symbols-outlined text-[18px]">person_off</span>
+          <span>Mark No-Show</span>
+        </button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    {# ── Main details card ──────────────────────────────────── #}
+    <div class="lg:col-span-2 space-y-5">
+
+      {# Doctor + patient info #}
+      <div class="bg-surface-container-lowest rounded-3xl shadow-[0_4px_20px_rgba(20,29,35,0.05)] overflow-hidden">
+        <div class="bg-surface-container-low px-7 py-4">
+          <h3 class="text-[11px] font-black text-on-surface-variant uppercase tracking-widest">Participants</h3>
+        </div>
+        <div class="px-7 py-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-primary-fixed flex items-center justify-center font-black text-primary">
+              {{ appointment.doctor.user.first_name|first }}{{ appointment.doctor.user.last_name|first }}
+            </div>
+            <div>
+              <p class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest mb-0.5">Doctor</p>
+              <p class="font-bold text-on-surface">Dr. {{ appointment.doctor.user.get_full_name }}</p>
+              <p class="text-xs font-semibold text-secondary">{{ appointment.doctor.specialization }}</p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-secondary-fixed flex items-center justify-center font-black text-on-secondary-fixed">
+              {{ appointment.patient.user.first_name|first }}{{ appointment.patient.user.last_name|first }}
+            </div>
+            <div>
+              <p class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest mb-0.5">Patient</p>
+              <p class="font-bold text-on-surface">{{ appointment.patient.user.get_full_name }}</p>
+              <p class="text-xs text-on-surface-variant">{{ appointment.patient.user.phone }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {# Appointment info #}
+      <div class="bg-surface-container-lowest rounded-3xl shadow-[0_4px_20px_rgba(20,29,35,0.05)] overflow-hidden">
+        <div class="bg-surface-container-low px-7 py-4">
+          <h3 class="text-[11px] font-black text-on-surface-variant uppercase tracking-widest">Appointment Info</h3>
+        </div>
+        <div class="px-7 py-6 grid grid-cols-2 sm:grid-cols-3 gap-5">
+          <div>
+            <p class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest mb-1">Date</p>
+            <p class="font-bold text-on-surface">{{ appointment.date|date:"M j, Y" }}</p>
+          </div>
+          <div>
+            <p class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest mb-1">Time</p>
+            <p class="font-bold text-on-surface">{{ appointment.start_time|time:"g:i A" }}</p>
+          </div>
+          <div>
+            <p class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest mb-1">Duration</p>
+            <p class="font-bold text-on-surface">{{ appointment.doctor.slot_duration_minutes }} min</p>
+          </div>
+          <div>
+            <p class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest mb-1">Booked By</p>
+            <p class="font-bold text-on-surface">{{ appointment.booked_by.get_full_name|default:"Self" }}</p>
+          </div>
+          <div>
+            <p class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest mb-1">Booked On</p>
+            <p class="font-bold text-on-surface">{{ appointment.created_at|date:"M j, Y" }}</p>
+          </div>
+          <div>
+            <p class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest mb-1">Fee</p>
+            <p class="font-bold text-on-surface">${{ appointment.doctor.consultation_fee }}</p>
+          </div>
+        </div>
+        <div class="px-7 pb-6">
+          <p class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest mb-2">Reason for Visit</p>
+          <p class="text-sm text-on-surface leading-relaxed bg-surface-container-low px-4 py-3 rounded-xl">{{ appointment.reason }}</p>
+        </div>
+        {% if appointment.notes %}
+        <div class="px-7 pb-6">
+          <p class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest mb-2">Receptionist Notes</p>
+          <p class="text-sm text-on-surface leading-relaxed bg-surface-container-low px-4 py-3 rounded-xl">{{ appointment.notes }}</p>
+        </div>
+        {% endif %}
+      </div>
+
+    </div>
+
+    {# ── Right sidebar: audit trail ─────────────────────────── #}
+    <div class="space-y-5">
+      <div class="bg-surface-container-lowest rounded-3xl shadow-[0_4px_20px_rgba(20,29,35,0.05)] overflow-hidden">
+        <div class="bg-surface-container-low px-6 py-4">
+          <h3 class="text-[11px] font-black text-on-surface-variant uppercase tracking-widest">Activity Log</h3>
+        </div>
+        <div class="px-6 py-4 space-y-4">
+          {% for log in appointment.audit_logs.all %}
+          <div class="flex items-start space-x-3">
+            <div class="w-7 h-7 rounded-full bg-surface-container-high flex items-center justify-center flex-shrink-0 mt-0.5">
+              <span class="material-symbols-outlined text-[14px] text-on-surface-variant">
+                {% if log.action == 'CREATE' %}add_circle
+                {% elif log.action == 'STATUS_CHANGE' %}swap_horiz
+                {% elif log.action == 'RESCHEDULE' %}event_repeat
+                {% else %}edit{% endif %}
+              </span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs font-bold text-on-surface">
+                {% if log.action == 'CREATE' %}Appointment created
+                {% elif log.action == 'STATUS_CHANGE' %}
+                  Status changed to <span class="badge-{{ log.new_value.status|lower }} px-1.5 py-0.5 rounded text-[10px]">{{ log.new_value.status }}</span>
+                {% elif log.action == 'RESCHEDULE' %}Rescheduled
+                {% else %}{{ log.action }}{% endif %}
+              </p>
+              <p class="text-[10px] text-on-surface-variant mt-0.5">
+                {{ log.timestamp|date:"M j, g:i A" }}
+                {% if log.changed_by %} · {{ log.changed_by.get_full_name }}{% endif %}
+              </p>
+              {% if log.reason %}
+              <p class="text-[10px] text-on-surface-variant italic mt-0.5">"{{ log.reason }}"</p>
+              {% endif %}
+            </div>
+          </div>
+          {% empty %}
+          <p class="text-xs text-on-surface-variant italic">No activity yet.</p>
+          {% endfor %}
+        </div>
+      </div>
+
+      {# Queue position if checked in #}
+      {% if appointment.status == 'CHECKED_IN' and appointment.queue_entry %}
+      <div class="bg-secondary-fixed/20 border border-secondary/20 rounded-2xl p-5">
+        <div class="flex items-center space-x-2 mb-3">
+          <span class="material-symbols-outlined text-secondary text-[20px]">queue</span>
+          <h4 class="font-bold text-on-surface text-sm">Queue Position</h4>
+        </div>
+        <p class="text-3xl font-black text-on-surface">#{{ appointment.queue_entry.position }}</p>
+        <p class="text-xs text-on-surface-variant mt-1">
+          Waiting approx. {{ appointment.queue_entry.waiting_minutes }} min
+        </p>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}

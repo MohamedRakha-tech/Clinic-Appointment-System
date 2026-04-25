@@ -1,0 +1,263 @@
+[
+  {
+    "model": "accounts.user",
+    "pk": 1,
+    "fields": {
+      "username": "amera",
+      "email": "ameraelsa3id2@gmail.com",
+      "first_name": "Amera",
+      "last_name": "Elsaid",
+      "is_staff": true,
+      "is_superuser": true,
+      "is_active": true,
+      "date_joined": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "accounts.user",
+    "pk": 2,
+    "fields": {
+      "username": "admin",
+      "email": "admin@clinic.com",
+      "first_name": "System",
+      "last_name": "Administrator",
+      "is_staff": true,
+      "is_superuser": true,
+      "is_active": true,
+      "date_joined": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "accounts.user",
+    "pk": 3,
+    "fields": {
+      "username": "dr_john_0",
+      "email": "dr.john.0@clinic.com",
+      "first_name": "John",
+      "last_name": "Smith",
+      "is_staff": false,
+      "is_superuser": false,
+      "is_active": true,
+      "date_joined": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "accounts.user",
+    "pk": 4,
+    "fields": {
+      "username": "dr_sarah_1",
+      "email": "dr.sarah.1@clinic.com",
+      "first_name": "Sarah",
+      "last_name": "Johnson",
+      "is_staff": false,
+      "is_superuser": false,
+      "is_active": true,
+      "date_joined": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "accounts.user",
+    "pk": 5,
+    "fields": {
+      "username": "dr_michael_2",
+      "email": "dr.michael.2@clinic.com",
+      "first_name": "Michael",
+      "last_name": "Williams",
+      "is_staff": false,
+      "is_superuser": false,
+      "is_active": true,
+      "date_joined": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "accounts.user",
+    "pk": 6,
+    "fields": {
+      "username": "rec_alice_0",
+      "email": "rec.alice.0@clinic.com",
+      "first_name": "Alice",
+      "last_name": "Wilson",
+      "is_staff": false,
+      "is_superuser": false,
+      "is_active": true,
+      "date_joined": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "accounts.user",
+    "pk": 7,
+    "fields": {
+      "username": "rec_bob_1",
+      "email": "rec.bob.1@clinic.com",
+      "first_name": "Bob",
+      "last_name": "Taylor",
+      "is_staff": false,
+      "is_superuser": false,
+      "is_active": true,
+      "date_joined": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "accounts.user",
+    "pk": 8,
+    "fields": {
+      "username": "patient_james_0",
+      "email": "patient.james.0@email.com",
+      "first_name": "James",
+      "last_name": "Moore",
+      "is_staff": false,
+      "is_superuser": false,
+      "is_active": true,
+      "date_joined": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "accounts.user",
+    "pk": 9,
+    "fields": {
+      "username": "patient_mary_1",
+      "email": "patient.mary.1@email.com",
+      "first_name": "Mary",
+      "last_name": "Taylor",
+      "is_staff": false,
+      "is_superuser": false,
+      "is_active": true,
+      "date_joined": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "accounts.user",
+    "pk": 10,
+    "fields": {
+      "username": "patient_patricia_2",
+      "email": "patient.patricia.2@email.com",
+      "first_name": "Patricia",
+      "last_name": "Anderson",
+      "is_staff": false,
+      "is_superuser": false,
+      "is_active": true,
+      "date_joined": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "accounts.adminprofile",
+    "pk": 1,
+    "fields": {
+      "user": 1,
+      "employee_code": "ADM0001",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "accounts.adminprofile",
+    "pk": 2,
+    "fields": {
+      "user": 2,
+      "employee_code": "ADM0002",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "accounts.doctorprofile",
+    "pk": 1,
+    "fields": {
+      "user": 3,
+      "specialization": "Cardiology",
+      "license_number": "MD12345",
+      "consultation_duration_minutes": 15,
+      "buffer_before_minutes": 5,
+      "buffer_after_minutes": 5,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "accounts.doctorprofile",
+    "pk": 2,
+    "fields": {
+      "user": 4,
+      "specialization": "Neurology",
+      "license_number": "MD67890",
+      "consultation_duration_minutes": 20,
+      "buffer_before_minutes": 5,
+      "buffer_after_minutes": 5,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "accounts.doctorprofile",
+    "pk": 3,
+    "fields": {
+      "user": 5,
+      "specialization": "Pediatrics",
+      "license_number": "MD54321",
+      "consultation_duration_minutes": 15,
+      "buffer_before_minutes": 5,
+      "buffer_after_minutes": 5,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "accounts.receptionistprofile",
+    "pk": 1,
+    "fields": {
+      "user": 6,
+      "employee_code": "REC0001",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "accounts.receptionistprofile",
+    "pk": 2,
+    "fields": {
+      "user": 7,
+      "employee_code": "REC0002",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "accounts.patientprofile",
+    "pk": 1,
+    "fields": {
+      "user": 8,
+      "date_of_birth": "1985-06-15",
+      "address": "123 Main St, City 1, State 1",
+      "emergency_contact_name": "John Moore",
+      "emergency_contact_phone": "+15559876543",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "accounts.patientprofile",
+    "pk": 2,
+    "fields": {
+      "user": 9,
+      "date_of_birth": "1990-03-22",
+      "address": "456 Oak Ave, City 2, State 2",
+      "emergency_contact_name": "Jane Taylor",
+      "emergency_contact_phone": "+15558765432",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "accounts.patientprofile",
+    "pk": 3,
+    "fields": {
+      "user": 10,
+      "date_of_birth": "1982-11-08",
+      "address": "789 Pine Rd, City 3, State 3",
+      "emergency_contact_name": "Robert Anderson",
+      "emergency_contact_phone": "+15557654321",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  }
+]
