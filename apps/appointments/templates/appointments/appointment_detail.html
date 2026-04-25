@@ -1,0 +1,191 @@
+{% extends 'appointments/base.html' %}
+
+{% block title %}Appointment {{ appointment.appointment_code }} - Clinic Appointment System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Appointment Details</h1>
+    <div>
+        <a href="{% url 'appointments:appointment_list' %}" class="btn btn-outline-secondary">
+            ← Back to List
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <!-- Main Appointment Card -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Appointment Information</h5>
+                <span class="badge status-badge 
+                    {% if appointment.status == 'CONFIRMED' %}bg-success
+                    {% elif appointment.status == 'REQUESTED' %}bg-warning
+                    {% elif appointment.status == 'CHECKED_IN' %}bg-info
+                    {% elif appointment.status == 'COMPLETED' %}bg-primary
+                    {% elif appointment.status == 'CANCELLED' %}bg-danger
+                    {% elif appointment.status == 'NO_SHOW' %}bg-secondary
+                    {% endif %}">
+                    {{ appointment.get_status_display }}
+                </span>
+            </div>
+            
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Appointment Code:</strong> {{ appointment.appointment_code }}</p>
+                        <p><strong>Status:</strong> {{ appointment.get_status_display }}</p>
+                        <p><strong>Date:</strong> {{ appointment.scheduled_start|date:"F d, Y" }}</p>
+                        <p><strong>Time:</strong> {{ appointment.scheduled_start|date:"g:i A" }} - 
+                           {{ appointment.scheduled_end|date:"g:i A" }}</p>
+                        <p><strong>Booking Source:</strong> {{ appointment.get_booking_source_display }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        {% if user_role != 'patient' %}
+                            <p><strong>Patient:</strong> 
+                                {{ appointment.patient.user.first_name }} {{ appointment.patient.user.last_name }}
+                            </p>
+                            <p><strong>Patient Email:</strong> {{ appointment.patient.user.email }}</p>
+                        {% endif %}
+                        
+                        <p><strong>Doctor:</strong> 
+                            Dr. {{ appointment.doctor.user.first_name }} {{ appointment.doctor.user.last_name }}
+                        </p>
+                        <p><strong>Specialization:</strong> {{ appointment.doctor.specialization }}</p>
+                        <p><strong>Created:</strong> {{ appointment.created_at|date:"F d, Y g:i A" }}</p>
+                    </div>
+                </div>
+                
+                {% if appointment.notes_for_staff %}
+                    <hr>
+                    <p><strong>Notes for Staff:</strong></p>
+                    <p class="text-muted">{{ appointment.notes_for_staff|linebreaks }}</p>
+                {% endif %}
+                
+                {% if appointment.cancellation_reason %}
+                    <hr>
+                    <div class="alert alert-danger">
+                        <strong>Cancellation Reason:</strong> {{ appointment.cancellation_reason }}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        {% if appointment.status == 'REQUESTED' and user_role in 'receptionist' or user_role == 'admin' %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h6 class="card-title">Available Actions</h6>
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'appointments:confirm_appointment' appointment.pk %}" 
+                           class="btn btn-success">
+                            ✅ Confirm Appointment
+                        </a>
+                        <a href="{% url 'appointments:cancel_appointment' appointment.pk %}" 
+                           class="btn btn-danger">
+                            ❌ Cancel Appointment
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        
+        {% if appointment.status == 'CONFIRMED' %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h6 class="card-title">Available Actions</h6>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% if user_role in 'receptionist' or user_role == 'admin' %}
+                            <a href="{% url 'appointments:check_in_appointment' appointment.pk %}" 
+                               class="btn btn-info">
+                                🏥 Check In Patient
+                            </a>
+                        {% endif %}
+                        
+                        {% if user_role == 'patient' or user_role in 'receptionist' or user_role == 'admin' %}
+                            <a href="{% url 'appointments:reschedule_appointment' appointment.pk %}" 
+                               class="btn btn-warning">
+                                🔄 Reschedule
+                            </a>
+                        {% endif %}
+                        
+                        {% if user_role == 'patient' or user_role in 'receptionist' or user_role == 'admin' %}
+                            <a href="{% url 'appointments:cancel_appointment' appointment.pk %}" 
+                               class="btn btn-danger">
+                                ❌ Cancel
+                            </a>
+                        {% endif %}
+                        
+                        {% if user_role in 'doctor' or user_role == 'receptionist' %}
+                            <a href="{% url 'appointments:no_show_appointment' appointment.pk %}" 
+                               class="btn btn-secondary">
+                                ⭕ Mark No Show
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        
+        {% if appointment.status == 'CHECKED_IN' and user_role == 'doctor' %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h6 class="card-title">Available Actions</h6>
+                    <a href="{% url 'appointments:complete_appointment' appointment.pk %}" 
+                       class="btn btn-primary">
+                        ✅ Complete Appointment
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-4">
+        <!-- Status History -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">Status History</h6>
+            </div>
+            <div class="card-body">
+                {% if status_history %}
+                    {% for change in status_history %}
+                        <div class="border-bottom pb-2 mb-2">
+                            <small class="text-muted">{{ change.created_at|date:"M d, Y g:i A" }}</small><br>
+                            <strong>{{ change.get_old_status_display }}</strong> → 
+                            <strong>{{ change.get_new_status_display }}</strong><br>
+                            <small>By: {{ change.changed_by.username }}</small>
+                            {% if change.reason %}
+                                <br><small class="text-muted">{{ change.reason }}</small>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">No status changes recorded.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Reschedule History -->
+        {% if reschedule_history %}
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Reschedule History</h6>
+                </div>
+                <div class="card-body">
+                    {% for change in reschedule_history %}
+                        <div class="border-bottom pb-2 mb-2">
+                            <small class="text-muted">{{ change.created_at|date:"M d, Y g:i A" }}</small><br>
+                            <strong>From:</strong> {{ change.old_start_datetime|date:"M d, g:i A" }}<br>
+                            <strong>To:</strong> {{ change.new_start_datetime|date:"M d, g:i A" }}<br>
+                            <small>By: {{ change.changed_by.username }}</small>
+                            {% if change.reason %}
+                                <br><small class="text-muted">{{ change.reason }}</small>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

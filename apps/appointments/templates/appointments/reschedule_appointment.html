@@ -1,0 +1,180 @@
+{% extends 'appointments/base.html' %}
+
+{% block title %}Reschedule Appointment - Clinic Appointment System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Reschedule Appointment</h1>
+    <a href="{% url 'appointments:appointment_detail' appointment.pk %}" class="btn btn-outline-secondary">
+        ← Back to Appointment
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <!-- Current Appointment Info -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Current Appointment</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Appointment Code:</strong> {{ appointment.appointment_code }}</p>
+                        <p><strong>Current Date:</strong> {{ appointment.scheduled_start|date:"F d, Y" }}</p>
+                        <p><strong>Current Time:</strong> {{ appointment.scheduled_start|date:"g:i A" }} - 
+                           {{ appointment.scheduled_end|date:"g:i A" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Doctor:</strong> Dr. {{ appointment.doctor.user.first_name }} {{ appointment.doctor.user.last_name }}</p>
+                        <p><strong>Specialization:</strong> {{ appointment.doctor.specialization }}</p>
+                        <p><strong>Status:</strong> 
+                            <span class="badge status-badge 
+                                {% if appointment.status == 'CONFIRMED' %}bg-success
+                                {% elif appointment.status == 'REQUESTED' %}bg-warning
+                                {% endif %}">
+                                {{ appointment.get_status_display }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Available Slots -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Available Time Slots for Rescheduling</h5>
+            </div>
+            <div class="card-body">
+                {% if available_slots %}
+                    <form method="post" id="rescheduleForm">
+                        {% csrf_token %}
+                        <div class="row">
+                            {% for slot in available_slots %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card slot-card">
+                                        <div class="card-body">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" 
+                                                       name="new_slot_id" value="{{ slot.id }}" 
+                                                       id="slot_{{ slot.id }}"
+                                                       required>
+                                                <label class="form-check-label" for="slot_{{ slot.id }}">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <strong>{{ slot.start_datetime|date:"F d, Y" }}</strong><br>
+                                                            <span class="text-primary">
+                                                                {{ slot.start_datetime|date:"g:i A" }} - 
+                                                                {{ slot.end_datetime|date:"g:i A" }}
+                                                            </span>
+                                                        </div>
+                                                        <div class="text-end">
+                                                            <small class="text-muted">
+                                                                Same Doctor
+                                                            </small>
+                                                        </div>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="mt-4">
+                            <h6>Reason for Rescheduling (Optional)</h6>
+                            <textarea name="reason" class="form-control" rows="3" 
+                                      placeholder="Please provide a reason for rescheduling..."></textarea>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-warning">
+                                🔄 Reschedule Appointment
+                            </button>
+                            <a href="{% url 'appointments:appointment_detail' appointment.pk %}" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                {% else %}
+                    <div class="text-center py-5">
+                        <h3 class="text-muted">No Available Slots</h3>
+                        <p class="text-muted">
+                            There are currently no available time slots for rescheduling. 
+                            Please check back later or contact the clinic directly.
+                        </p>
+                        <a href="{% url 'appointments:appointment_detail' appointment.pk %}" class="btn btn-primary">
+                            Back to Appointment
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Rescheduling Information</h6>
+            </div>
+            <div class="card-body">
+                <p><strong>Patient:</strong> {{ appointment.patient.user.first_name }} {{ appointment.patient.user.last_name }}</p>
+                <p><strong>Doctor:</strong> Dr. {{ appointment.doctor.user.first_name }} {{ appointment.doctor.user.last_name }}</p>
+                
+                <hr>
+                
+                <h6>Rescheduling Policy:</h6>
+                <ul class="small">
+                    <li>Rescheduling is subject to availability</li>
+                    <li>Same doctor will be maintained</li>
+                    <li>Previous slot will be released</li>
+                    <li>Complete audit trail will be maintained</li>
+                </ul>
+                
+                <hr>
+                
+                <h6>Important Notes:</h6>
+                <p class="small text-muted">
+                    Once rescheduled, your original time slot will be available for other patients. 
+                    Please make sure the new time works for your schedule.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .slot-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .slot-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .form-check-input:checked + .form-check-label .slot-card {
+        background-color: #fff3cd;
+        border-color: #ffc107;
+    }
+</style>
+
+{% block extra_js %}
+<script>
+document.getElementById('rescheduleForm').addEventListener('submit', function(e) {
+    const selectedSlot = document.querySelector('input[name="new_slot_id"]:checked');
+    if (!selectedSlot) {
+        e.preventDefault();
+        alert('Please select a new time slot.');
+        return false;
+    }
+    
+    // Confirm rescheduling
+    if (!confirm('Are you sure you want to reschedule this appointment? The original time slot will be released.')) {
+        e.preventDefault();
+        return false;
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

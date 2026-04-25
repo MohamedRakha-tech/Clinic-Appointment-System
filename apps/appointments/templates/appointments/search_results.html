@@ -1,0 +1,148 @@
+{% extends 'appointments/base.html' %}
+
+{% block title %}Search Results - Clinic Appointment System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Search Appointments</h1>
+    <a href="{% url 'appointments:appointment_list' %}" class="btn btn-outline-secondary">
+        ← Back to Appointments
+    </a>
+</div>
+
+<!-- Search Form -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-8">
+                <input type="text" name="q" class="form-control" 
+                       placeholder="Search by appointment code or patient name..." 
+                       value="{{ query }}">
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary w-100">
+                    🔍 Search
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Search Results -->
+{% if query %}
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                Search Results for "{{ query }}"
+                <small class="text-muted">({{ appointments|length }} results)</small>
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if appointments %}
+                <div class="row">
+                    {% for appointment in appointments %}
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card appointment-card h-100">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <span class="badge status-badge 
+                                        {% if appointment.status == 'CONFIRMED' %}bg-success
+                                        {% elif appointment.status == 'REQUESTED' %}bg-warning
+                                        {% elif appointment.status == 'CHECKED_IN' %}bg-info
+                                        {% elif appointment.status == 'COMPLETED' %}bg-primary
+                                        {% elif appointment.status == 'CANCELLED' %}bg-danger
+                                        {% elif appointment.status == 'NO_SHOW' %}bg-secondary
+                                        {% endif %}">
+                                        {{ appointment.get_status_display }}
+                                    </span>
+                                    <small class="text-muted">{{ appointment.appointment_code }}</small>
+                                </div>
+                                
+                                <div class="card-body">
+                                    <h5 class="card-title">
+                                        {{ appointment.patient.user.first_name }} {{ appointment.patient.user.last_name }}
+                                        <br>
+                                        <small class="text-muted">
+                                            Dr. {{ appointment.doctor.user.first_name }} {{ appointment.doctor.user.last_name }}
+                                        </small>
+                                    </h5>
+                                    
+                                    <p class="card-text">
+                                        <strong>📅 Date:</strong> {{ appointment.scheduled_start|date:"F d, Y" }}<br>
+                                        <strong>⏰ Time:</strong> {{ appointment.scheduled_start|date:"g:i A" }} - 
+                                        {{ appointment.scheduled_end|date:"g:i A" }}<br>
+                                        <strong>📧 Email:</strong> {{ appointment.patient.user.email }}
+                                    </p>
+                                    
+                                    <div class="d-flex justify-content-between">
+                                        <a href="{% url 'appointments:appointment_detail' appointment.pk %}" 
+                                           class="btn btn-outline-primary btn-sm">
+                                            View Details
+                                        </a>
+                                        
+                                        <!-- Quick actions based on status -->
+                                        {% if appointment.status == 'REQUESTED' %}
+                                            <a href="{% url 'appointments:confirm_appointment' appointment.pk %}" 
+                                               class="btn btn-success btn-sm">
+                                                ✅ Confirm
+                                            </a>
+                                        {% elif appointment.status == 'CONFIRMED' %}
+                                            <a href="{% url 'appointments:check_in_appointment' appointment.pk %}" 
+                                               class="btn btn-info btn-sm">
+                                                🏥 Check In
+                                            </a>
+                                        {% elif appointment.status == 'CHECKED_IN' %}
+                                            <a href="{% url 'appointments:complete_appointment' appointment.pk %}" 
+                                               class="btn btn-primary btn-sm">
+                                                ✅ Complete
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <h3 class="text-muted">No appointments found</h3>
+                    <p class="text-muted">
+                        No appointments match your search criteria. Try searching with different terms.
+                    </p>
+                    <a href="{% url 'appointments:search_appointments' %}" class="btn btn-outline-primary">
+                        🔍 New Search
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% else %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <h3 class="text-muted">Search for Appointments</h3>
+            <p class="text-muted">
+                Enter an appointment code or patient name to search for appointments.
+            </p>
+            <div class="alert alert-info">
+                <strong>Search Tips:</strong>
+                <ul class="text-start mb-0">
+                    <li>Search by appointment code (e.g., APT123456)</li>
+                    <li>Search by patient first name or last name</li>
+                    <li>Partial matches are supported</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+<style>
+    .appointment-card {
+        transition: transform 0.2s;
+    }
+    .appointment-card:hover {
+        transform: translateY(-2px);
+    }
+    .status-badge {
+        font-size: 0.8em;
+    }
+</style>
+{% endblock %}

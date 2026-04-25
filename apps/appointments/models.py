@@ -43,11 +43,16 @@ class Appointment(models.Model):
                 condition=models.Q(scheduled_end__gt=models.F("scheduled_start")),
                 name="chk_appointment_time",
             ),
+            models.UniqueConstraint(
+                fields=["slot"],
+                name="uniq_appointment_slot",
+            ),
         ]
         indexes = [
             models.Index(fields=["patient", "scheduled_start"], name="idx_appointments_patient_start"),
             models.Index(fields=["doctor", "scheduled_start"],  name="idx_appointments_doctor_start"),
             models.Index(fields=["status"],                     name="idx_appointments_status"),
+            models.Index(fields=["scheduled_start", "scheduled_end"], name="idx_appointments_time_range"),
         ]
 
     def __str__(self):

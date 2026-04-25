@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
     'apps.accounts',
     'apps.appointments',
     'apps.common',
@@ -93,7 +94,7 @@ DATABASES = {
         'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.mysql'),
         'NAME': os.getenv('DB_NAME', 'clinic_db'),
         'USER': os.getenv('DB_USER', 'root'),
-        'PASSWORD': os.getenv('DB_PASSWORD', ''),
+        # 'PASSWORD': os.getenv('DB_PASSWORD', '1122'),
         'HOST': os.getenv('DB_HOST', '127.0.0.1'),
         'PORT': os.getenv('DB_PORT', '3306'),
     }

@@ -1,0 +1,156 @@
+{% extends 'appointments/base.html' %}
+
+{% block title %}Appointments - Clinic Appointment System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        {% if user_role == 'patient' %}
+            My Appointments
+        {% elif user_role == 'doctor' %}
+            My Schedule
+        {% else %}
+            All Appointments
+        {% endif %}
+    </h1>
+    
+    {% if user_role == 'patient' %}
+        <a href="{% url 'appointments:book_appointment' %}" class="btn btn-primary">
+            📅 Book New Appointment
+        </a>
+    {% endif %}
+</div>
+
+<!-- Status Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-6">
+                <label for="status" class="form-label">Filter by Status:</label>
+                <select name="status" id="status" class="form-select" onchange="this.form.submit()">
+                    <option value="">All Status</option>
+                    {% for status_value, status_label in status_choices %}
+                        <option value="{{ status_value }}" {% if current_status == status_value %}selected{% endif %}>
+                            {{ status_label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if appointments %}
+    <div class="row">
+        {% for appointment in appointments %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card appointment-card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span class="badge status-badge 
+                            {% if appointment.status == 'CONFIRMED' %}bg-success
+                            {% elif appointment.status == 'REQUESTED' %}bg-warning
+                            {% elif appointment.status == 'CHECKED_IN' %}bg-info
+                            {% elif appointment.status == 'COMPLETED' %}bg-primary
+                            {% elif appointment.status == 'CANCELLED' %}bg-danger
+                            {% elif appointment.status == 'NO_SHOW' %}bg-secondary
+                            {% endif %}">
+                            {{ appointment.get_status_display }}
+                        </span>
+                        <small class="text-muted">{{ appointment.appointment_code }}</small>
+                    </div>
+                    
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            {% if user_role != 'patient' %}
+                                {{ appointment.patient.user.first_name }} {{ appointment.patient.user.last_name }}
+                            {% else %}
+                                {{ appointment.doctor.user.first_name }} {{ appointment.doctor.user.last_name }}
+                                <br>
+                                <small class="text-muted">{{ appointment.doctor.specialization }}</small>
+                            {% endif %}
+                        </h5>
+                        
+                        <p class="card-text">
+                            <strong>📅 Date:</strong> {{ appointment.scheduled_start|date:"F d, Y" }}<br>
+                            <strong>⏰ Time:</strong> {{ appointment.scheduled_start|date:"g:i A" }} - 
+                            {{ appointment.scheduled_end|date:"g:i A" }}<br>
+                            {% if appointment.notes_for_staff %}
+                                <strong>📝 Notes:</strong> {{ appointment.notes_for_staff|truncatewords:10 }}
+                            {% endif %}
+                        </p>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'appointments:appointment_detail' appointment.pk %}" 
+                               class="btn btn-outline-primary btn-sm">
+                                View Details
+                            </a>
+                            
+                            <!-- Action buttons based on status and user role -->
+                            {% if appointment.status == 'REQUESTED' and user_role in 'receptionist' or user_role == 'admin' %}
+                                <a href="{% url 'appointments:confirm_appointment' appointment.pk %}" 
+                                   class="btn btn-success btn-sm">
+                                    ✅ Confirm
+                                </a>
+                            {% endif %}
+                            
+                            {% if appointment.status == 'CONFIRMED' %}
+                                {% if user_role in 'receptionist' or user_role == 'admin' %}
+                                    <a href="{% url 'appointments:check_in_appointment' appointment.pk %}" 
+                                       class="btn btn-info btn-sm">
+                                        🏥 Check In
+                                    </a>
+                                {% endif %}
+                                {% if user_role == 'patient' or user_role in 'receptionist' or user_role == 'admin' %}
+                                    <a href="{% url 'appointments:reschedule_appointment' appointment.pk %}" 
+                                       class="btn btn-warning btn-sm">
+                                        🔄 Reschedule
+                                    </a>
+                                {% endif %}
+                            {% endif %}
+                            
+                            {% if appointment.status == 'CHECKED_IN' and user_role == 'doctor' %}
+                                <a href="{% url 'appointments:complete_appointment' appointment.pk %}" 
+                                   class="btn btn-primary btn-sm">
+                                    ✅ Complete
+                                </a>
+                            {% endif %}
+                            
+                            {% if appointment.status in 'REQUESTED' or appointment.status == 'CONFIRMED' %}
+                                {% if user_role == 'patient' or user_role in 'receptionist' or user_role == 'admin' %}
+                                    <a href="{% url 'appointments:cancel_appointment' appointment.pk %}" 
+                                       class="btn btn-danger btn-sm">
+                                        ❌ Cancel
+                                    </a>
+                                {% endif %}
+                            {% endif %}
+                            
+                            {% if appointment.status == 'CONFIRMED' and user_role in 'doctor' or user_role == 'receptionist' %}
+                                <a href="{% url 'appointments:no_show_appointment' appointment.pk %}" 
+                                   class="btn btn-secondary btn-sm">
+                                    ⭕ No Show
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="text-center py-5">
+        <h3 class="text-muted">No appointments found</h3>
+        <p class="text-muted">
+            {% if user_role == 'patient' %}
+                You don't have any appointments yet. Book your first appointment!
+            {% else %}
+                No appointments match the current filter criteria.
+            {% endif %}
+        </p>
+        {% if user_role == 'patient' %}
+            <a href="{% url 'appointments:book_appointment' %}" class="btn btn-primary">
+                📅 Book Your First Appointment
+            </a>
+        {% endif %}
+    </div>
+{% endif %}
+{% endblock %}
