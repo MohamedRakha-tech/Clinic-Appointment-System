@@ -1,0 +1,446 @@
+{% extends "base.html" %}
+
+{% block title %}Receptionist Dashboard | Clinical Sanctuary{% endblock %}
+{% block topbar_subtitle %}Reception Desk{% endblock %}
+{% block topbar_role %}Role: Receptionist{% endblock %}
+
+{% block extra_css %}
+<style>
+    .metric-card {
+        background: var(--panel-bg);
+        border: 1px solid #dde8f4;
+        border-radius: 1rem;
+        box-shadow: 0 8px 30px rgba(15, 55, 110, .06);
+        padding: 1.5rem;
+        position: relative;
+        overflow: hidden;
+        transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 35px rgba(15, 55, 110, .1);
+    }
+    .metric-card .glow {
+        position: absolute;
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        top: -20px;
+        right: -20px;
+        filter: blur(20px);
+        opacity: .15;
+    }
+    .metric-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: .6rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+    .metric-label {
+        font-size: .65rem;
+        font-weight: 800;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: var(--muted);
+    }
+    .metric-value {
+        font-size: 2rem;
+        font-weight: 900;
+        color: var(--ink);
+        line-height: 1.1;
+    }
+    .metric-badge {
+        font-size: .7rem;
+        font-weight: 700;
+        padding: .2rem .55rem;
+        border-radius: 2rem;
+    }
+    .chart-card {
+        background: var(--panel-bg);
+        border: 1px solid #dde8f4;
+        border-radius: 1rem;
+        box-shadow: 0 8px 30px rgba(15, 55, 110, .06);
+        padding: 1.75rem;
+    }
+    .chart-title {
+        font-size: 1rem;
+        font-weight: 800;
+        color: var(--ink);
+    }
+    .chart-sub {
+        font-size: .78rem;
+        color: var(--muted);
+    }
+    .appt-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: .9rem 1rem;
+        border-radius: .75rem;
+        border: 1px solid #eef4fa;
+        background: var(--panel-bg);
+        transition: box-shadow .2s, transform .2s;
+    }
+    .appt-row:hover {
+        box-shadow: 0 4px 18px rgba(15,55,110,.08);
+        transform: translateX(2px);
+    }
+    .patient-avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: #e0eaff;
+        color: var(--brand);
+        font-weight: 800;
+        font-size: .85rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .status-badge {
+        font-size: .68rem;
+        font-weight: 800;
+        padding: .25rem .6rem;
+        border-radius: .4rem;
+        letter-spacing: .04em;
+        white-space: nowrap;
+    }
+    .status-REQUESTED  { background: #fff3cd; color: #856404; }
+    .status-CONFIRMED  { background: #e0eaff; color: #1a3fa0; }
+    .status-CHECKED_IN { background: #e6f4ea; color: #1e7e34; }
+    .status-COMPLETED  { background: #e0f7fa; color: #006877; }
+    .status-CANCELLED  { background: #fde8e8; color: #b91c1c; }
+    .status-NO_SHOW    { background: #ede9fe; color: #5b21b6; }
+    .bar-track {
+        height: 8px;
+        background: var(--soft-bg);
+        border-radius: 99px;
+        overflow: hidden;
+    }
+    .bar-fill {
+        height: 100%;
+        border-radius: 99px;
+        transition: width .6s ease;
+    }
+    .action-btn {
+        font-size: .75rem;
+        font-weight: 700;
+        padding: .3rem .75rem;
+        border-radius: .5rem;
+        border: none;
+        cursor: pointer;
+        transition: filter .2s;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+    .action-btn:hover { filter: brightness(.92); }
+    .btn-checkin  { background: #e6f4ea; color: #1e7e34; }
+    .btn-confirm  { background: #e0eaff; color: #1a3fa0; }
+    .btn-noshow   { background: #fde8e8; color: #b91c1c; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ============================================================ -->
+<!-- PAGE CONTENT -->
+<!-- ============================================================ -->
+
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-end mb-4">
+    <div>
+        <h3 class="fw-black mb-1" style="font-size:1.6rem;">Reception Desk</h3>
+        <p class="text-muted mb-0" style="font-size:.85rem;">
+            Manage today's appointments and patient check-ins.
+        </p>
+    </div>
+    <div class="text-muted small fw-bold">
+        <i class="bi bi-calendar3 me-1"></i>
+        {% now "l, F j, Y" %}
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- KPI CARDS -->
+<!-- ============================================================ -->
+<div class="row g-4 mb-4">
+
+    <!-- Today's Total -->
+    <div class="col-6 col-xl-3">
+        <div class="metric-card">
+            <div class="glow" style="background:#003f87;"></div>
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="metric-icon" style="background:#e0eaff;color:#003f87;">
+                    <i class="bi bi-calendar-check-fill"></i>
+                </div>
+                <span class="metric-badge" style="background:#e0eaff;color:#003f87;">Today</span>
+            </div>
+            <div class="metric-label mb-1">Total Appointments</div>
+            <div class="metric-value">{{ today_appointments }}</div>
+        </div>
+    </div>
+
+    <!-- Pending Confirmation -->
+    <div class="col-6 col-xl-3">
+        <div class="metric-card">
+            <div class="glow" style="background:#f59e0b;"></div>
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="metric-icon" style="background:#fff3cd;color:#856404;">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+                <span class="metric-badge" style="background:#fff3cd;color:#856404;">
+                    Action Needed
+                </span>
+            </div>
+            <div class="metric-label mb-1">Pending Confirmation</div>
+            <div class="metric-value">{{ pending_count }}</div>
+            <div class="mt-2" style="font-size:.75rem;color:#856404;font-weight:700;">
+                Awaiting your review
+            </div>
+        </div>
+    </div>
+
+    <!-- Checked In -->
+    <div class="col-6 col-xl-3">
+        <div class="metric-card">
+            <div class="glow" style="background:#006877;"></div>
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="metric-icon" style="background:#e0f7fa;color:#006877;">
+                    <i class="bi bi-person-check-fill"></i>
+                </div>
+                <span class="metric-badge" style="background:#e0f7fa;color:#006877;">Live</span>
+            </div>
+            <div class="metric-label mb-1">Checked In</div>
+            <div class="metric-value">
+                {{ appointments_today.CHECKED_IN|default:0 }}
+            </div>
+            <div class="mt-2" style="font-size:.75rem;color:var(--muted);font-weight:700;">
+                Currently with doctor
+            </div>
+        </div>
+    </div>
+
+    <!-- Completed -->
+    <div class="col-6 col-xl-3">
+        <div class="metric-card">
+            <div class="glow" style="background:#004c17;"></div>
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="metric-icon" style="background:#e6f4ea;color:#004c17;">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+                <span class="metric-badge" style="background:#e6f4ea;color:#004c17;">Done</span>
+            </div>
+            <div class="metric-label mb-1">Completed</div>
+            <div class="metric-value">
+                {{ appointments_today.COMPLETED|default:0 }}
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ============================================================ -->
+<!-- STATUS BREAKDOWN + PENDING LIST -->
+<!-- ============================================================ -->
+<div class="row g-4 mb-4">
+
+    <!-- Status Breakdown -->
+    <div class="col-12 col-xl-4">
+        <div class="chart-card h-100">
+            <div class="chart-title mb-1">Today's Status Breakdown</div>
+            <div class="chart-sub mb-4">Distribution across all statuses</div>
+
+            <div class="d-flex flex-column gap-3">
+                {% for status, count in appointments_today.items %}
+                <div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span style="font-size:.78rem;font-weight:700;
+                                     text-transform:uppercase;letter-spacing:.05em;">
+                            {{ status|lower|capfirst }}
+                        </span>
+                        <span style="font-size:.78rem;font-weight:800;color:var(--brand);">
+                            {{ count }}
+                        </span>
+                    </div>
+                    <div class="bar-track">
+                        <div class="bar-fill"
+                             style="width:{% if today_appointments > 0 %}{% widthratio count today_appointments 100 %}{% else %}0{% endif %}%;
+                                    background:{% if status == 'COMPLETED'  %}#006877
+                                               {% elif status == 'CONFIRMED'  %}#003f87
+                                               {% elif status == 'REQUESTED'  %}#f59e0b
+                                               {% elif status == 'CHECKED_IN' %}#1e7e34
+                                               {% elif status == 'CANCELLED'  %}#ba1a1a
+                                               {% elif status == 'NO_SHOW'    %}#7c3aed
+                                               {% else %}#94a3b8{% endif %};">
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-muted small">No appointments today.</p>
+                {% endfor %}
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Pending Confirmation List -->
+    <div class="col-12 col-xl-8">
+        <div class="chart-card h-100">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <div class="chart-title">Pending Confirmation</div>
+                    <div class="chart-sub">Appointments waiting for your action</div>
+                </div>
+                {% if pending_count > 0 %}
+                <span class="metric-badge" style="background:#fff3cd;color:#856404;">
+                    {{ pending_count }} pending
+                </span>
+                {% endif %}
+            </div>
+
+            <div class="d-flex flex-column gap-3">
+                {% for appt in appointments_list %}
+                {% if appt.status == 'REQUESTED' %}
+                <div class="appt-row">
+
+                    <!-- Avatar -->
+                    <div class="patient-avatar">
+                        {{ appt.patient.user.first_name|first|upper }}{{ appt.patient.user.last_name|first|upper }}
+                    </div>
+
+                    <!-- Info -->
+                    <div class="flex-grow-1">
+                        <div style="font-size:.88rem;font-weight:800;">
+                            {{ appt.patient.user.first_name }} {{ appt.patient.user.last_name }}
+                        </div>
+                        <div style="font-size:.75rem;color:var(--muted);">
+                            <i class="bi bi-clock me-1"></i>{{ appt.scheduled_start|time:"H:i" }}
+                            &nbsp;·&nbsp;
+                            <i class="bi bi-person-badge me-1"></i>
+                            Dr. {{ appt.doctor.user.first_name }} {{ appt.doctor.user.last_name }}
+                        </div>
+                    </div>
+
+                    <!-- Status -->
+                    <span class="status-badge status-{{ appt.status }}">
+                        {{ appt.status }}
+                    </span>
+
+                    <!-- Actions -->
+                    <div class="d-flex gap-2">
+                        <a href="#" class="action-btn btn-confirm">
+                            <i class="bi bi-check2 me-1"></i>Confirm
+                        </a>
+                        <a href="#" class="action-btn btn-noshow">
+                            <i class="bi bi-x me-1"></i>Cancel
+                        </a>
+                    </div>
+
+                </div>
+                {% endif %}
+                {% empty %}
+                <div class="text-center py-5">
+                    <i class="bi bi-check-all" style="font-size:2.5rem;color:#c8ced8;"></i>
+                    <p class="text-muted mt-3 fw-bold">All caught up — no pending confirmations.</p>
+                </div>
+                {% endfor %}
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<!-- ============================================================ -->
+<!-- FULL TODAY'S QUEUE -->
+<!-- ============================================================ -->
+<div class="chart-card">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="chart-title">Full Queue — Today</div>
+            <div class="chart-sub">All appointments ordered by time</div>
+        </div>
+        <a href="#" class="action-btn btn-confirm">
+            <i class="bi bi-plus me-1"></i> New Appointment
+        </a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table align-middle" style="font-size:.85rem;">
+            <thead>
+                <tr style="font-size:.68rem;font-weight:800;text-transform:uppercase;
+                           letter-spacing:.08em;color:var(--muted);">
+                    <th class="border-0 pb-3">#</th>
+                    <th class="border-0 pb-3">Patient</th>
+                    <th class="border-0 pb-3">Time</th>
+                    <th class="border-0 pb-3">Doctor</th>
+                    <th class="border-0 pb-3">Status</th>
+                    <th class="border-0 pb-3">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for appt in appointments_list %}
+                <tr style="border-color:#eef4fa;">
+                    <td style="color:var(--muted);font-weight:700;">
+                        {{ forloop.counter }}
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="patient-avatar" style="width:32px;height:32px;font-size:.75rem;">
+                                {{ appt.patient.user.first_name|first|upper }}{{ appt.patient.user.last_name|first|upper }}
+                            </div>
+                            <span style="font-weight:700;">
+                                {{ appt.patient.user.first_name }} {{ appt.patient.user.last_name }}
+                            </span>
+                        </div>
+                    </td>
+                    <td style="font-weight:700;color:var(--brand);">
+                        {{ appt.scheduled_start|time:"H:i" }}
+                    </td>
+                    <td style="color:var(--muted);">
+                        Dr. {{ appt.doctor.user.first_name }} {{ appt.doctor.user.last_name }}
+                    </td>
+                    <td>
+                        <span class="status-badge status-{{ appt.status }}">
+                            {{ appt.status|lower|capfirst }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="d-flex gap-2">
+                            {% if appt.status == 'CONFIRMED' %}
+                            <a href="#" class="action-btn btn-checkin">
+                                <i class="bi bi-box-arrow-in-right me-1"></i>Check In
+                            </a>
+                            {% endif %}
+                            {% if appt.status == 'REQUESTED' %}
+                            <a href="#" class="action-btn btn-confirm">
+                                <i class="bi bi-check2 me-1"></i>Confirm
+                            </a>
+                            {% endif %}
+                            {% if appt.status == 'CHECKED_IN' %}
+                            <a href="#" class="action-btn btn-noshow">
+                                <i class="bi bi-person-x me-1"></i>No Show
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-5 text-muted">
+                        <i class="bi bi-calendar-x" style="font-size:2rem;"></i>
+                        <p class="mt-2 fw-bold">No appointments scheduled for today.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+{% endblock %}
