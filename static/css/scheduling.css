@@ -1911,6 +1911,139 @@ body {
   color: #ffffff;
 }
 
+.slot-pagination-footer {
+  background: #f8fbff;
+  border-top: 1px solid #e7f0f8;
+  padding: 0.9rem 1.15rem;
+}
+
+.slot-pagination-bar {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.slot-pagination-meta {
+  color: #5f7188;
+  font-size: 0.84rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.slot-pagination-nav {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.slot-pagination {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #dfeaf5;
+  border-radius: 999px;
+  box-shadow: 0 8px 20px rgba(25, 65, 110, 0.06);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  justify-content: flex-end;
+  padding: 0.3rem;
+}
+
+.slot-pagination .page-item {
+  display: inline-flex;
+}
+
+.slot-pagination .page-link {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  box-shadow: none;
+  color: #3f5b78;
+  display: inline-flex;
+  font-size: 0.78rem;
+  font-weight: 800;
+  gap: 0.35rem;
+  justify-content: center;
+  line-height: 1;
+  min-height: 32px;
+  min-width: 32px;
+  padding: 0.5rem 0.7rem;
+  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+  white-space: nowrap;
+}
+
+.slot-pagination .page-link:hover {
+  background: #eef6ff;
+  box-shadow: none;
+  color: #0057a8;
+}
+
+.slot-pagination .page-link:focus {
+  box-shadow: 0 0 0 0.18rem rgba(0, 87, 168, 0.16);
+}
+
+.slot-pagination .page-item.active .page-link {
+  background: #0057a8;
+  box-shadow: 0 6px 14px rgba(0, 87, 168, 0.2);
+  color: #ffffff;
+}
+
+.slot-pagination .page-item.disabled .page-link {
+  background: transparent;
+  box-shadow: none;
+  color: #a5b1bf;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.slot-pagination .page-link-step {
+  min-width: auto;
+  padding-inline: 0.85rem;
+}
+
+.slot-pagination .page-link-ellipsis {
+  min-width: 26px;
+  padding-inline: 0.35rem;
+}
+
+@media (max-width: 767.98px) {
+  .slot-pagination-footer {
+    padding: 0.95rem;
+  }
+
+  .slot-pagination-bar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .slot-pagination-meta {
+    text-align: center;
+    white-space: normal;
+  }
+
+  .slot-pagination-nav,
+  .slot-pagination {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .slot-pagination {
+    border-radius: 18px;
+  }
+
+  .slot-pagination .page-link {
+    min-height: 32px;
+    min-width: 32px;
+    padding: 0.5rem 0.7rem;
+  }
+
+  .slot-pagination .page-link-step {
+    flex: 1 1 110px;
+    min-width: 0;
+  }
+}
+
 .schedule-insight-grid {
   display: grid;
   gap: 1.4rem;

@@ -149,6 +149,58 @@
                 </tbody>
             </table>
         </div>
+        {% if is_paginated %}
+        <div class="card-footer slot-pagination-footer border-0">
+            <div class="slot-pagination-bar">
+                <span class="slot-pagination-meta">Showing {{ page_obj.start_index }}&ndash;{{ page_obj.end_index }} of {{ paginator.count }} items</span>
+                <nav class="slot-pagination-nav" aria-label="Appointment slots pagination">
+                    <ul class="pagination slot-pagination mb-0">
+                        <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+                            {% if page_obj.has_previous %}
+                                <a class="page-link page-link-step" href="?{% if pagination_query %}{{ pagination_query }}&amp;{% endif %}page={{ page_obj.previous_page_number }}">
+                                    <i class="bi bi-chevron-left" aria-hidden="true"></i>
+                                    <span>Previous</span>
+                                </a>
+                            {% else %}
+                                <span class="page-link page-link-step">
+                                    <i class="bi bi-chevron-left" aria-hidden="true"></i>
+                                    <span>Previous</span>
+                                </span>
+                            {% endif %}
+                        </li>
+                        {% for num in page_range %}
+                            {% if num == paginator.ELLIPSIS %}
+                                <li class="page-item disabled">
+                                    <span class="page-link page-link-ellipsis">&hellip;</span>
+                                </li>
+                            {% else %}
+                                <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                                    {% if page_obj.number == num %}
+                                        <span class="page-link">{{ num }}</span>
+                                    {% else %}
+                                        <a class="page-link" href="?{% if pagination_query %}{{ pagination_query }}&amp;{% endif %}page={{ num }}">{{ num }}</a>
+                                    {% endif %}
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+                            {% if page_obj.has_next %}
+                                <a class="page-link page-link-step" href="?{% if pagination_query %}{{ pagination_query }}&amp;{% endif %}page={{ page_obj.next_page_number }}">
+                                    <span>Next</span>
+                                    <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                                </a>
+                            {% else %}
+                                <span class="page-link page-link-step">
+                                    <span>Next</span>
+                                    <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                                </span>
+                            {% endif %}
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        {% endif %}
     </div>
 
     <div class="row g-3 mt-1">
