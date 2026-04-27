@@ -1,0 +1,160 @@
+{% extends "scheduling/base_scheduling_fixed.html" %}
+
+{% block title %}Appointment Slots{% endblock %}
+
+{% block scheduling_content %}
+<section class="schedule-screen container-fluid px-0">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+        <div>
+            <h1 class="h3 fw-bold mb-0">Appointment Slots</h1>
+            <p class="text-muted mb-0">Manage and monitor your current scheduling availability.</p>
+        </div>
+        <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-3">
+            <div class="d-flex align-items-center gap-2 bg-light px-3 py-2 rounded-pill border">
+                <span class="status-dot bg-success rounded-circle" style="width: 8px; height: 8px; display: inline-block;"></span>
+                <span class="fw-semibold text-dark">{{ available_count }} Slots Available</span>
+            </div>
+            {% if can_manage_scheduling %}
+                <a class="btn btn-primary px-4" href="{% url 'scheduling:generate_slots' %}">
+                    <i class="bi bi-arrow-repeat me-1"></i> Generate Slots
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-6 col-xl">
+            <div class="card h-100 border-0 shadow-sm p-3">
+                <div class="text-muted small mb-1">Total Slots</div>
+                <div class="h3 fw-bold mb-1">{{ total_slots }}</div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl">
+            <div class="card h-100 border-0 shadow-sm p-3">
+                <div class="text-muted small mb-1">Available</div>
+                <div class="h3 fw-bold mb-1 text-success">{{ available_count }}</div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl">
+            <div class="card h-100 border-0 shadow-sm p-3">
+                <div class="text-muted small mb-1">Booked</div>
+                <div class="h3 fw-bold mb-1 text-primary">{{ booked_count }}</div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl">
+            <div class="card h-100 border-0 shadow-sm p-3">
+                <div class="text-muted small mb-1">Blocked</div>
+                <div class="h3 fw-bold mb-1 text-secondary">{{ blocked_count }}</div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl">
+            <div class="card h-100 border-0 shadow-sm p-3">
+                <div class="text-muted small mb-1">Expired</div>
+                <div class="h3 fw-bold mb-1 text-danger">{{ expired_count }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-3">
+            <form method="get" class="row g-3 align-items-end">
+                {% if can_manage_scheduling %}
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <label class="form-label small fw-bold text-muted mb-1" for="doctor">Doctor</label>
+                        <select class="form-select" id="doctor" name="doctor">
+                            <option value="">All Medical Staff</option>
+                            {% for doctor in doctors %}
+                                <option value="{{ doctor.pk }}" {% if filters.doctor == doctor.pk|stringformat:"s" %}selected{% endif %}>{{ doctor }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% endif %}
+                <div class="col-12 col-md-6 col-lg-3">
+                    <label class="form-label small fw-bold text-muted mb-1" for="date">Slot Date</label>
+                    <input class="form-control" id="date" type="date" name="date" value="{{ filters.date }}">
+                </div>
+                <div class="col-12 col-md-6 col-lg-2">
+                    <label class="form-label small fw-bold text-muted mb-1" for="status">Status</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="">All Statuses</option>
+                        {% for value, label in status_choices %}
+                            <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12 col-md-6 col-lg-2">
+                    <label class="form-label small fw-bold text-muted mb-1" for="generated_from">Source</label>
+                    <select class="form-select" id="generated_from" name="generated_from">
+                        <option value="">All Sources</option>
+                        {% for value, label in generated_from_choices %}
+                            <option value="{{ value }}" {% if filters.generated_from == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12 col-lg-2">
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-primary w-100" type="submit">Filter</button>
+                        <a class="btn btn-outline-secondary px-3" href="{% url 'scheduling:appointment_slot_list' %}">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4 py-3">Doctor</th>
+                        <th class="py-3">Date</th>
+                        <th class="py-3">Time Range</th>
+                        <th class="py-3">Status</th>
+                        <th class="py-3">Source</th>
+                        <th class="text-end pe-4 py-3">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for slot in slots %}
+                        <tr>
+                            <td class="ps-4 py-3">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="avatar-chip bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; font-size: 0.8rem;">
+                                        {{ slot.doctor.user.username|slice:":2"|upper }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark">{{ slot.doctor }}</div>
+                                        <div class="small text-muted">{{ slot.doctor.specialization|default:"Practitioner" }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="fw-semibold">{{ slot.slot_date|date:"M d, Y" }}</div>
+                                <div class="small text-muted">{{ slot.slot_date|date:"l" }}</div>
+                            </td>
+                            <td class="small">{{ slot.start_datetime|date:"h:i A" }} - {{ slot.end_datetime|date:"h:i A" }}</td>
+                            <td><span class="badge rounded-pill bg-light text-dark border">{{ slot.status }}</span></td>
+                            <td><span class="small text-muted">{{ slot.generated_from }}</span></td>
+                            <td class="text-end pe-4">
+                                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#slotDetails{{ slot.pk }}">
+                                    View
+                                </button>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="7" class="text-center py-5 text-muted">No slots found matching criteria.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="row g-3 mt-1">
+        <div class="col-md-4"><div class="card border-0 p-3 shadow-sm"><h6 class="fw-bold mb-1"><i class="bi bi-stars text-primary me-2"></i>Automated</h6><p class="small text-muted mb-0">Weekly schedules generated via system defaults.</p></div></div>
+        <div class="col-md-4"><div class="card border-0 p-3 shadow-sm"><h6 class="fw-bold mb-1"><i class="bi bi-shield-check text-info me-2"></i>Locked</h6><p class="small text-muted mb-0">Slots lock instantly upon patient booking.</p></div></div>
+        <div class="col-md-4"><div class="card border-0 p-3 shadow-sm"><h6 class="fw-bold mb-1"><i class="bi bi-clock-history text-success me-2"></i>Audited</h6><p class="small text-muted mb-0">All manual changes are logged for transparency.</p></div></div>
+    </div>
+</section>
+{% endblock %}
