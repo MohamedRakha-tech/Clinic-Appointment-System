@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}My EMR - Clinic{% endblock %}
+{% block topbar_subtitle %}Patient Records{% endblock %}
+{% block topbar_role %}Role: Patient{% endblock %}
+
+{% block content %}
+<section class="surface-card p-4 p-lg-5 d-grid gap-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+            <h1 class="h4 fw-bold mb-1">My Consultation Records</h1>
+            <p class="text-muted mb-0">Read-only records from completed clinical visits.</p>
+        </div>
+        <span class="badge text-bg-primary">{{ consultations|length }} record{{ consultations|length|pluralize }}</span>
+    </div>
+
+    {% if consultations %}
+    <div class="list-group">
+        {% for consultation in consultations %}
+        <a href="{% url 'emr:detail' consultation.id %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+            <div>
+                <div class="fw-bold">Dr. {{ consultation.doctor.user.first_name|default:consultation.doctor.user.username }} {{ consultation.doctor.user.last_name }}</div>
+                <small class="text-muted">{{ consultation.appointment.scheduled_start|date:"d M Y H:i" }} | {{ consultation.appointment.appointment_code }}</small>
+            </div>
+            <i class="bi bi-chevron-right"></i>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info mb-0">No consultation records are available yet.</div>
+    {% endif %}
+</section>
+{% endblock %}

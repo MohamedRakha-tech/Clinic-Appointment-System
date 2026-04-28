@@ -131,6 +131,30 @@
         </div>
     </section>
 
+    <section class="doctor-card">
+        <div class="doctor-head">
+            <div>
+                <h4 class="doctor-name">Pending Check-Ins</h4>
+                <small class="text-muted">Confirmed appointments waiting at reception</small>
+            </div>
+            <span class="queue-badge">{{ pending_checkins|length }} waiting</span>
+        </div>
+
+        <div class="queue-list">
+            {% for appointment in pending_checkins %}
+            <div class="queue-item">
+                <div>
+                    <div class="fw-semibold">{{ appointment.patient.user.first_name|default:appointment.patient.user.username }} {{ appointment.patient.user.last_name }}</div>
+                    <small class="text-muted">Dr. {{ appointment.doctor.user.first_name|default:appointment.doctor.user.username }} {{ appointment.doctor.user.last_name }} | {{ appointment.scheduled_start|time:"H:i" }}</small>
+                </div>
+                <a href="{% url 'queueing:checkin' appointment.id %}" class="btn btn-sm btn-primary">Check In</a>
+            </div>
+            {% empty %}
+            <p class="text-muted mb-0 px-2">No confirmed appointments waiting to be checked in.</p>
+            {% endfor %}
+        </div>
+    </section>
+
     {% if doctors_queue %}
     <section class="doctor-columns">
         {% for doctor_id, data in doctors_queue.items %}

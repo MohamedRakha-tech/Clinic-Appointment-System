@@ -4,7 +4,6 @@ from django.core.validators import MinLengthValidator
 
 
 class ConsultationRecordForm(forms.ModelForm):
-    """Form for creating/updating consultation records."""
 
     class Meta:
         model = ConsultationRecord
@@ -40,7 +39,6 @@ class ConsultationRecordForm(forms.ModelForm):
 
 
 class PrescriptionItemForm(forms.ModelForm):
-    """Form for adding prescription items to consultation."""
 
     FREQUENCY_CHOICES = [
         ('OD', 'Once Daily'),
@@ -86,7 +84,6 @@ class PrescriptionItemForm(forms.ModelForm):
 
 
 class RequestedTestForm(forms.ModelForm):
-    """Form for requesting tests as part of consultation."""
 
     URGENCY_CHOICES = [
         ('routine', 'Routine'),

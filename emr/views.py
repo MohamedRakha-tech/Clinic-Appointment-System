@@ -1,44 +1,30 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.core.exceptions import ValidationError
-from datetime import date
 
 from appointments.models import Appointment
 from accounts.models import DoctorProfile
 from .models import ConsultationRecord, PrescriptionItem, RequestedTest
 from .forms import ConsultationRecordForm, PrescriptionItemForm, RequestedTestForm
 
-
-# ─────────────────────────────────────────────
-# SERVICES (Business Logic)
-# ─────────────────────────────────────────────
-
 class EMRService:
-    """Service for EMR and consultation operations."""
 
     @staticmethod
     @transaction.atomic
     def create_consultation_record(appointment_id: int, doctor: DoctorProfile, data: dict) -> ConsultationRecord:
-        """
-        Create a new consultation record.
-        Doctor must own the appointment and appointment must be CHECKED_IN.
-        """
         appointment = Appointment.objects.select_for_update().get(id=appointment_id)
 
-        # Validate doctor ownership
         if appointment.doctor != doctor:
             raise ValidationError("You can only create records for your own appointments.")
 
-        # Validate appointment status
         if appointment.status != Appointment.Status.CHECKED_IN:
             raise ValidationError("Patient must be checked in (CHECKED_IN status).")
 
-        # Prevent duplicate consultation
         if hasattr(appointment, 'consultation_record'):
             raise ValidationError("Consultation record already exists for this appointment.")
 
-        # Create consultation record
         consultation = ConsultationRecord.objects.create(
             appointment=appointment,
             doctor=doctor,
@@ -53,14 +39,11 @@ class EMRService:
     @staticmethod
     @transaction.atomic
     def update_consultation_record(consultation_id: int, doctor: DoctorProfile, data: dict) -> ConsultationRecord:
-        """Update an existing consultation record (doctor only)."""
         consultation = ConsultationRecord.objects.select_for_update().get(id=consultation_id)
 
-        # Validate doctor ownership
         if consultation.doctor != doctor:
             raise ValidationError("You can only edit your own consultation records.")
 
-        # Update fields
         consultation.diagnosis = data.get('diagnosis', consultation.diagnosis)
         consultation.notes = data.get('notes', consultation.notes)
         consultation.requested_tests = data.get('requested_tests', consultation.requested_tests)
@@ -71,7 +54,6 @@ class EMRService:
 
     @staticmethod
     def get_doctor_consultations(doctor: DoctorProfile, limit: int = None):
-        """Get all consultation records for a doctor."""
         queryset = ConsultationRecord.objects.filter(
             doctor=doctor
         ).select_related(
@@ -86,17 +68,29 @@ class EMRService:
         return list(queryset)
 
 
-# ─────────────────────────────────────────────
-# VIEWS
-# ─────────────────────────────────────────────
+def _get_doctor_profile(request):
+    try:
+        return request.user.doctor_profile
+    except (DoctorProfile.DoesNotExist, AttributeError):
+        return None
 
-class ConsultationListView(View):
-    """Doctor views list of their consultations."""
+
+def _get_patient_profile(request):
+    try:
+        return request.user.patient_profile
+    except AttributeError:
+        return None
+
+class ConsultationListView(LoginRequiredMixin, View):
+
+    login_url = '/accounts/login/'
 
     def get(self, request):
-        try:
-            doctor_profile = request.user.doctor_profile
-        except DoctorProfile.DoesNotExist:
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
+
+        doctor_profile = _get_doctor_profile(request)
+        if not doctor_profile:
             return render(request, 'error.html', {
                 'error': 'User does not have doctor profile'
             })
@@ -109,8 +103,36 @@ class ConsultationListView(View):
         })
 
 
-class ConsultationDetailView(View):
-    """View consultation record details with prescriptions and tests."""
+class PatientConsultationListView(LoginRequiredMixin, View):
+
+    login_url = '/accounts/login/'
+
+    def get(self, request):
+        patient_profile = _get_patient_profile(request)
+        if not patient_profile:
+            return render(request, 'error.html', {
+                'error': 'User does not have patient profile'
+            }, status=403)
+
+        consultations = ConsultationRecord.objects.filter(
+            appointment__patient=patient_profile
+        ).select_related(
+            'doctor',
+            'doctor__user',
+            'appointment',
+            'appointment__patient',
+            'appointment__patient__user'
+        ).order_by('-created_at')
+
+        return render(request, 'emr/patient_consultations_list.html', {
+            'consultations': consultations,
+            'patient': patient_profile,
+        })
+
+
+class ConsultationDetailView(LoginRequiredMixin, View):
+
+    login_url = '/accounts/login/'
 
     def get(self, request, pk):
         consultation = get_object_or_404(
@@ -126,8 +148,11 @@ class ConsultationDetailView(View):
             pk=pk
         )
 
-        # Only doctor who created it can view (or admin)
-        if consultation.doctor.user != request.user and not request.user.is_staff:
+        patient_profile = _get_patient_profile(request)
+        can_manage = consultation.doctor.user == request.user or request.user.is_staff
+        can_view = can_manage or (patient_profile and consultation.appointment.patient_id == patient_profile.id)
+
+        if not can_view:
             return render(request, 'error.html', {
                 'error': 'Permission denied'
             }, status=403)
@@ -136,11 +161,14 @@ class ConsultationDetailView(View):
             'consultation': consultation,
             'prescriptions': consultation.prescription_items.all(),
             'tests': consultation.requested_tests_normalized.all(),
+            'can_manage': can_manage,
+            'is_patient_view': bool(patient_profile and consultation.appointment.patient_id == patient_profile.id),
         })
 
 
-class ConsultationCreateView(View):
-    """Doctor creates a consultation record for a checked-in appointment."""
+class ConsultationCreateView(LoginRequiredMixin, View):
+
+    login_url = '/accounts/login/'
 
     def get(self, request, appointment_id):
         appointment = get_object_or_404(
@@ -148,16 +176,25 @@ class ConsultationCreateView(View):
             pk=appointment_id
         )
 
-        # Validate appointment belongs to requesting doctor
-        try:
-            doctor_profile = request.user.doctor_profile
-            if appointment.doctor != doctor_profile:
-                return render(request, 'error.html', {
-                    'error': 'Permission denied'
-                }, status=403)
-        except DoctorProfile.DoesNotExist:
+        doctor_profile = _get_doctor_profile(request)
+        if not doctor_profile:
             return render(request, 'error.html', {
                 'error': 'User does not have doctor profile'
+            }, status=403)
+
+        if appointment.doctor != doctor_profile:
+            return render(request, 'error.html', {
+                'error': 'Permission denied'
+            }, status=403)
+
+        if appointment.status != Appointment.Status.CHECKED_IN:
+            return render(request, 'error.html', {
+                'error': 'Only checked-in appointments can start a consultation'
+            }, status=403)
+
+        if hasattr(appointment, 'consultation_record'):
+            return render(request, 'error.html', {
+                'error': 'Consultation record already exists for this appointment'
             }, status=403)
 
         form = ConsultationRecordForm()
@@ -170,15 +207,25 @@ class ConsultationCreateView(View):
     def post(self, request, appointment_id):
         appointment = get_object_or_404(Appointment, pk=appointment_id)
 
-        try:
-            doctor_profile = request.user.doctor_profile
-            if appointment.doctor != doctor_profile:
-                return render(request, 'error.html', {
-                    'error': 'Permission denied'
-                }, status=403)
-        except DoctorProfile.DoesNotExist:
+        doctor_profile = _get_doctor_profile(request)
+        if not doctor_profile:
             return render(request, 'error.html', {
                 'error': 'User does not have doctor profile'
+            }, status=403)
+
+        if appointment.doctor != doctor_profile:
+            return render(request, 'error.html', {
+                'error': 'Permission denied'
+            }, status=403)
+
+        if appointment.status != Appointment.Status.CHECKED_IN:
+            return render(request, 'error.html', {
+                'error': 'Only checked-in appointments can start a consultation'
+            }, status=403)
+
+        if hasattr(appointment, 'consultation_record'):
+            return render(request, 'error.html', {
+                'error': 'Consultation record already exists for this appointment'
             }, status=403)
 
         form = ConsultationRecordForm(request.POST)
@@ -207,8 +254,9 @@ class ConsultationCreateView(View):
         })
 
 
-class ConsultationUpdateView(View):
-    """Doctor updates consultation record."""
+class ConsultationUpdateView(LoginRequiredMixin, View):
+
+    login_url = '/accounts/login/'
 
     def get(self, request, pk):
         consultation = get_object_or_404(
@@ -216,15 +264,15 @@ class ConsultationUpdateView(View):
             pk=pk
         )
 
-        try:
-            doctor_profile = request.user.doctor_profile
-            if consultation.doctor != doctor_profile:
-                return render(request, 'error.html', {
-                    'error': 'Permission denied'
-                }, status=403)
-        except DoctorProfile.DoesNotExist:
+        doctor_profile = _get_doctor_profile(request)
+        if not doctor_profile:
             return render(request, 'error.html', {
                 'error': 'User does not have doctor profile'
+            }, status=403)
+
+        if consultation.doctor != doctor_profile:
+            return render(request, 'error.html', {
+                'error': 'Permission denied'
             }, status=403)
 
         form = ConsultationRecordForm(instance=consultation)
@@ -238,15 +286,15 @@ class ConsultationUpdateView(View):
     def post(self, request, pk):
         consultation = get_object_or_404(ConsultationRecord, pk=pk)
 
-        try:
-            doctor_profile = request.user.doctor_profile
-            if consultation.doctor != doctor_profile:
-                return render(request, 'error.html', {
-                    'error': 'Permission denied'
-                }, status=403)
-        except DoctorProfile.DoesNotExist:
+        doctor_profile = _get_doctor_profile(request)
+        if not doctor_profile:
             return render(request, 'error.html', {
                 'error': 'User does not have doctor profile'
+            }, status=403)
+
+        if consultation.doctor != doctor_profile:
+            return render(request, 'error.html', {
+                'error': 'Permission denied'
             }, status=403)
 
         form = ConsultationRecordForm(request.POST, instance=consultation)
@@ -277,21 +325,21 @@ class ConsultationUpdateView(View):
         })
 
 
-class ConsultationDeleteView(View):
-    """Doctor deletes a consultation record."""
+class ConsultationDeleteView(LoginRequiredMixin, View):
+    login_url = '/accounts/login/'
 
     def get(self, request, pk):
         consultation = get_object_or_404(ConsultationRecord, pk=pk)
 
-        try:
-            doctor_profile = request.user.doctor_profile
-            if consultation.doctor != doctor_profile:
-                return render(request, 'error.html', {
-                    'error': 'Permission denied'
-                }, status=403)
-        except DoctorProfile.DoesNotExist:
+        doctor_profile = _get_doctor_profile(request)
+        if not doctor_profile:
             return render(request, 'error.html', {
                 'error': 'User does not have doctor profile'
+            }, status=403)
+
+        if consultation.doctor != doctor_profile:
+            return render(request, 'error.html', {
+                'error': 'Permission denied'
             }, status=403)
 
         return render(request, 'emr/consultation_delete.html', {
