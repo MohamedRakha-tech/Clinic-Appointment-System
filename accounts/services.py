@@ -1,29 +1,13 @@
 from django.contrib.auth import login
-from django.contrib.auth.models import Group
 
-GROUP_TO_ROLE = {
-    "Patient": "patient",
-    "Doctor": "doctor",
-    "Receptionist": "receptionist",
-    "Admin": "admin",
-}
-ROLE_TO_GROUP = {v: k for k, v in GROUP_TO_ROLE.items()}
-
-
-def get_user_role(instance):
-    """Return role slug ('patient', 'doctor', …) based on the user's group."""
-    for group in instance.groups.all():
-        if group.name in GROUP_TO_ROLE:
-            return GROUP_TO_ROLE[group.name]
-    return None
+from accounts.utils import ROLE_NAMES, ensure_role_groups, set_user_role
 
 
 def assign_group(instance, target_role):
-    """Assign the matching auth Group to the user."""
-    group_name = ROLE_TO_GROUP.get(target_role)
-    if group_name:
-        group, _ = Group.objects.get_or_create(name=group_name)
-        instance.groups.add(group)
+    """Assign the matching auth group to the user."""
+    if target_role in ROLE_NAMES:
+        ensure_role_groups()
+        set_user_role(instance, target_role)
 
 
 def ensure_profile_for_role(instance, target_role):

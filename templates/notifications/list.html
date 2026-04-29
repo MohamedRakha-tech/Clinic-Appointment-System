@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications - Clinic{% endblock %}
+{% block topbar_subtitle %}Notifications{% endblock %}
+{% block topbar_role %}Role: {{ request.user.username }}{% endblock %}
+
+{% block content %}
+<section class="surface-card p-4 p-lg-5 d-grid gap-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+            <h1 class="h4 fw-bold mb-1">Notifications</h1>
+            <p class="text-muted mb-0">Updates for your account.</p>
+        </div>
+        <form method="post" action="{% url 'notifications:mark_all_read' %}">
+            {% csrf_token %}
+            <button class="btn btn-outline-secondary" type="submit"{% if unread_count == 0 %} disabled{% endif %}>Mark all read</button>
+        </form>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-outline-secondary{% if status_filter == 'all' %} active{% endif %}" href="{% url 'notifications:list' %}">All</a>
+        <a class="btn btn-outline-secondary{% if status_filter == 'unread' %} active{% endif %}" href="{% url 'notifications:list' %}?status=unread">Unread</a>
+        <a class="btn btn-outline-secondary{% if status_filter == 'read' %} active{% endif %}" href="{% url 'notifications:list' %}?status=read">Read</a>
+    </div>
+
+    <div class="list-group">
+        {% for notification in notifications %}
+        <div class="list-group-item d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+            <div>
+                <div class="fw-semibold">{{ notification.verb }}</div>
+                {% if notification.description %}
+                <div class="text-muted small">{{ notification.description }}</div>
+                {% endif %}
+                <div class="text-muted small">{{ notification.created_at|date:"d M Y H:i" }}</div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                {% if notification.is_read %}
+                <span class="badge text-bg-secondary">Read</span>
+                {% else %}
+                <span class="badge text-bg-primary">Unread</span>
+                <form method="post" action="{% url 'notifications:mark_read' notification.id %}">
+                    {% csrf_token %}
+                    <button class="btn btn-sm btn-outline-primary" type="submit">Mark read</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="list-group-item text-muted">No notifications yet.</div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

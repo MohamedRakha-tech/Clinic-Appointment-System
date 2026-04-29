@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth import logout
 from django.db import transaction
 from django.shortcuts import redirect, render
@@ -5,7 +6,8 @@ from django.views.generic import TemplateView
 
 from accounts.forms import LoginForm, PatientRegisterForm
 from accounts.mixins import AdminRequiredMixin, DoctorRequiredMixin, PatientRequiredMixin, ReceptionistRequiredMixin
-from accounts.services import get_user_role, login_user
+from accounts.services import login_user
+from accounts.utils import get_user_role
 
 
 def _redirect_by_role(user):
@@ -18,12 +20,22 @@ def _redirect_by_role(user):
         return redirect("accounts:reception_dashboard")
     if role == "admin":
         return redirect("accounts:admin_dashboard")
-    return redirect("accounts:login")
+    return redirect("accounts:patient_login")
+
+
+def _redirect_if_authenticated(request):
+    if request.user.is_authenticated:
+        return _redirect_by_role(request.user)
+    return None
 
 
 @transaction.atomic
 def register_view(request):
     """Public registration view (patients only)."""
+    redirect_response = _redirect_if_authenticated(request)
+    if redirect_response:
+        return redirect_response
+
     if request.method == "POST":
         form = PatientRegisterForm(request.POST)
         if form.is_valid():
@@ -41,22 +53,52 @@ def register_view(request):
     return render(request, "accounts/register.html", {"form": form})
 
 
-def login_view(request):
+def patient_login_view(request):
+    redirect_response = _redirect_if_authenticated(request)
+    if redirect_response:
+        return redirect_response
+
     if request.method == "POST":
         form = LoginForm(request, data=request.POST)
         if form.is_valid():
             user = form.get_user()
+            if get_user_role(user) != "patient":
+                messages.error(request, "Please use the staff login portal.")
+                return redirect("accounts:staff_login")
             login_user(request, user)
             return _redirect_by_role(user)
     else:
         form = LoginForm(request)
 
-    return render(request, "accounts/login.html", {"form": form})
+    return render(request, "accounts/login.html", {"form": form, "is_staff_login": False})
+
+
+def staff_login_view(request):
+    redirect_response = _redirect_if_authenticated(request)
+    if redirect_response:
+        return redirect_response
+
+    if request.method == "POST":
+        form = LoginForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            if get_user_role(user) == "patient":
+                messages.error(request, "Patients must use the patient login portal.")
+                return redirect("accounts:patient_login")
+            login_user(request, user)
+            return _redirect_by_role(user)
+    else:
+        form = LoginForm(request)
+
+    return render(request, "accounts/login.html", {"form": form, "is_staff_login": True})
 
 
 def logout_view(request):
+    role = get_user_role(request.user)
     logout(request)
-    return redirect("accounts:login")
+    if role == "patient":
+        return redirect("accounts:patient_login")
+    return redirect("accounts:staff_login")
 
 
 class PatientDashboardView(PatientRequiredMixin, TemplateView):

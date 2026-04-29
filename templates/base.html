@@ -27,6 +27,10 @@
 			background: var(--side-bg);
 			min-height: 100vh;
 			border-right: 1px solid #c8ced8;
+			position: sticky;
+			top: 0;
+			height: 100vh;
+			overflow-y: auto;
 		}
 
 		.sidebar-brand .brand-icon {
@@ -109,6 +113,86 @@
 			border-bottom: 1px solid #deebf7;
 		}
 
+		.notification-shell {
+			position: relative;
+		}
+
+		.notification-button {
+			border: 1px solid #d5e3f3;
+			background: #fff;
+			color: var(--brand);
+			width: 42px;
+			height: 42px;
+			border-radius: 999px;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			position: relative;
+		}
+
+		.notification-badge {
+			position: absolute;
+			top: -4px;
+			right: -4px;
+			background: #d24545;
+			color: #fff;
+			border-radius: 999px;
+			font-size: .65rem;
+			font-weight: 800;
+			padding: .15rem .35rem;
+		}
+
+		.notification-panel {
+			position: absolute;
+			right: 0;
+			top: calc(100% + .6rem);
+			width: min(420px, 90vw);
+			background: #fff;
+			border: 1px solid #dde8f4;
+			border-radius: .9rem;
+			box-shadow: 0 16px 40px rgba(15, 55, 110, .12);
+			display: none;
+			z-index: 1050;
+		}
+
+		.notification-panel.active {
+			display: block;
+		}
+
+		.notification-head {
+			padding: .85rem 1rem;
+			border-bottom: 1px solid #e5eef6;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: .75rem;
+		}
+
+		.notification-list {
+			max-height: 320px;
+			overflow-y: auto;
+			display: grid;
+			gap: .6rem;
+			padding: .9rem 1rem 1rem;
+		}
+
+		.notification-item {
+			border: 1px solid #e3edf7;
+			border-radius: .75rem;
+			padding: .7rem .8rem;
+			background: #f9fcff;
+		}
+
+		.notification-item.unread {
+			background: #eef6ff;
+			border-color: #cfe3fb;
+		}
+
+		.notification-meta {
+			font-size: .72rem;
+			color: var(--muted);
+		}
+
 		.surface-card {
 			background: var(--panel-bg);
 			border: 1px solid #dde8f4;
@@ -145,7 +229,47 @@
 						<h2 class="h5 mb-0 fw-bold">Clinical Sanctuary</h2>
 						<small class="text-muted">{% block topbar_subtitle %}Operations Workspace{% endblock %}</small>
 					</div>
-					<div class="text-muted small">{% block topbar_role %}Role: Staff{% endblock %}</div>
+					<div class="d-flex align-items-center gap-3">
+						<div class="text-muted small">{% block topbar_role %}Role: Staff{% endblock %}</div>
+						{% if request.user.is_authenticated %}
+						<div class="notification-shell">
+							<button class="notification-button" type="button" aria-label="Notifications" data-notification-toggle>
+								<i class="bi bi-bell"></i>
+								{% if notification_unread_count %}
+								<span class="notification-badge">{{ notification_unread_count }}</span>
+								{% endif %}
+							</button>
+							<div class="notification-panel" data-notification-panel>
+								<div class="notification-head">
+									<div>
+										<div class="fw-bold">Notifications</div>
+										<div class="notification-meta">Latest updates</div>
+									</div>
+									<a class="btn btn-sm btn-outline-secondary" href="{% url 'notifications:list' %}">Show all</a>
+								</div>
+								<div class="notification-list">
+									{% for note in notification_preview %}
+									<div class="notification-item{% if not note.is_read %} unread{% endif %}">
+										<div class="fw-semibold">{{ note.verb }}</div>
+										{% if note.description %}
+										<div class="text-muted small">{{ note.description }}</div>
+										{% endif %}
+										<div class="notification-meta">{{ note.created_at|date:"d M Y H:i" }}</div>
+										{% if not note.is_read %}
+										<form method="post" action="{% url 'notifications:mark_read' note.id %}" class="mt-2">
+											{% csrf_token %}
+											<button class="btn btn-sm btn-outline-primary" type="submit">Mark read</button>
+										</form>
+										{% endif %}
+									</div>
+									{% empty %}
+									<div class="text-muted small">No notifications yet.</div>
+									{% endfor %}
+								</div>
+							</div>
+						</div>
+						{% endif %}
+					</div>
 				</header>
 				<main class="p-4 p-xl-5">
 					{% block content %}{% endblock %}
@@ -154,5 +278,32 @@
 		</div>
 	</div>
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+	<script>
+		(function () {
+			var toggle = document.querySelector("[data-notification-toggle]");
+			var panel = document.querySelector("[data-notification-panel]");
+
+			if (!toggle || !panel) {
+				return;
+			}
+
+			function closePanel() {
+				panel.classList.remove("active");
+			}
+
+			toggle.addEventListener("click", function (event) {
+				event.stopPropagation();
+				panel.classList.toggle("active");
+			});
+
+			panel.addEventListener("click", function (event) {
+				event.stopPropagation();
+			});
+
+			document.addEventListener("click", function () {
+				closePanel();
+			});
+		})();
+	</script>
 </body>
 </html>
