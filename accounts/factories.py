@@ -1,91 +1,47 @@
-import factory
-from factory.django import DjangoModelFactory
-from uuid import uuid4
+from itertools import count
 
-from .models import AdminProfile, DoctorProfile, PatientProfile, ReceptionistProfile, User
+from django.contrib.auth import get_user_model
 
-
-class UserFactory(DjangoModelFactory):
-    class Meta:
-        model = User
-
-    username = factory.LazyFunction(lambda: f"user_{uuid4().hex[:12]}")
-    email = factory.LazyAttribute(lambda obj: f"{obj.username}@example.com")
-    first_name = factory.Faker("first_name")
-    last_name = factory.Faker("last_name")
-    phone = factory.Faker("msisdn")
-    is_active = True
-    is_staff = False
-    password = factory.PostGenerationMethodCall("set_password", "Password123!")
+from accounts.models import AdminProfile, DoctorProfile, PatientProfile, ReceptionistProfile
 
 
-class PatientUserFactory(UserFactory):
-    username = factory.LazyFunction(lambda: f"patient_{uuid4().hex[:12]}")
-    email = factory.LazyAttribute(lambda obj: f"{obj.username}@example.com")
+User = get_user_model()
+
+_user_seq = count(1)
 
 
-class DoctorUserFactory(UserFactory):
-    username = factory.LazyFunction(lambda: f"doctor_{uuid4().hex[:12]}")
-    email = factory.LazyAttribute(lambda obj: f"{obj.username}@example.com")
+def _unique_username(prefix):
+    idx = next(_user_seq)
+    return f"{prefix}{idx}"
 
 
-class ReceptionistUserFactory(UserFactory):
-    username = factory.LazyFunction(lambda: f"reception_{uuid4().hex[:12]}")
-    email = factory.LazyAttribute(lambda obj: f"{obj.username}@example.com")
-    is_staff = True
+def UserFactory(**kwargs):
+    idx = next(_user_seq)
+    username = kwargs.pop("username", f"user{idx}")
+    email = kwargs.pop("email", f"{username}@example.com")
+    password = kwargs.pop("password", "testpass123")
+    return User.objects.create_user(username=username, email=email, password=password, **kwargs)
 
 
-class AdminUserFactory(UserFactory):
-    username = factory.LazyFunction(lambda: f"admin_{uuid4().hex[:12]}")
-    email = factory.LazyAttribute(lambda obj: f"{obj.username}@example.com")
-    is_staff = True
+def PatientProfileFactory(**kwargs):
+    user = kwargs.pop("user", None) or UserFactory()
+    return PatientProfile.objects.create(user=user, **kwargs)
 
 
-class PatientProfileFactory(DjangoModelFactory):
-    class Meta:
-        model = PatientProfile
-
-    user = factory.SubFactory(PatientUserFactory)
-    date_of_birth = factory.Faker("date_of_birth", minimum_age=18, maximum_age=90)
-    gender = factory.Iterator(["Male", "Female"])
-    address = factory.Faker("address")
-    emergency_contact_name = factory.Faker("name")
-    emergency_contact_phone = factory.Faker("msisdn")
+def DoctorProfileFactory(**kwargs):
+    user = kwargs.pop("user", None) or UserFactory(username=_unique_username("doctor"))
+    kwargs.setdefault("specialization", "General Medicine")
+    kwargs.setdefault("license_number", f"LIC-{next(_user_seq)}")
+    return DoctorProfile.objects.create(user=user, **kwargs)
 
 
-class DoctorProfileFactory(DjangoModelFactory):
-    class Meta:
-        model = DoctorProfile
-
-    user = factory.SubFactory(DoctorUserFactory)
-    specialization = factory.Iterator(
-        [
-            "Cardiology",
-            "Dermatology",
-            "Neurology",
-            "Pediatrics",
-            "Orthopedics",
-            "Internal Medicine",
-        ]
-    )
-    license_number = factory.LazyFunction(lambda: f"LIC-{uuid4().hex[:12].upper()}")
-    consultation_duration_minutes = factory.Iterator([10, 15, 20, 30])
-    buffer_before_minutes = factory.Iterator([0, 5, 10])
-    buffer_after_minutes = factory.Iterator([0, 5, 10])
-    bio = factory.Faker("paragraph", nb_sentences=3)
+def ReceptionistProfileFactory(**kwargs):
+    user = kwargs.pop("user", None) or UserFactory(username=_unique_username("receptionist"))
+    kwargs.setdefault("employee_code", f"REC-{next(_user_seq)}")
+    return ReceptionistProfile.objects.create(user=user, **kwargs)
 
 
-class ReceptionistProfileFactory(DjangoModelFactory):
-    class Meta:
-        model = ReceptionistProfile
-
-    user = factory.SubFactory(ReceptionistUserFactory)
-    employee_code = factory.LazyFunction(lambda: f"REC-{uuid4().hex[:10].upper()}")
-
-
-class AdminProfileFactory(DjangoModelFactory):
-    class Meta:
-        model = AdminProfile
-
-    user = factory.SubFactory(AdminUserFactory)
-    employee_code = factory.LazyFunction(lambda: f"ADM-{uuid4().hex[:10].upper()}")
+def AdminProfileFactory(**kwargs):
+    user = kwargs.pop("user", None) or UserFactory(username=_unique_username("admin"), is_staff=True)
+    kwargs.setdefault("employee_code", f"ADM-{next(_user_seq)}")
+    return AdminProfile.objects.create(user=user, **kwargs)
