@@ -1,13 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils import timezone
 from django.db import transaction
 from django.core.exceptions import ValidationError
 from datetime import date
 
 from appointments.models import Appointment
-from accounts.models import DoctorProfile, ReceptionistProfile
+from accounts.mixins import DoctorRequiredMixin, ReceptionistRequiredMixin
+from accounts.models import DoctorProfile
 from .models import AppointmentCheckin
 from .forms import CheckInForm
 
@@ -40,18 +40,11 @@ class QueueService:
             queue_number=position,
         )
 
-class CheckInView(LoginRequiredMixin, View):
+class CheckInView(ReceptionistRequiredMixin, View):
 
     login_url = '/accounts/login/'
 
     def get(self, request, appointment_id):
-        try:
-            request.user.receptionist_profile
-        except (ReceptionistProfile.DoesNotExist, AttributeError):
-            return render(request, 'error.html', {
-                'error': 'User does not have receptionist profile'
-            }, status=403)
-
         appointment = get_object_or_404(Appointment, pk=appointment_id)
         form = CheckInForm()
         return render(request, 'queueing/checkin.html', {
@@ -60,13 +53,6 @@ class CheckInView(LoginRequiredMixin, View):
         })
 
     def post(self, request, appointment_id):
-        try:
-            request.user.receptionist_profile
-        except (ReceptionistProfile.DoesNotExist, AttributeError):
-            return render(request, 'error.html', {
-                'error': 'User does not have receptionist profile'
-            }, status=403)
-
         appointment = get_object_or_404(Appointment, pk=appointment_id)
         form = CheckInForm(request.POST)
 
@@ -88,14 +74,11 @@ class CheckInView(LoginRequiredMixin, View):
         })
 
 
-class DoctorQueueView(LoginRequiredMixin, View):
+class DoctorQueueView(DoctorRequiredMixin, View):
 
     login_url = '/accounts/login/'
 
     def get(self, request):
-        if not request.user.is_authenticated:
-            return self.handle_no_permission()
-
         try:
             doctor_profile = request.user.doctor_profile
         except (DoctorProfile.DoesNotExist, AttributeError):
@@ -119,18 +102,11 @@ class DoctorQueueView(LoginRequiredMixin, View):
         })
 
 
-class ReceptionQueueMonitorView(LoginRequiredMixin, View):
+class ReceptionQueueMonitorView(ReceptionistRequiredMixin, View):
 
     login_url = '/accounts/login/'
 
     def get(self, request):
-        try:
-            request.user.receptionist_profile
-        except (ReceptionistProfile.DoesNotExist, AttributeError):
-            return render(request, 'error.html', {
-                'error': 'User does not have receptionist profile'
-            }, status=403)
-
         pending_checkins = Appointment.objects.filter(
             status=Appointment.Status.CONFIRMED,
             scheduled_start__date=date.today(),

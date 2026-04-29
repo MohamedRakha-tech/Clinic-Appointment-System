@@ -5,6 +5,7 @@ from django.db import transaction
 from django.core.exceptions import ValidationError
 
 from appointments.models import Appointment
+from accounts.mixins import DoctorRequiredMixin, PatientRequiredMixin
 from accounts.models import DoctorProfile
 from .models import ConsultationRecord, PrescriptionItem, RequestedTest
 from .forms import ConsultationRecordForm, PrescriptionItemForm, RequestedTestForm
@@ -81,14 +82,11 @@ def _get_patient_profile(request):
     except AttributeError:
         return None
 
-class ConsultationListView(LoginRequiredMixin, View):
+class ConsultationListView(DoctorRequiredMixin, View):
 
     login_url = '/accounts/login/'
 
     def get(self, request):
-        if not request.user.is_authenticated:
-            return self.handle_no_permission()
-
         doctor_profile = _get_doctor_profile(request)
         if not doctor_profile:
             return render(request, 'error.html', {
@@ -103,7 +101,7 @@ class ConsultationListView(LoginRequiredMixin, View):
         })
 
 
-class PatientConsultationListView(LoginRequiredMixin, View):
+class PatientConsultationListView(PatientRequiredMixin, View):
 
     login_url = '/accounts/login/'
 
@@ -166,7 +164,7 @@ class ConsultationDetailView(LoginRequiredMixin, View):
         })
 
 
-class ConsultationCreateView(LoginRequiredMixin, View):
+class ConsultationCreateView(DoctorRequiredMixin, View):
 
     login_url = '/accounts/login/'
 
@@ -254,7 +252,7 @@ class ConsultationCreateView(LoginRequiredMixin, View):
         })
 
 
-class ConsultationUpdateView(LoginRequiredMixin, View):
+class ConsultationUpdateView(DoctorRequiredMixin, View):
 
     login_url = '/accounts/login/'
 
@@ -325,8 +323,7 @@ class ConsultationUpdateView(LoginRequiredMixin, View):
         })
 
 
-class ConsultationDeleteView(LoginRequiredMixin, View):
-    login_url = '/accounts/login/'
+class ConsultationDeleteView(DoctorRequiredMixin, View):
 
     def get(self, request, pk):
         consultation = get_object_or_404(ConsultationRecord, pk=pk)

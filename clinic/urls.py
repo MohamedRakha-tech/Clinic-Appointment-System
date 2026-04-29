@@ -17,10 +17,16 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 
+handler403 = "clinic.views.error_403"
+handler404 = "clinic.views.error_404"
+handler500 = "clinic.views.error_500"
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('admin-panel/', include('dashboard.urls')),
     path('accounts/', include('accounts.urls')),
     path('queueing/', include('queueing.urls')),
     path('emr/', include('emr.urls')),
     path('scheduling/', include('scheduling.urls')),
+    path('notifications/', include('notifications.urls')),
 ]
