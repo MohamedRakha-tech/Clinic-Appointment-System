@@ -20,12 +20,15 @@
       <div class="scheduling-header-center">
         <nav class="scheduling-tabs nav" aria-label="Scheduling navigation">
           <a class="nav-link {% if request.resolver_match.url_name == 'doctor_my_schedule' %}active{% endif %}" href="{% url 'scheduling:doctor_my_schedule' %}">Weekly View</a>
+          {% if can_manage_scheduling %}
           <a class="nav-link {% if 'slot' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'scheduling:appointment_slot_list' %}">Doctor Slots</a>
           <a class="nav-link {% if 'exception' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'scheduling:schedule_exception_list' %}">Exceptions</a>
           <a class="nav-link {% if 'schedule' in request.resolver_match.url_name and request.resolver_match.url_name != 'doctor_my_schedule' and 'exception' not in request.resolver_match.url_name %}active{% endif %}" href="{% url 'scheduling:weekly_schedule_list' %}">Schedules</a>
+          {% endif %}
         </nav>
       </div>
       <div class="scheduling-header-right">
+        {% if can_manage_scheduling %}
         <div class="scheduling-actions">
           <form method="GET" class="scheduling-search-form">
             {% for key, value in request.GET.items %}{% if key != "search" and key != "page" %}<input type="hidden" name="{{ key }}" value="{{ value }}" />{% endif %}{% endfor %}
@@ -37,6 +40,7 @@
           </form>
           {% if can_manage_scheduling %}<a class="btn scheduling-generate-btn" href="{% url 'scheduling:generate_slots' %}"><i class="bi bi-arrow-repeat"></i> Generate</a>{% endif %}
         </div>
+        {% endif %}
       </div>
     </div>
   </div>

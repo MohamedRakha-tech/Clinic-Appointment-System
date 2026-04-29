@@ -8,6 +8,8 @@ from django.views import View
 from django.views.generic import CreateView, ListView, UpdateView
 from datetime import timedelta
 
+from accounts.mixins import DoctorRequiredMixin as AccountsDoctorRequiredMixin
+from accounts.utils import get_user_role, user_has_role
 from accounts.models import DoctorProfile
 from scheduling.forms import DoctorScheduleExceptionForm, DoctorWeeklyScheduleForm
 from scheduling.models import (
@@ -31,31 +33,21 @@ def style_form_fields(form):
 
 
 def is_scheduling_manager(user):
-    return (
-        user.is_authenticated
-        and (
-            user.is_staff
-            or hasattr(user, "admin_profile")
-            or hasattr(user, "receptionist_profile")
-        )
-    )
+    if not user or not getattr(user, "is_authenticated", False):
+        return False
+
+    role = get_user_role(user)
+    if role == "doctor":
+        return False
+
+    if user_has_role(user, ["admin", "receptionist"]):
+        return True
+
+    return user.is_staff
 
 
 def is_doctor(user):
     return user.is_authenticated and hasattr(user, "doctor_profile")
-
-
-class SchedulingAccessMixin(LoginRequiredMixin, UserPassesTestMixin):
-    raise_exception = True
-
-    def test_func(self):
-        return is_scheduling_manager(self.request.user) or is_doctor(self.request.user)
-
-    def get_doctor_profile(self):
-        if is_doctor(self.request.user):
-            return self.request.user.doctor_profile
-
-        return None
 
 
 class SchedulingManagerRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
@@ -65,12 +57,7 @@ class SchedulingManagerRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
         return is_scheduling_manager(self.request.user)
 
 
-class DoctorRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
-    raise_exception = True
-
-    def test_func(self):
-        return is_doctor(self.request.user)
-
+class DoctorRequiredMixin(AccountsDoctorRequiredMixin):
     def get_doctor_profile(self):
         return self.request.user.doctor_profile
 
@@ -81,7 +68,7 @@ class SchedulingFormStyleMixin:
         return style_form_fields(form)
 
 
-class WeeklyScheduleListView(SchedulingAccessMixin, ListView):
+class WeeklyScheduleListView(SchedulingManagerRequiredMixin, ListView):
     model = DoctorWeeklySchedule
     template_name = "scheduling/weekly_schedule_list.html"
     context_object_name = "schedules"
@@ -89,10 +76,6 @@ class WeeklyScheduleListView(SchedulingAccessMixin, ListView):
 
     def get_queryset(self):
         queryset = DoctorWeeklySchedule.objects.select_related("doctor", "doctor__user")
-
-        doctor_profile = self.get_doctor_profile()
-        if doctor_profile and not is_scheduling_manager(self.request.user):
-            queryset = queryset.filter(doctor=doctor_profile)
 
         doctor_id = self.request.GET.get("doctor")
         day_of_week = self.request.GET.get("day_of_week")
@@ -211,7 +194,7 @@ class WeeklyScheduleUpdateView(SchedulingFormStyleMixin, SchedulingManagerRequir
         context["form_mode"] = "Edit"
         return context
 
-class ScheduleExceptionListView(SchedulingAccessMixin, ListView):
+class ScheduleExceptionListView(SchedulingManagerRequiredMixin, ListView):
     model = DoctorScheduleException
     template_name = "scheduling/schedule_exception_list.html"
     context_object_name = "exceptions"
@@ -222,10 +205,6 @@ class ScheduleExceptionListView(SchedulingAccessMixin, ListView):
             "doctor__user",
             "created_by",
         )
-
-        doctor_profile = self.get_doctor_profile()
-        if doctor_profile and not is_scheduling_manager(self.request.user):
-            queryset = queryset.filter(doctor=doctor_profile)
 
         doctor_id = self.request.GET.get("doctor")
         exception_date = self.request.GET.get("date")
@@ -296,7 +275,7 @@ class ScheduleExceptionUpdateView(SchedulingFormStyleMixin, SchedulingManagerReq
         context["form_mode"] = "Edit"
         return context
 
-class AppointmentSlotListView(SchedulingAccessMixin, ListView):
+class AppointmentSlotListView(SchedulingManagerRequiredMixin, ListView):
     model = AppointmentSlot
     template_name = "scheduling/appointment_slot_list.html"
     context_object_name = "slots"
@@ -304,10 +283,6 @@ class AppointmentSlotListView(SchedulingAccessMixin, ListView):
 
     def get_queryset(self):
         queryset = AppointmentSlot.objects.select_related("doctor", "doctor__user")
-
-        doctor_profile = self.get_doctor_profile()
-        if doctor_profile and not is_scheduling_manager(self.request.user):
-            queryset = queryset.filter(doctor=doctor_profile)
 
         doctor_id = self.request.GET.get("doctor")
         slot_date = self.request.GET.get("date")
@@ -341,9 +316,6 @@ class AppointmentSlotListView(SchedulingAccessMixin, ListView):
         filtered_queryset = self.get_queryset()
 
         doctors = DoctorProfile.objects.select_related("user").order_by("user__username")
-        doctor_profile = self.get_doctor_profile()
-        if doctor_profile and not is_scheduling_manager(self.request.user):
-            doctors = doctors.filter(pk=doctor_profile.pk)
         context["doctors"] = doctors
         context["status_choices"] = AppointmentSlot.Status.choices
         context["generated_from_choices"] = AppointmentSlot.GeneratedFrom.choices
@@ -456,7 +428,7 @@ class GenerateSlotsView(SchedulingManagerRequiredMixin, View):
 
         return start_date, end_date, None
 
-class DoctorMyScheduleView(LoginRequiredMixin, View):
+class DoctorMyScheduleView(DoctorRequiredMixin, View):
     template_name = "scheduling/doctor_my_schedule.html"
 
     def get_doctor_profile(self):

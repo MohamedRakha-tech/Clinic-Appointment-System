@@ -12,6 +12,7 @@ venv/
 
 # Local databases
 db.sqlite3
+dev_role_credentials.txt
 
 
 .codex

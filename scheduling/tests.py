@@ -4,9 +4,11 @@ from io import StringIO
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.test import TestCase
+from django.urls import reverse
 from django.utils import timezone
 
-from accounts.models import DoctorProfile, User
+from accounts.models import AdminProfile, DoctorProfile, ReceptionistProfile, User
+from accounts.utils import set_user_role
 from scheduling.models import (
     AppointmentSlot,
     DoctorScheduleException,
@@ -278,3 +280,96 @@ class GenerateSlotsCommandTests(SchedulingTestCase):
 
         self.assertEqual(AppointmentSlot.objects.count(), 2)
         self.assertIn("Slot generation completed.", output.getvalue())
+
+
+class SchedulingAccessTests(TestCase):
+    def setUp(self):
+        self.doctor_user = User.objects.create_user(
+            username="doctor_access",
+            email="doctor_access@example.com",
+            password="password",
+            is_staff=True,
+        )
+        self.doctor_user._target_role = "doctor"
+        self.doctor_user.save()
+        self.doctor_profile, _ = DoctorProfile.objects.get_or_create(
+            user=self.doctor_user,
+            defaults={
+                "specialization": "Cardiology",
+                "license_number": "DOC-ACCESS-001",
+            },
+        )
+        set_user_role(self.doctor_user, "doctor")
+
+        self.reception_user = User.objects.create_user(
+            username="reception_access",
+            email="reception_access@example.com",
+            password="password",
+            is_staff=True,
+        )
+        self.reception_user._target_role = "receptionist"
+        self.reception_user.save()
+        ReceptionistProfile.objects.get_or_create(
+            user=self.reception_user,
+            defaults={"employee_code": "REC-ACCESS-001"},
+        )
+        set_user_role(self.reception_user, "receptionist")
+
+        self.admin_user = User.objects.create_user(
+            username="admin_access",
+            email="admin_access@example.com",
+            password="password",
+            is_staff=True,
+        )
+        self.admin_user._target_role = "admin"
+        self.admin_user.save()
+        AdminProfile.objects.get_or_create(
+            user=self.admin_user,
+            defaults={"employee_code": "ADM-ACCESS-001"},
+        )
+        set_user_role(self.admin_user, "admin")
+
+        self.patient_user = User.objects.create_user(
+            username="patient_access",
+            email="patient_access@example.com",
+            password="password",
+        )
+        self.patient_user._target_role = "patient"
+        self.patient_user.save()
+        set_user_role(self.patient_user, "patient")
+
+    def test_doctor_can_access_only_my_schedule(self):
+        self.client.login(username="doctor_access", password="password")
+
+        my_schedule_response = self.client.get(reverse("scheduling:doctor_my_schedule"))
+        schedules_response = self.client.get(reverse("scheduling:weekly_schedule_list"))
+        slots_response = self.client.get(reverse("scheduling:appointment_slot_list"))
+        generate_response = self.client.get(reverse("scheduling:generate_slots"))
+
+        self.assertEqual(my_schedule_response.status_code, 200)
+        self.assertEqual(schedules_response.status_code, 403)
+        self.assertEqual(slots_response.status_code, 403)
+        self.assertEqual(generate_response.status_code, 403)
+
+    def test_receptionist_can_access_scheduling_management(self):
+        self.client.login(username="reception_access", password="password")
+
+        response = self.client.get(reverse("scheduling:weekly_schedule_list"))
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_admin_can_access_scheduling_management(self):
+        self.client.login(username="admin_access", password="password")
+
+        response = self.client.get(reverse("scheduling:weekly_schedule_list"))
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_patient_cannot_access_scheduling_pages(self):
+        self.client.login(username="patient_access", password="password")
+
+        schedules_response = self.client.get(reverse("scheduling:weekly_schedule_list"))
+        my_schedule_response = self.client.get(reverse("scheduling:doctor_my_schedule"))
+
+        self.assertEqual(schedules_response.status_code, 403)
+        self.assertEqual(my_schedule_response.status_code, 403)
