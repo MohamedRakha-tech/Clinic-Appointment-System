@@ -1,0 +1,130 @@
+{% extends "scheduling/base_scheduling_fixed.html" %} {% block title %}Doctor My
+Schedule{% endblock %} {% block scheduling_content %} {% if no_doctor_profile %}
+<div class="schedule-card p-5 text-center">
+  <div class="avatar-chip blue mx-auto mb-3">
+    <i class="bi bi-person-badge"></i>
+  </div>
+  <h1 class="page-title">Doctor My Schedule</h1>
+  <p class="page-subtitle mb-4">
+    This page shows schedule data only for a logged-in doctor profile. Your
+    current account can access scheduling management, but it is not linked to a
+    doctor profile.
+  </p>
+  <a class="btn btn-primary" href="{% url 'scheduling:weekly_schedule_list' %}">
+    Back to Scheduling Management
+  </a>
+</div>
+{% else %}
+<div
+  class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4"
+>
+  <div>
+    <div class="page-kicker">Practitioner Overview</div>
+    <h1 class="page-title">{{ doctor }}</h1>
+    <p class="page-subtitle">
+      {{ doctor.specialization }} • Week of {{ week_start|date:"M d, Y" }}
+    </p>
+  </div>
+  <div class="schedule-card schedule-card-muted px-3 py-2">
+    <i class="bi bi-calendar3"></i>
+    {{ week_start|date:"M d" }} - {{ week_end|date:"M d" }}
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-12 col-xl-8">
+    <div class="doctor-week-card mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h5 fw-bold mb-0">Weekly Schedule</h2>
+        <span class="status-badge status-active">Active Template</span>
+      </div>
+      {% for day in schedule_days %}
+      <div class="day-row">
+        <div>
+          <div class="fw-bold">{{ day.date|date:"D" }}</div>
+          <div class="doctor-meta">{{ day.date|date:"M d" }}</div>
+        </div>
+        <div>
+          {% for schedule in day.schedules %}
+          <span class="slot-pill"
+            >{{ schedule.start_time|time:"H:i" }} - {{
+            schedule.end_time|time:"H:i" }}</span
+          >
+          {% empty %}
+          <span class="doctor-meta">No standard recurring blocks</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="doctor-week-card">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h5 fw-bold mb-0">Upcoming Generated Slots</h2>
+        <span class="status-badge status-available"
+          >{{ available_slots_count }} Available</span
+        >
+      </div>
+      <div class="row g-3">
+        {% for slot in upcoming_slots %}
+        <div class="col-12 col-md-6 col-lg-4">
+          <div class="schedule-card schedule-card-muted p-3">
+            <div class="fw-bold">{{ slot.slot_date|date:"D, M d" }}</div>
+            <div>{{ slot.start_datetime|date:"h:i A" }}</div>
+            <div class="doctor-meta">{{ slot.get_status_display }}</div>
+          </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-muted">No upcoming generated slots.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-xl-4">
+    <div class="doctor-week-card mb-4">
+      <h2 class="h5 fw-bold mb-3">Schedule Exceptions</h2>
+      {% for exception in exceptions %}
+      <div class="border-start border-3 ps-3 mb-3">
+        {% if exception.type == "VACATION" %}
+        <span class="status-badge status-vacation">Current Exception</span>
+        {% elif exception.type == "DAY_OFF" %}
+        <span class="status-badge status-day-off">Upcoming</span>
+        {% else %}
+        <span class="status-badge status-special-working-day">Upcoming</span>
+        {% endif %}
+        <div class="fw-bold mt-2">{{ exception.get_type_display }}</div>
+        <div class="doctor-meta">
+          {{ exception.exception_date|date:"M d, Y" }}
+        </div>
+        <div class="doctor-meta">
+          {{ exception.reason|default:"-"|truncatechars:60 }}
+        </div>
+      </div>
+      {% empty %}
+      <p class="doctor-meta mb-0">
+        No schedule exceptions in the upcoming window.
+      </p>
+      {% endfor %}
+    </div>
+
+    <div class="metric-card metric-blue p-4 mb-4">
+      <div class="metric-label text-white-50">Capacity Utilization</div>
+      <div class="metric-value">{{ available_slots_count }}</div>
+      <div class="small">Future available generated slots</div>
+    </div>
+
+    <div class="doctor-week-card">
+      <div class="metric-label mb-3">Patient Load Distribution</div>
+      <div class="d-flex gap-2 align-items-end" style="height: 90px">
+        {% for day in schedule_days %}
+        <div
+          class="bg-primary bg-opacity-25 rounded flex-fill"
+          style="height: 45%"
+        ></div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %} {% endblock %}

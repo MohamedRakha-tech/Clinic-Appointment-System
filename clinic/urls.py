@@ -22,4 +22,5 @@ urlpatterns = [
     path('accounts/', include('accounts.urls')),
     path('queueing/', include('queueing.urls')),
     path('emr/', include('emr.urls')),
+    path('scheduling/', include('scheduling.urls')),
 ]

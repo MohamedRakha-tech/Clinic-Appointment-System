@@ -12,7 +12,12 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 import os
 from pathlib import Path
-from dotenv import load_dotenv
+
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    def load_dotenv(*args, **kwargs):
+        return False
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -134,9 +139,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
-
 AUTHENTICATION_BACKENDS = [
     'accounts.backends.UsernameOrEmailBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
-
+STATICFILES_DIRS = [BASE_DIR / 'static']

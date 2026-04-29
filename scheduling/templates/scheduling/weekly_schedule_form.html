@@ -1,0 +1,281 @@
+{% extends "scheduling/base_scheduling_fixed.html" %} {% block title %}{{
+form_mode }} Weekly Schedule{% endblock %} {% block scheduling_content %}
+<div class="row g-4">
+  <div class="col-12 col-xl-8">
+    <div class="mb-5">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-2">
+          <li
+            class="breadcrumb-item text-uppercase fw-bold tracking-wider small opacity-50"
+          >
+            Scheduling
+          </li>
+          <li
+            class="breadcrumb-item text-uppercase fw-bold tracking-wider small opacity-50"
+          >
+            Templates
+          </li>
+          <li
+            class="breadcrumb-item active text-uppercase fw-bold tracking-wider small text-primary"
+            aria-current="page"
+          >
+            {{ form_mode }}
+          </li>
+        </ol>
+      </nav>
+      <h1 class="page-title fw-bold m-0">{{ form_mode }} Weekly Schedule</h1>
+      <p class="text-muted m-0">
+        Configure recurring availability for clinical staff members.
+      </p>
+    </div>
+
+    <form
+      method="post"
+      class="schedule-card border-0 shadow-sm p-4 bg-white rounded-4"
+    >
+      {% csrf_token %} {% if form.non_field_errors %}
+      <div
+        class="alert alert-danger border-0 shadow-sm rounded-3 d-flex align-items-center"
+      >
+        <i class="bi bi-exclamation-triangle-fill me-3 fs-4"></i>
+        <div>{{ form.non_field_errors }}</div>
+      </div>
+      {% endif %}
+
+      <div class="row g-4">
+        <div class="col-12 col-md-6">
+          <label
+            class="form-label fw-bold small text-uppercase text-muted"
+            for="{{ form.doctor.id_for_label }}"
+          >
+            Practitioner <span class="text-danger">*</span>
+          </label>
+          <div
+            class="input-group input-group-merge border rounded-2 overflow-hidden border-light-subtle"
+          >
+            <span class="input-group-text bg-light border-0"
+              ><i class="bi bi-person-badge"></i
+            ></span>
+            {{ form.doctor }}
+          </div>
+          {% for error in form.doctor.errors %}
+          <div class="text-danger small mt-1 fw-medium">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="col-12 col-md-6">
+          <label
+            class="form-label fw-bold small text-uppercase text-muted"
+            for="{{ form.day_of_week.id_for_label }}"
+          >
+            Recurring Day <span class="text-danger">*</span>
+          </label>
+          <div
+            class="input-group input-group-merge border rounded-2 overflow-hidden border-light-subtle"
+          >
+            <span class="input-group-text bg-light border-0"
+              ><i class="bi bi-calendar-event"></i
+            ></span>
+            {{ form.day_of_week }}
+          </div>
+          {% for error in form.day_of_week.errors %}
+          <div class="text-danger small mt-1 fw-medium">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="col-12 col-md-6">
+          <label
+            class="form-label fw-bold small text-uppercase text-muted"
+            for="{{ form.start_time.id_for_label }}"
+          >
+            Shift Start
+          </label>
+          <div
+            class="input-group input-group-merge border rounded-2 overflow-hidden border-light-subtle"
+          >
+            <span class="input-group-text bg-light border-0"
+              ><i class="bi bi-clock"></i
+            ></span>
+            {{ form.start_time }}
+          </div>
+          {% for error in form.start_time.errors %}
+          <div class="text-danger small mt-1 fw-medium">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="col-12 col-md-6">
+          <label
+            class="form-label fw-bold small text-uppercase text-muted"
+            for="{{ form.end_time.id_for_label }}"
+          >
+            Shift End
+          </label>
+          <div
+            class="input-group input-group-merge border rounded-2 overflow-hidden border-light-subtle"
+          >
+            <span class="input-group-text bg-light border-0"
+              ><i class="bi bi-clock-fill"></i
+            ></span>
+            {{ form.end_time }}
+          </div>
+          {% for error in form.end_time.errors %}
+          <div class="text-danger small mt-1 fw-medium">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="col-12">
+          <div
+            class="bg-light p-3 rounded-3 d-flex justify-content-between align-items-center border border-dashed border-secondary-subtle"
+          >
+            <div class="d-flex align-items-center gap-3">
+              <div class="bg-white p-2 rounded-circle shadow-sm">
+                <i class="bi bi-power text-primary fs-5"></i>
+              </div>
+              <div>
+                <div class="fw-bold text-dark small text-uppercase">
+                  Template Status
+                </div>
+                <div class="text-muted small">
+                  Inactive templates stop slot generation immediately.
+                </div>
+              </div>
+            </div>
+            <div class="form-check form-switch form-check-lg m-0">
+              {{ form.is_active }}
+              <label
+                class="form-check-label fw-bold text-primary"
+                for="{{ form.is_active.id_for_label }}"
+                >Active</label
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="d-flex flex-wrap justify-content-end gap-3 mt-5 pt-4 border-top"
+      >
+        <a
+          class="btn btn-link text-muted fw-medium text-decoration-none"
+          href="{% url 'scheduling:weekly_schedule_list' %}"
+        >
+          Discard Changes
+        </a>
+        <button
+          class="btn btn-primary btn-lg px-5 shadow-sm fw-bold transition-up"
+          type="submit"
+        >
+          <i class="bi bi-check2-circle me-2"></i>
+          {% if form_mode == "Edit" %} Update Template {% else %} Save Template
+          {% endif %}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div class="col-12 col-xl-4">
+    {% if form_mode == "Edit" and object %}
+    <div class="metric-card bg-white p-4 shadow-sm border-0 rounded-4 mb-4">
+      <div class="text-muted fw-bold small text-uppercase mb-3">
+        Currently Editing
+      </div>
+      <div
+        class="d-flex align-items-center p-3 bg-primary-subtle rounded-3 border border-primary-subtle"
+      >
+        <div class="avatar-chip bg-primary text-white me-3 shadow-sm">
+          {{ object.doctor.user.username|slice:":2"|upper }}
+        </div>
+        <div>
+          <div class="fw-bold text-dark">{{ object.doctor }}</div>
+          <div class="small text-primary-emphasis fw-medium">
+            {{ object.doctor.specialization }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="metric-card bg-info-subtle border-0 p-4 shadow-sm rounded-4">
+      <div class="d-flex align-items-center gap-2 mb-2 text-info">
+        <i class="bi bi-info-circle-fill"></i>
+        <div class="fw-bold text-uppercase small">Impact Warning</div>
+      </div>
+      <p class="small text-info-emphasis mb-0">
+        Modifying a template re-calculates availability. Existing
+        <strong>booked</strong> appointments are protected and will not be
+        moved.
+      </p>
+    </div>
+    {% else %}
+    <div class="metric-card bg-white p-4 shadow-sm border-0 rounded-4 mb-4">
+      <div class="text-muted fw-bold small text-uppercase mb-3">
+        Live Fleet Stats
+      </div>
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="text-muted small">Active Doctors</span>
+        <span class="badge bg-dark rounded-pill"
+          >{{ active_doctors_count }}</span
+        >
+      </div>
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <span class="text-muted small">Network Coverage</span>
+        <span class="fw-bold text-primary">{{ weekly_coverage }}%</span>
+      </div>
+      <div class="progress" style="height: 8px">
+        <div
+          class="progress-bar bg-primary rounded-pill"
+          role="progressbar"
+          style="width: {{ weekly_coverage }}%"
+        ></div>
+      </div>
+    </div>
+
+    <div class="metric-card bg-dark p-4 shadow-sm border-0 rounded-4">
+      <div class="text-white-50 fw-bold small text-uppercase mb-2">Pro-Tip</div>
+      <p class="text-white small mb-0 opacity-75">
+        Templates define the "norm." Use the <strong>Exceptions</strong> module
+        for temporary changes like vacations or maintenance.
+      </p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% if recent_schedules %}
+<div class="mt-5 pt-4 border-top">
+  <div class="d-flex align-items-center mb-4">
+    <div class="bg-light p-2 rounded-circle me-3">
+      <i class="bi bi-clock-history text-muted"></i>
+    </div>
+    <h5 class="fw-bold text-dark m-0">Recently Updated Templates</h5>
+  </div>
+  <div class="row g-3">
+    {% for schedule in recent_schedules %}
+    <div class="col-12 col-md-6 col-lg-4">
+      <div
+        class="schedule-card bg-white border-0 shadow-sm p-3 rounded-3 d-flex justify-content-between align-items-center transition-up"
+      >
+        <div class="d-flex align-items-center">
+          <div
+            class="avatar-chip bg-light text-primary me-2 shadow-none border border-primary-subtle"
+          >
+            <i class="bi bi-person"></i>
+          </div>
+          <div>
+            <div class="fw-bold small text-dark">{{ schedule.doctor }}</div>
+            <div class="text-muted" style="font-size: 0.75rem">
+              {{ schedule.get_day_of_week_display }} • {{
+              schedule.start_time|time:"H:i" }}
+            </div>
+          </div>
+        </div>
+        <span
+          class="badge {% if schedule.is_active %}bg-success-subtle text-success{% else %}bg-secondary-subtle text-secondary{% endif %} rounded-pill px-2"
+        >
+          {{ schedule.is_active|yesno:"Active,Inactive" }}
+        </span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %} {% endblock %}

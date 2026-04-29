@@ -20,9 +20,9 @@
             <i class="bi bi-calendar2-week-fill"></i>
             <span>Appointments</span>
         </a>
-        <a class="nav-link sidebar-link" href="#">
+        <a class="nav-link sidebar-link {% if '/scheduling/' in request.path %}active{% endif %}" href="{% url 'scheduling:weekly_schedule_list' %}">
             <i class="bi bi-calendar-check-fill"></i>
-            <span>Schedule</span>
+            <span>Scheduling Management</span>
         </a>
         <a class="nav-link sidebar-link" href="#">
             <i class="bi bi-people-fill"></i>
