@@ -1,0 +1,90 @@
+{% extends "appointments/base.html" %}
+
+{% block title %}Reschedule Appointment{% endblock %}
+{% block breadcrumb %}
+    <li class="text-on-surface-variant/50">/</li>
+    <li><a href="{% url 'appointment-detail' pk=appointment.pk %}" class="hover:text-primary transition-colors">Detail #{{ appointment.pk }}</a></li>
+    <li class="text-on-surface-variant/50">/</li>
+    <li class="text-primary font-medium">Reschedule</li>
+{% endblock %}
+
+{% block appointment_content %}
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    <div class="lg:col-span-8 space-y-8">
+        <section class="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/10">
+            <h3 class="text-xs font-bold text-on-surface-variant uppercase tracking-[0.15em] mb-4">Current Appointment</h3>
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold">
+                    {{ appointment.doctor.user.username|first|upper }}
+                </div>
+                <div class="flex-1">
+                    <h4 class="text-base font-bold text-on-surface">Dr. {{ appointment.doctor.user.first_name|default:appointment.doctor.user.username }}</h4>
+                    <p class="text-sm text-on-surface-variant">{{ appointment.scheduled_start|date:"M d, Y" }} at {{ appointment.scheduled_start|time:"h:i A" }}</p>
+                </div>
+                <span class="px-3 py-1 rounded-full text-xs font-bold bg-primary-fixed text-on-primary-fixed border border-primary/10">
+                    {{ appointment.get_status_display }}
+                </span>
+            </div>
+        </section>
+
+        <section>
+            <h3 class="text-xs font-bold text-on-surface-variant uppercase tracking-[0.15em] mb-6">Select New Slot</h3>
+            <form method="post" action="{% url 'appointment-reschedule' pk=appointment.pk %}">
+                {% csrf_token %}
+
+                <div class="mb-6">
+                    <label for="{{ form.reason.id_for_label }}" class="block text-xs font-bold text-on-surface-variant uppercase tracking-[0.15em] mb-3">
+                        Reason for Rescheduling <span class="text-primary">*</span>
+                    </label>
+                    {{ form.reason }}
+                    {% if form.reason.errors %}
+                        <p class="text-sm text-error mt-2">{{ form.reason.errors|striptags }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="bg-surface-container-low p-6 rounded-2xl mb-6">
+                    <h4 class="text-xs font-bold text-on-surface-variant uppercase tracking-[0.15em] mb-4">Available Times</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {% for slot in available_slots %}
+                            <button type="submit" name="slot_id" value="{{ slot.id }}" class="py-3 px-4 rounded-xl border border-outline-variant/30 text-sm font-bold text-on-surface hover:bg-surface-container-high transition-all text-left">
+                                {{ slot.start_datetime|date:"M d" }} | {{ slot.start_datetime|time:"h:i A" }} - {{ slot.end_datetime|time:"h:i A" }}
+                            </button>
+                        {% empty %}
+                            <p class="text-sm text-on-surface-variant">No available slots for this doctor on the selected date.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                {% if form.non_field_errors %}
+                    <div class="mb-4 text-sm text-error">{{ form.non_field_errors|striptags }}</div>
+                {% endif %}
+
+                <div class="flex items-center justify-between pt-4 border-t border-outline-variant/10">
+                    <a href="{% url 'appointment-detail' pk=appointment.pk %}" class="px-6 py-3 text-on-surface-variant font-bold text-sm hover:text-on-surface transition-colors flex items-center space-x-2">
+                        <span class="material-symbols-outlined text-sm">arrow_back</span>
+                        <span>Go Back</span>
+                    </a>
+                    <p class="text-xs text-on-surface-variant">Choosing a slot will submit the reschedule request immediately.</p>
+                </div>
+            </form>
+        </section>
+    </div>
+
+    <aside class="lg:col-span-4 sticky top-24">
+        <h3 class="text-xs font-bold text-on-surface-variant uppercase tracking-[0.15em] mb-6">New Schedule</h3>
+        <div class="glass-panel p-6 rounded-3xl shadow-lg border border-white/40 space-y-4">
+            <div class="space-y-2">
+                <p class="text-[10px] font-black text-secondary uppercase tracking-widest">Doctor</p>
+                <h5 class="text-base font-bold text-on-surface">Dr. {{ appointment.doctor.user.first_name|default:appointment.doctor.user.username }}</h5>
+            </div>
+            <div class="space-y-2">
+                <p class="text-[10px] font-black text-secondary uppercase tracking-widest">Selected Date</p>
+                <p class="text-sm font-bold text-on-surface">{{ selected_date|date:"M d, Y" }}</p>
+            </div>
+            <p class="text-xs text-on-surface-variant">
+                Rescheduling moves the appointment back to REQUESTED until the staff reconfirms it.
+            </p>
+        </div>
+    </aside>
+</div>
+{% endblock %}
