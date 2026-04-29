@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Receptionist Dashboard{% endblock %}
+{% block topbar_subtitle %}Reception Workspace{% endblock %}
+{% block topbar_role %}Role: Receptionist{% endblock %}
+
+{% block content %}
+<div class="surface-card p-4">
+	<h1 class="h4 fw-bold">Receptionist Dashboard</h1>
+	<p class="text-muted mb-0">Welcome {{ request.user.username }}.</p>
+</div>
+{% endblock %}

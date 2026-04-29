@@ -147,9 +147,13 @@
             </div>
         </div>
         <div class="action-row">
+            {% if can_manage %}
             <a href="{% url 'emr:edit' consultation.id %}" class="btn btn-primary">Edit</a>
             <a href="{% url 'emr:delete' consultation.id %}" class="btn btn-outline-danger">Delete</a>
             <a href="{% url 'emr:list' %}" class="btn btn-outline-secondary">Back</a>
+            {% else %}
+            <a href="{% url 'emr:patient_list' %}" class="btn btn-outline-secondary">Back to My Consultations</a>
+            {% endif %}
         </div>
     </div>
 
