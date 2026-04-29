@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+{% block topbar_subtitle %}Admin Workspace{% endblock %}
+{% block topbar_role %}Role: Admin{% endblock %}
+
+{% block content %}
+<div class="surface-card p-4">
+	<h1 class="h4 fw-bold">Admin Dashboard</h1>
+	<p class="text-muted mb-0">Welcome {{ request.user.username }}.</p>
+</div>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Dashboard{% endblock %}
+{% block topbar_subtitle %}Patient Workspace{% endblock %}
+{% block topbar_role %}Role: Patient{% endblock %}
+
+{% block content %}
+<div class="surface-card p-4">
+	<h1 class="h4 fw-bold">Patient Dashboard</h1>
+	<p class="text-muted mb-0">Welcome {{ request.user.username }}.</p>
+</div>
+{% endblock %}
