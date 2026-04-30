@@ -8,121 +8,201 @@
 <style>
     .detail-shell {
         display: grid;
-        gap: 1rem;
+        gap: 1.5rem;
     }
 
+    /* Premium Glassmorphic Hero */
     .hero-card {
-        background: linear-gradient(125deg, #ffffff 0%, #f7fbff 60%, #ebf4fb 100%);
-        border: 1px solid #d9e6f3;
-        border-radius: 1rem;
-        padding: 1rem;
-        box-shadow: 0 8px 24px rgba(15, 55, 110, 0.06);
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(244, 249, 255, 0.8) 100%);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(217, 230, 243, 0.8);
+        border-radius: 1.25rem;
+        padding: 1.5rem;
+        box-shadow: 0 10px 30px rgba(15, 55, 110, 0.05), inset 0 1px 0 rgba(255,255,255,0.6);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .hero-card:hover {
+        box-shadow: 0 15px 35px rgba(15, 55, 110, 0.08), inset 0 1px 0 rgba(255,255,255,0.8);
     }
 
     .hero-title {
         margin: 0;
-        font-size: 1.35rem;
+        font-size: 1.45rem;
         font-weight: 800;
-        color: #152129;
+        color: #121c24;
+        letter-spacing: -0.01em;
     }
 
     .hero-subtitle {
-        margin: .25rem 0 0;
-        color: #5f6975;
-        font-size: .92rem;
+        margin: .35rem 0 0;
+        color: #556272;
+        font-size: .95rem;
+        font-weight: 500;
     }
 
     .pill-row {
         display: flex;
         flex-wrap: wrap;
-        gap: .45rem;
-        margin-top: .55rem;
+        gap: .6rem;
+        margin-top: .75rem;
     }
 
     .pill {
         display: inline-flex;
         border-radius: 999px;
-        padding: .24rem .6rem;
-        font-size: .76rem;
+        padding: .35rem .75rem;
+        font-size: .75rem;
         font-weight: 700;
+        letter-spacing: .02em;
+        text-transform: uppercase;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+        transition: filter 0.2s ease;
+    }
+    
+    .pill:hover {
+        filter: brightness(0.95);
     }
 
     .pill.code {
-        background: #e8f4ff;
-        color: #0b4ea2;
+        background: linear-gradient(to right, #e8f4ff, #d6ebff);
+        color: #094085;
+        border: 1px solid #cce3ff;
     }
 
     .pill.date {
-        background: #e8f8ef;
-        color: #1c7a48;
+        background: linear-gradient(to right, #e8f8ef, #d4f2e0);
+        color: #155e37;
+        border: 1px solid #bcead0;
     }
 
     .action-row {
         display: flex;
         flex-wrap: wrap;
-        gap: .5rem;
+        gap: .6rem;
+    }
+    
+    .action-row .btn {
+        border-radius: 0.85rem;
+        padding: 0.6rem 1.2rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    .action-row .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+    }
+    
+    .action-row .btn-primary {
+        background: linear-gradient(135deg, #0d4d99 0%, #0a6f8b 100%);
+        border: none;
     }
 
     .content-grid {
         display: grid;
-        grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
-        gap: 1rem;
+        grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr);
+        gap: 1.5rem;
         align-items: start;
     }
 
+    /* Premium Cards */
     .panel-card {
-        background: #fff;
-        border: 1px solid #dde8f4;
-        border-radius: 1rem;
-        box-shadow: 0 8px 24px rgba(15, 55, 110, 0.06);
-        padding: 1rem;
+        background: #ffffff;
+        border: 1px solid #e2edf8;
+        border-radius: 1.25rem;
+        box-shadow: 0 8px 24px rgba(15, 55, 110, 0.04), 0 2px 6px rgba(15, 55, 110, 0.02);
+        padding: 1.5rem;
+        transition: box-shadow 0.3s ease;
+    }
+    
+    .panel-card:hover {
+        box-shadow: 0 12px 32px rgba(15, 55, 110, 0.06), 0 4px 10px rgba(15, 55, 110, 0.03);
     }
 
     .section-label {
-        margin: 0 0 .4rem;
-        font-size: .74rem;
+        margin: 0 0 .5rem;
+        font-size: .8rem;
         font-weight: 800;
         letter-spacing: .08em;
         text-transform: uppercase;
-        color: #5f6975;
+        color: #606f80;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .panel-card > .section-label::before {
+        content: '';
+        display: block;
+        width: 4px;
+        height: 14px;
+        background: #0a6f8b;
+        border-radius: 4px;
     }
 
     .section-copy {
         margin: 0;
         color: #263441;
         white-space: pre-line;
+        line-height: 1.6;
+        font-size: 0.95rem;
     }
 
     .segment {
         border: 1px solid #e5eef6;
         background: #fbfdff;
-        border-radius: .8rem;
-        padding: .75rem;
+        border-radius: 1rem;
+        padding: 1.25rem;
+        transition: background 0.2s, border-color 0.2s;
+    }
+    
+    .segment:hover {
+        background: #ffffff;
+        border-color: #dce8f3;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.02);
     }
 
     .item-card {
-        border: 1px solid #e3edf7;
-        background: #f9fcff;
-        border-radius: .75rem;
-        padding: .72rem;
+        border: 1px solid #e2edf8;
+        background: #fbfdff;
+        border-radius: 1rem;
+        padding: 1rem;
+        transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+    
+    .item-card:hover {
+        transform: translateX(4px);
+        background: #ffffff;
+        box-shadow: 0 4px 12px rgba(15, 55, 110, 0.05);
+        border-color: #cbdced;
     }
 
     .item-title {
         margin: 0;
-        font-weight: 700;
+        font-weight: 800;
         color: #1d3242;
+        font-size: 1rem;
     }
 
     .item-meta {
-        margin: .2rem 0 0;
+        margin: .3rem 0 0;
         color: #60707f;
-        font-size: .86rem;
+        font-size: .85rem;
+        line-height: 1.4;
     }
 
     .empty-inline {
         margin: 0;
         color: #6b7784;
         font-size: .9rem;
+        font-style: italic;
+        padding: 0.5rem;
+        text-align: center;
+        background: #f8f9fa;
+        border-radius: 0.5rem;
     }
 
     @media (max-width: 1199px) {
@@ -185,10 +265,13 @@
                 <h4 class="section-label mb-1">Prescriptions</h4>
                 {% for prescription in prescriptions %}
                 <div class="item-card">
-                    <p class="item-title">{{ prescription.drug_name }}</p>
-                    <p class="item-meta">{{ prescription.dose }} | {{ prescription.duration }}</p>
+                    <div class="d-flex justify-content-between align-items-start">
+                        <p class="item-title">{{ prescription.drug_name }}</p>
+                        <span class="badge bg-light text-dark border">{{ prescription.frequency }}</span>
+                    </div>
+                    <p class="item-meta mb-1"><strong>Dose:</strong> {{ prescription.dose }} | <strong>Duration:</strong> {{ prescription.duration }}</p>
                     {% if prescription.instructions %}
-                    <p class="item-meta mb-0">{{ prescription.instructions }}</p>
+                    <p class="item-meta mb-0 text-muted" style="font-style: italic;">"{{ prescription.instructions }}"</p>
                     {% endif %}
                 </div>
                 {% empty %}
@@ -197,14 +280,19 @@
             </div>
 
             <div class="panel-card d-grid gap-2">
-                <h4 class="section-label mb-1">Requested Tests (Normalized)</h4>
+                <h4 class="section-label mb-1">Laboratory Orders</h4>
                 {% for test in tests %}
                 <div class="item-card">
-                    <p class="item-title">{{ test.test_name }}</p>
-                    <p class="item-meta mb-0">{{ test.notes|default:"No notes" }}</p>
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <p class="item-title">{{ test.test_name }}</p>
+                        <span class="badge {% if test.urgency == 'stat' %}bg-danger{% elif test.urgency == 'urgent' %}bg-warning text-dark{% else %}bg-info text-dark{% endif %} text-uppercase" style="font-size: 0.65rem;">
+                            {{ test.get_urgency_display }}
+                        </span>
+                    </div>
+                    <p class="item-meta mb-0">{{ test.notes|default:"No special instructions" }}</p>
                 </div>
                 {% empty %}
-                <p class="empty-inline">No normalized tests requested.</p>
+                <p class="empty-inline">No structured tests requested.</p>
                 {% endfor %}
             </div>
         </div>

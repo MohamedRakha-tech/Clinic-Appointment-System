@@ -60,8 +60,6 @@ INSTALLED_APPS = [
     'queueing',
     'reports',
     'scheduling',
-    'scripts',
-    
 ]
 
 MIDDLEWARE = [

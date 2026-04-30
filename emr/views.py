@@ -8,7 +8,7 @@ from appointments.models import Appointment
 from accounts.mixins import DoctorRequiredMixin, PatientRequiredMixin
 from accounts.models import DoctorProfile
 from .models import ConsultationRecord, PrescriptionItem, RequestedTest
-from .forms import ConsultationRecordForm, PrescriptionItemForm, RequestedTestForm
+from .forms import ConsultationRecordForm, PrescriptionItemForm, RequestedTestForm, PrescriptionItemFormSet, RequestedTestFormSet
 
 class EMRService:
 
@@ -34,6 +34,9 @@ class EMRService:
             requested_tests=data.get('requested_tests', ''),
             summary_for_patient=data.get('summary_for_patient', ''),
         )
+
+        appointment.status = Appointment.Status.COMPLETED
+        appointment.save(update_fields=['status'])
 
         return consultation
 
@@ -196,8 +199,12 @@ class ConsultationCreateView(DoctorRequiredMixin, View):
             }, status=403)
 
         form = ConsultationRecordForm()
+        prescription_formset = PrescriptionItemFormSet(prefix='prescriptions')
+        test_formset = RequestedTestFormSet(prefix='tests')
         return render(request, 'emr/consultation_form.html', {
             'form': form,
+            'prescription_formset': prescription_formset,
+            'test_formset': test_formset,
             'appointment': appointment,
             'action': 'Create',
         })
@@ -227,19 +234,28 @@ class ConsultationCreateView(DoctorRequiredMixin, View):
             }, status=403)
 
         form = ConsultationRecordForm(request.POST)
+        prescription_formset = PrescriptionItemFormSet(request.POST, prefix='prescriptions')
+        test_formset = RequestedTestFormSet(request.POST, prefix='tests')
 
-        if form.is_valid():
+        if form.is_valid() and prescription_formset.is_valid() and test_formset.is_valid():
             try:
-                consultation = EMRService.create_consultation_record(
-                    appointment_id,
-                    doctor_profile,
-                    form.cleaned_data
-                )
+                with transaction.atomic():
+                    consultation = EMRService.create_consultation_record(
+                        appointment_id,
+                        doctor_profile,
+                        form.cleaned_data
+                    )
+                    prescription_formset.instance = consultation
+                    prescription_formset.save()
+                    test_formset.instance = consultation
+                    test_formset.save()
                 return redirect('emr:detail', pk=consultation.id)
             except ValidationError as e:
                 form.add_error(None, str(e))
                 return render(request, 'emr/consultation_form.html', {
                     'form': form,
+                    'prescription_formset': prescription_formset,
+                    'test_formset': test_formset,
                     'appointment': appointment,
                     'action': 'Create',
                     'error': str(e),
@@ -247,6 +263,8 @@ class ConsultationCreateView(DoctorRequiredMixin, View):
 
         return render(request, 'emr/consultation_form.html', {
             'form': form,
+            'prescription_formset': prescription_formset,
+            'test_formset': test_formset,
             'appointment': appointment,
             'action': 'Create',
         })
@@ -274,8 +292,12 @@ class ConsultationUpdateView(DoctorRequiredMixin, View):
             }, status=403)
 
         form = ConsultationRecordForm(instance=consultation)
+        prescription_formset = PrescriptionItemFormSet(instance=consultation, prefix='prescriptions')
+        test_formset = RequestedTestFormSet(instance=consultation, prefix='tests')
         return render(request, 'emr/consultation_form.html', {
             'form': form,
+            'prescription_formset': prescription_formset,
+            'test_formset': test_formset,
             'consultation': consultation,
             'appointment': consultation.appointment,
             'action': 'Edit',
@@ -296,19 +318,26 @@ class ConsultationUpdateView(DoctorRequiredMixin, View):
             }, status=403)
 
         form = ConsultationRecordForm(request.POST, instance=consultation)
+        prescription_formset = PrescriptionItemFormSet(request.POST, instance=consultation, prefix='prescriptions')
+        test_formset = RequestedTestFormSet(request.POST, instance=consultation, prefix='tests')
 
-        if form.is_valid():
+        if form.is_valid() and prescription_formset.is_valid() and test_formset.is_valid():
             try:
-                consultation = EMRService.update_consultation_record(
-                    pk,
-                    doctor_profile,
-                    form.cleaned_data
-                )
+                with transaction.atomic():
+                    consultation = EMRService.update_consultation_record(
+                        pk,
+                        doctor_profile,
+                        form.cleaned_data
+                    )
+                    prescription_formset.save()
+                    test_formset.save()
                 return redirect('emr:detail', pk=consultation.id)
             except ValidationError as e:
                 form.add_error(None, str(e))
                 return render(request, 'emr/consultation_form.html', {
                     'form': form,
+                    'prescription_formset': prescription_formset,
+                    'test_formset': test_formset,
                     'consultation': consultation,
                     'appointment': consultation.appointment,
                     'action': 'Edit',
@@ -317,6 +346,8 @@ class ConsultationUpdateView(DoctorRequiredMixin, View):
 
         return render(request, 'emr/consultation_form.html', {
             'form': form,
+            'prescription_formset': prescription_formset,
+            'test_formset': test_formset,
             'consultation': consultation,
             'appointment': consultation.appointment,
             'action': 'Edit',
