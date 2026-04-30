@@ -63,8 +63,8 @@ def patient_login_view(request):
         if form.is_valid():
             user = form.get_user()
             if get_user_role(user) != "patient":
-                messages.error(request, "Please use the staff login portal.")
-                return redirect("accounts:staff_login")
+                form.add_error(None, "Please use the staff login portal.")
+                return render(request, "accounts/login.html", {"form": form, "is_staff_login": False})
             login_user(request, user)
             return _redirect_by_role(user)
     else:
@@ -83,8 +83,8 @@ def staff_login_view(request):
         if form.is_valid():
             user = form.get_user()
             if get_user_role(user) == "patient":
-                messages.error(request, "Patients must use the patient login portal.")
-                return redirect("accounts:patient_login")
+                form.add_error(None, "Patients must use the patient login portal.")
+                return render(request, "accounts/login.html", {"form": form, "is_staff_login": True})
             login_user(request, user)
             return _redirect_by_role(user)
     else:

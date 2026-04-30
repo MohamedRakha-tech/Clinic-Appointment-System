@@ -1,0 +1,194 @@
+{% extends "appointments/base.html" %}
+
+{% block title %}Book Appointment{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item active" aria-current="page">Book</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .slot-card.selected {
+        border-color: #0d6efd !important;
+        box-shadow: 0 0 0 .2rem rgba(13,110,253,.15);
+    }
+</style>
+{% endblock %}
+
+{% block appointment_content %}
+<div class="row g-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="mb-4">
+                    <h1 class="h3 fw-bold mb-1">Schedule Consultation</h1>
+                    <p class="text-muted mb-0">Choose a doctor, load live slots from the slot API, and reserve a visit.</p>
+                </div>
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">{{ form.non_field_errors|striptags }}</div>
+                {% endif %}
+
+                <form id="booking-form" method="post" action="{% url 'appointment-book' %}">
+                    {% csrf_token %}
+                    <input type="hidden" id="slot_id" name="slot_id" value="{{ form.initial.slot_id|default:'' }}">
+                    <input type="hidden" name="doctor_id" id="doctor_hidden" value="{{ form.initial.doctor_id|default:'' }}">
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-12 col-md-4">
+                            <label class="form-label">Doctor</label>
+                            <select id="doctor_id" name="doctor_id" class="form-select">
+                                {% for doctor in doctors %}
+                                    <option value="{{ doctor.id }}" {% if selected_doctor and doctor.id == selected_doctor.id %}selected{% endif %}>
+                                        {% firstof doctor.user.first_name doctor.user.username %} - {{ doctor.specialization }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label class="form-label">Date</label>
+                            <input id="slot_date" type="date" name="date" value="{{ selected_date|date:'Y-m-d' }}" class="form-control">
+                        </div>
+                        <div class="col-12 col-md-4 d-flex align-items-end">
+                            <button type="button" id="reload-slots" class="btn btn-primary w-100">Load Slots</button>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h2 class="h6 text-uppercase text-muted fw-semibold mb-0">Available Slots</h2>
+                            <span class="text-muted small" id="slot-status">Loading from slot API...</span>
+                        </div>
+                        <div id="slot-grid" class="row g-3"></div>
+                        <div id="slot-empty" class="alert alert-light border mt-3 d-none">
+                            No available slots were found for the selected doctor and date.
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-12 col-md-6">
+                            <div class="p-3 border rounded-3 bg-light">
+                                <div class="text-uppercase text-muted small fw-semibold">Selected Slot</div>
+                                <div id="selected-slot-text" class="fw-semibold">None selected yet.</div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label for="notes_for_staff" class="form-label">Notes for Staff</label>
+                            <textarea
+                                id="notes_for_staff"
+                                name="{{ form.notes_for_staff.name }}"
+                                rows="3"
+                                class="form-control"
+                                placeholder="Optional notes for staff..."
+                            >{{ form.notes_for_staff.value|default_if_none:'' }}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                        <a href="{% url 'appointment-list' %}" class="btn btn-link px-0">Back to List</a>
+                        <button type="submit" id="book-button" class="btn btn-primary" disabled>Confirm Booking</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const apiUrl = "{{ slot_api_url|escapejs }}";
+    const doctorSelect = document.getElementById("doctor_id");
+    const doctorHidden = document.getElementById("doctor_hidden");
+    const dateInput = document.getElementById("slot_date");
+    const reloadButton = document.getElementById("reload-slots");
+    const slotGrid = document.getElementById("slot-grid");
+    const slotEmpty = document.getElementById("slot-empty");
+    const slotStatus = document.getElementById("slot-status");
+    const selectedSlotText = document.getElementById("selected-slot-text");
+    const slotIdInput = document.getElementById("slot_id");
+    const bookButton = document.getElementById("book-button");
+
+    const setSelectedSlot = (slot, card) => {
+        slotIdInput.value = slot.id;
+        selectedSlotText.textContent = `${slot.doctor_name} | ${new Date(slot.start_datetime).toLocaleString()}`;
+        bookButton.disabled = false;
+        slotGrid.querySelectorAll("[data-slot-card]").forEach((el) => el.classList.remove("selected"));
+        card.classList.add("selected");
+    };
+
+    const renderSlots = (slots) => {
+        slotGrid.innerHTML = "";
+        slotEmpty.classList.toggle("d-none", slots.length !== 0);
+        if (!slots.length) {
+            bookButton.disabled = true;
+            slotIdInput.value = "";
+            selectedSlotText.textContent = "None selected yet.";
+            return;
+        }
+
+        slots.forEach((slot) => {
+            const col = document.createElement("div");
+            col.className = "col-12 col-md-6";
+            const card = document.createElement("button");
+            card.type = "button";
+            card.dataset.slotCard = "true";
+            card.className = "slot-card text-start w-100 card border rounded-3 h-100";
+            const start = new Date(slot.start_datetime);
+            const end = new Date(slot.end_datetime);
+            card.innerHTML = `
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start gap-3">
+                        <div>
+                            <div class="text-uppercase text-muted small fw-semibold">Available</div>
+                            <div class="fw-bold">${start.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</div>
+                            <div class="text-muted small">${start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} - ${end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
+                        </div>
+                        <span class="badge text-bg-primary">Pick</span>
+                    </div>
+                </div>
+            `;
+            card.addEventListener("click", () => setSelectedSlot(slot, card));
+            col.appendChild(card);
+            slotGrid.appendChild(col);
+        });
+    };
+
+    const loadSlots = async () => {
+        const params = new URLSearchParams({
+            doctor: doctorSelect.value,
+            slot_date: dateInput.value,
+        });
+        doctorHidden.value = doctorSelect.value;
+        slotStatus.textContent = "Loading from slot API...";
+        slotIdInput.value = "";
+        bookButton.disabled = true;
+        selectedSlotText.textContent = "Choose one of the available slots.";
+        slotGrid.innerHTML = "";
+
+        try {
+            const response = await fetch(`${apiUrl}?${params.toString()}`, {
+                headers: {
+                    "Accept": "application/json",
+                    "X-Requested-With": "XMLHttpRequest",
+                },
+                credentials: "same-origin",
+            });
+            const data = await response.json();
+            const slots = Array.isArray(data.results) ? data.results : [];
+            slotStatus.textContent = `${slots.length} slot${slots.length === 1 ? "" : "s"} loaded`;
+            renderSlots(slots);
+        } catch (error) {
+            slotStatus.textContent = "Could not load slots right now.";
+            slotEmpty.classList.remove("d-none");
+            slotEmpty.textContent = "Unable to load slots from the slot API.";
+        }
+    };
+
+    reloadButton.addEventListener("click", loadSlots);
+    doctorSelect.addEventListener("change", loadSlots);
+    dateInput.addEventListener("change", loadSlots);
+    loadSlots();
+});
+</script>
+{% endblock %}

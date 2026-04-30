@@ -1,0 +1,127 @@
+{% extends "appointments/base.html" %}
+
+{% block title %}Appointment #{{ appointment.pk }}{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item active" aria-current="page">Detail #{{ appointment.pk }}</li>
+{% endblock %}
+
+{% block appointment_content %}
+<div class="row g-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
+                    <div>
+                        <p class="text-uppercase text-muted small fw-semibold mb-1">Appointment Code</p>
+                        <h1 class="h2 fw-bold mb-0">{{ appointment.appointment_code }}</h1>
+                    </div>
+                    <span class="badge text-bg-primary align-self-start">{{ appointment.get_status_display }}</span>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-12 col-md-4">
+                        <div class="p-3 border rounded-3 bg-light">
+                            <div class="text-uppercase text-muted small fw-semibold">Doctor</div>
+                            <div class="fw-semibold">Dr. {{ appointment.doctor.user.first_name|default:appointment.doctor.user.username }}</div>
+                            <div class="text-muted small">{{ appointment.doctor.specialization }}</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="p-3 border rounded-3 bg-light">
+                            <div class="text-uppercase text-muted small fw-semibold">Date</div>
+                            <div class="fw-semibold">{{ appointment.scheduled_start|date:"M d, Y" }}</div>
+                            <div class="text-muted small">{{ appointment.scheduled_start|time:"h:i A" }} - {{ appointment.scheduled_end|time:"h:i A" }}</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="p-3 border rounded-3 bg-light">
+                            <div class="text-uppercase text-muted small fw-semibold">Patient</div>
+                            <div class="fw-semibold">{{ appointment.patient.user.first_name|default:appointment.patient.user.username }}</div>
+                            <div class="text-muted small">{{ appointment.get_booking_source_display }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    {% if can_reschedule %}
+                        <a href="{% url 'appointment-reschedule' pk=appointment.pk %}" class="btn btn-outline-primary">Reschedule</a>
+                    {% endif %}
+                    {% if can_cancel %}
+                        <a href="{% url 'appointment-cancel' pk=appointment.pk %}" class="btn btn-outline-danger">Cancel</a>
+                    {% endif %}
+                    {% if can_confirm %}
+                        <form method="post" action="{% url 'appointment-confirm' pk=appointment.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success">Confirm</button>
+                        </form>
+                    {% endif %}
+                    {% if can_check_in %}
+                        <form method="post" action="{% url 'queueing:checkin' appointment.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary">Check In</button>
+                        </form>
+                    {% endif %}
+                    {% if can_complete %}
+                        <form method="post" action="{% url 'appointment-complete' pk=appointment.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-success">Complete</button>
+                        </form>
+                    {% endif %}
+                    {% if can_mark_no_show %}
+                        <form method="post" action="{% url 'appointment-no-show' pk=appointment.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-secondary">No Show</button>
+                        </form>
+                    {% endif %}
+                    {% if can_manage and appointment.status == "REQUESTED" %}
+                        <form method="post" action="{% url 'appointment-decline' pk=appointment.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-dark">Decline</button>
+                        </form>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex gap-2">
+                    <a href="{% url 'appointment-history' pk=appointment.pk %}" class="btn btn-outline-secondary">View Full History</a>
+                    <a href="{% url 'appointment-list' %}" class="btn btn-link">Back to list</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white">
+                <h2 class="h6 mb-0 fw-bold">Status History</h2>
+            </div>
+            <div class="card-body">
+                {% for entry in status_history %}
+                    <div class="border rounded-3 p-3 mb-3">
+                        <div class="d-flex justify-content-between gap-2">
+                            <div class="fw-semibold">{{ entry.old_status|default:"" }} → {{ entry.new_status }}</div>
+                            <div class="text-muted small">{{ entry.created_at|date:"M d, Y h:i A" }}</div>
+                        </div>
+                        <div class="text-muted small mt-1">Changed by: {{ entry.changed_by.username|default:"System" }}</div>
+                        {% if entry.change_reason %}
+                            <div class="text-muted small">Reason: {{ entry.change_reason }}</div>
+                        {% endif %}
+                    </div>
+                {% empty %}
+                    <div class="text-muted">No status history yet.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white">
+                <h2 class="h6 mb-0 fw-bold">Notes</h2>
+            </div>
+            <div class="card-body">
+                <p class="mb-0 text-muted">{{ appointment.notes_for_staff|default:"No internal notes were added for this appointment." }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

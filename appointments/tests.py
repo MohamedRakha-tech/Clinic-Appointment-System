@@ -3,10 +3,12 @@ from datetime import timedelta
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
+from rest_framework.test import APIClient
 
 from accounts.factories import DoctorProfileFactory, PatientProfileFactory, ReceptionistProfileFactory
 from appointments.factories import AppointmentFactory
 from appointments.models import Appointment
+from emr.models import ConsultationRecord
 from scheduling.factories import AppointmentSlotFactory
 
 
@@ -18,6 +20,19 @@ class AppointmentViewsTests(TestCase):
         other_appointment = AppointmentFactory(patient=other_patient)
 
         self.client.force_login(patient.user)
+        response = self.client.get(reverse("appointment-list"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, own_appointment.appointment_code)
+        self.assertNotContains(response, other_appointment.appointment_code)
+
+    def test_doctor_list_shows_only_their_appointments(self):
+        doctor_one = DoctorProfileFactory()
+        doctor_two = DoctorProfileFactory()
+        own_appointment = AppointmentFactory(doctor=doctor_one)
+        other_appointment = AppointmentFactory(doctor=doctor_two)
+
+        self.client.force_login(doctor_one.user)
         response = self.client.get(reverse("appointment-list"))
 
         self.assertEqual(response.status_code, 200)
@@ -76,6 +91,59 @@ class AppointmentViewsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "This slot is no longer available.")
 
+    def test_booking_rejects_overlapping_patient_appointment(self):
+        patient = PatientProfileFactory()
+        doctor_one = DoctorProfileFactory()
+        doctor_two = DoctorProfileFactory()
+        first_slot = AppointmentSlotFactory(
+            doctor=doctor_one,
+            slot_date=timezone.localdate() + timedelta(days=2),
+            start_datetime=timezone.now() + timedelta(days=2, hours=1),
+            end_datetime=timezone.now() + timedelta(days=2, hours=1, minutes=30),
+        )
+        overlapping_slot = AppointmentSlotFactory(
+            doctor=doctor_two,
+            slot_date=timezone.localdate() + timedelta(days=2),
+            start_datetime=timezone.now() + timedelta(days=2, hours=1, minutes=15),
+            end_datetime=timezone.now() + timedelta(days=2, hours=1, minutes=45),
+        )
+        AppointmentFactory(patient=patient, doctor=doctor_one, slot=first_slot)
+
+        self.client.force_login(patient.user)
+        response = self.client.post(reverse("appointment-book"), {
+            "doctor_id": doctor_two.id,
+            "slot_id": overlapping_slot.id,
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "overlaps with this time")
+
+    def test_booking_rejects_doctor_buffer_conflict(self):
+        patient = PatientProfileFactory()
+        doctor = DoctorProfileFactory(buffer_before_minutes=15, buffer_after_minutes=15)
+        first_slot = AppointmentSlotFactory(
+            doctor=doctor,
+            slot_date=timezone.localdate() + timedelta(days=3),
+            start_datetime=timezone.now() + timedelta(days=3, hours=1),
+            end_datetime=timezone.now() + timedelta(days=3, hours=1, minutes=30),
+        )
+        buffered_slot = AppointmentSlotFactory(
+            doctor=doctor,
+            slot_date=timezone.localdate() + timedelta(days=3),
+            start_datetime=first_slot.end_datetime + timedelta(minutes=10),
+            end_datetime=first_slot.end_datetime + timedelta(minutes=40),
+        )
+        AppointmentFactory(patient=PatientProfileFactory(), doctor=doctor, slot=first_slot)
+
+        self.client.force_login(patient.user)
+        response = self.client.post(reverse("appointment-book"), {
+            "doctor_id": doctor.id,
+            "slot_id": buffered_slot.id,
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "buffer window")
+
     def test_staff_can_confirm_appointment_and_record_history(self):
         receptionist = ReceptionistProfileFactory()
         appointment = AppointmentFactory(status=Appointment.Status.REQUESTED)
@@ -120,6 +188,57 @@ class AppointmentViewsTests(TestCase):
         self.assertEqual(old_slot.status, "AVAILABLE")
         self.assertEqual(new_slot.status, "BOOKED")
         self.assertEqual(appointment.reschedule_history.count(), 1)
+
+    def test_completion_requires_consultation_record(self):
+        receptionist = ReceptionistProfileFactory()
+        appointment = AppointmentFactory(status=Appointment.Status.CHECKED_IN)
+
+        self.client.force_login(receptionist.user)
+        response = self.client.post(reverse("appointments_api:appointment-complete", args=[appointment.pk]))
+
+        self.assertEqual(response.status_code, 400)
+        self.assertContains(response, "consultation record must exist", status_code=400)
+
+    def test_completion_succeeds_after_consultation_record_exists(self):
+        doctor = DoctorProfileFactory()
+        appointment = AppointmentFactory(doctor=doctor, status=Appointment.Status.CHECKED_IN)
+        ConsultationRecord.objects.create(
+            appointment=appointment,
+            doctor=doctor,
+            diagnosis="Hypertension follow-up",
+            notes="Vitals reviewed, stable exam.",
+            requested_tests="",
+            summary_for_patient="Continue current medication and return in 4 weeks.",
+        )
+
+        receptionist = ReceptionistProfileFactory()
+        self.client.force_login(receptionist.user)
+        response = self.client.post(reverse("appointments_api:appointment-complete", args=[appointment.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        appointment.refresh_from_db()
+        self.assertEqual(appointment.status, Appointment.Status.COMPLETED)
+
+    def test_appointment_api_books_for_patient(self):
+        patient = PatientProfileFactory()
+        doctor = DoctorProfileFactory()
+        slot = AppointmentSlotFactory(
+            doctor=doctor,
+            slot_date=timezone.localdate() + timedelta(days=6),
+            start_datetime=timezone.now() + timedelta(days=6, hours=1),
+            end_datetime=timezone.now() + timedelta(days=6, hours=1, minutes=30),
+        )
+
+        api_client = APIClient()
+        api_client.force_authenticate(user=patient.user)
+        response = api_client.post(
+            reverse("appointments_api:appointment-list"),
+            {"slot_id": slot.id},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertTrue(Appointment.objects.filter(slot=slot, patient=patient).exists())
 
     def test_staff_history_view_shows_status_and_reschedule_entries(self):
         receptionist = ReceptionistProfileFactory()

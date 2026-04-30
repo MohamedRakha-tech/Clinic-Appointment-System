@@ -16,6 +16,7 @@ from accounts.mixins import (
     StaffAppointmentRequiredMixin,
 )
 from appointments.filters import (
+    can_manage_all_appointments,
     appointment_detail_queryset_for_user,
     appointment_history_queryset_for_user,
     apply_appointment_list_filters,
@@ -34,8 +35,11 @@ class AppointmentListView(AppointmentQuerysetMixin, ListView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        queryset = apply_appointment_list_filters(queryset, self.request.GET)
+        queryset = apply_appointment_list_filters(queryset, self.request.GET, is_staff=self.context_is_staff())
         return queryset
+
+    def context_is_staff(self):
+        return can_manage_all_appointments(self.request.user)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -44,13 +48,7 @@ class AppointmentListView(AppointmentQuerysetMixin, ListView):
         context["date_from"] = (self.request.GET.get("date_from") or "").strip()
         context["date_to"] = (self.request.GET.get("date_to") or "").strip()
         context["doctor_id"] = (self.request.GET.get("doctor_id") or "").strip()
-        context["show_staff_actions"] = self.request.user.is_authenticated and (
-            self.request.user.is_staff
-            or self.request.user.is_superuser
-            or hasattr(self.request.user, "doctor_profile")
-            or hasattr(self.request.user, "receptionist_profile")
-            or hasattr(self.request.user, "admin_profile")
-        )
+        context["show_staff_actions"] = self.context_is_staff()
         return context
 
 
@@ -65,21 +63,35 @@ class AppointmentDetailView(AppointmentQuerysetMixin, DetailView):
         context = super().get_context_data(**kwargs)
         context["status_history"] = self.object.status_history.select_related("changed_by").order_by("-created_at")
         context["reschedule_history"] = self.object.reschedule_history.select_related("changed_by").order_by("-created_at")
-        context["can_manage"] = self.request.user.is_authenticated and (
-            self.request.user.is_staff
-            or self.request.user.is_superuser
-            or hasattr(self.request.user, "doctor_profile")
-            or hasattr(self.request.user, "receptionist_profile")
-            or hasattr(self.request.user, "admin_profile")
+        user = self.request.user
+        is_staff_user = user.is_authenticated and (
+            user.is_staff
+            or user.is_superuser
+            or hasattr(user, "doctor_profile")
+            or hasattr(user, "receptionist_profile")
+            or hasattr(user, "admin_profile")
         )
-        context["can_reschedule"] = self.object.status not in {
+        status = self.object.status
+
+        context["can_manage"] = is_staff_user
+        context["can_reschedule"] = status not in {
             Appointment.Status.CANCELLED,
             Appointment.Status.COMPLETED,
         }
-        context["can_cancel"] = self.object.status not in {
+        context["can_cancel"] = status not in {
             Appointment.Status.CANCELLED,
             Appointment.Status.COMPLETED,
-        }
+        } and (is_staff_user or status == Appointment.Status.REQUESTED)
+
+        # Status transition permissions (staff only)
+        context["can_confirm"] = is_staff_user and status == Appointment.Status.REQUESTED
+        context["can_check_in"] = is_staff_user and status == Appointment.Status.CONFIRMED
+        context["can_complete"] = is_staff_user and status == Appointment.Status.CHECKED_IN
+        context["can_mark_no_show"] = is_staff_user and status == Appointment.Status.REQUESTED
+
+        # Patient can only cancel their own requested appointments
+        context["is_patient"] = user.is_authenticated and hasattr(user, "patient_profile")
+
         return context
 
 
@@ -254,6 +266,78 @@ class AppointmentNoShowView(ClinicStaffRequiredMixin, View):
             return redirect("appointment-detail", pk=pk)
 
         messages.success(request, "Appointment marked as no-show.")
+        return redirect("appointment-detail", pk=pk)
+
+
+class AppointmentCompleteView(ClinicStaffRequiredMixin, View):
+    def post(self, request, pk):
+        appointment = get_object_or_404(Appointment.objects.select_related("slot"), pk=pk)
+        try:
+            transition_appointment(
+                appointment,
+                Appointment.Status.COMPLETED,
+                changed_by=request.user,
+                reason="Completed by clinician",
+            )
+        except ValidationError as exc:
+            messages.error(request, str(exc))
+            return redirect("appointment-detail", pk=pk)
+
+        messages.success(request, "Appointment completed.")
+        return redirect("appointment-detail", pk=pk)
+
+
+class AppointmentDeclineView(ClinicStaffRequiredMixin, View):
+    def post(self, request, pk):
+        appointment = get_object_or_404(Appointment.objects.select_related("slot"), pk=pk)
+        try:
+            transition_appointment(
+                appointment,
+                Appointment.Status.CANCELLED,
+                changed_by=request.user,
+                reason="Declined by staff",
+            )
+        except ValidationError as exc:
+            messages.error(request, str(exc))
+            return redirect("appointment-detail", pk=pk)
+
+        messages.success(request, "Appointment declined.")
+        return redirect("appointment-detail", pk=pk)
+
+
+class AppointmentCheckInView(ClinicStaffRequiredMixin, View):
+    def post(self, request, pk):
+        appointment = get_object_or_404(Appointment.objects.select_related("slot"), pk=pk)
+        try:
+            transition_appointment(
+                appointment,
+                Appointment.Status.CHECKED_IN,
+                changed_by=request.user,
+                reason="Patient checked in",
+            )
+        except ValidationError as exc:
+            messages.error(request, str(exc))
+            return redirect("appointment-detail", pk=pk)
+
+        messages.success(request, "Appointment checked in.")
+        return redirect("appointment-detail", pk=pk)
+
+
+class AppointmentCompleteView(ClinicStaffRequiredMixin, View):
+    def post(self, request, pk):
+        appointment = get_object_or_404(Appointment.objects.select_related("slot"), pk=pk)
+        try:
+            transition_appointment(
+                appointment,
+                Appointment.Status.COMPLETED,
+                changed_by=request.user,
+                reason="Appointment completed",
+            )
+        except ValidationError as exc:
+            messages.error(request, str(exc))
+            return redirect("appointment-detail", pk=pk)
+
+        messages.success(request, "Appointment completed.")
         return redirect("appointment-detail", pk=pk)
 
 
