@@ -26,6 +26,8 @@ urlpatterns = [
     # path('admin-panel/', include('dashboard.urls')),
     path('api/', include('scheduling.api.urls')),
     path('accounts/', include('accounts.urls')),
+    path('appointments/', include('appointments.urls')),
+    path('social-auth/', include('allauth.urls')),
     path('queueing/', include('queueing.urls')),
     path('emr/', include('emr.urls')),
     path('dashboard/', include('dashboard.urls')),

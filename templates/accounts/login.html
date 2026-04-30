@@ -1,8 +1,10 @@
 {% extends "auth/auth_base.html" %}
+{% load socialaccount %}
 
 {% block title %}Login | Sanctuary Health{% endblock %}
 
 {% block auth_content %}
+{% get_providers as socialaccount_providers %}
 <section class="w-full lg:w-1/2 flex items-center justify-center p-6 bg-surface">
   <div class="w-full max-w-md">
     <div class="lg:hidden flex flex-col items-center mb-10">
@@ -18,7 +20,11 @@
       </p>
     </div>
 
-
+    {% if not is_staff_login and request.GET.error == "not_patient" %}
+    <div class="mb-6 bg-error-container border border-error/20 rounded-lg px-4 py-3">
+      <p class="text-sm text-error font-medium">This social login is only available for patient accounts.</p>
+    </div>
+    {% endif %}
 
     {% if form.non_field_errors %}
     <div class="mb-6 bg-error-container border border-error/20 rounded-lg px-4 py-3">
@@ -74,6 +80,26 @@
     </form>
 
     {% if not is_staff_login %}
+    {% if socialaccount_providers %}
+    <div class="my-8 flex items-center gap-4">
+      <div class="h-px flex-1 bg-outline-variant/60"></div>
+      <span class="text-xs font-bold uppercase tracking-[0.25em] text-on-surface-variant">or continue with</span>
+      <div class="h-px flex-1 bg-outline-variant/60"></div>
+    </div>
+
+    <div class="space-y-3">
+      {% for provider in socialaccount_providers %}
+      {% if provider.id == "google" %}
+      <a class="w-full flex items-center justify-center gap-3 py-4 bg-white border border-outline-variant/70 rounded-xl font-semibold text-on-surface hover:border-primary hover:shadow-sm transition-all"
+         href="{% provider_login_url provider.id %}">
+        <span class="material-symbols-outlined text-lg">login</span>
+        <span>Continue with Google</span>
+      </a>
+      {% endif %}
+      {% endfor %}
+    </div>
+    {% endif %}
+
     <div class="mt-10 text-center">
       <p class="text-on-surface-variant font-medium">
         Don't have an account?
