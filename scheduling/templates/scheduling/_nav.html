@@ -1,0 +1,28 @@
+<div class="schedule-page-head mb-4">
+  <div>
+    <div class="schedule-kicker text-uppercase small text-muted fw-bold mb-1">
+      Scheduling Management
+    </div>
+    <h1 class="schedule-title h3 fw-bold">Appointment Slots</h1>
+  </div>
+
+  <div class="d-flex flex-wrap gap-2 mt-3">
+    <a
+      class="btn {% if request.resolver_match.url_name == 'weekly_schedule_list' %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm"
+      href="{% url 'scheduling:weekly_schedule_list' %}"
+      >Weekly Schedules</a
+    >
+
+    <a
+      class="btn {% if request.resolver_match.url_name == 'schedule_exception_list' %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm"
+      href="{% url 'scheduling:schedule_exception_list' %}"
+      >Exceptions</a
+    >
+
+    <a
+      class="btn {% if request.resolver_match.url_name == 'appointment_slot_list' %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm"
+      href="{% url 'scheduling:appointment_slot_list' %}"
+      >Slots</a
+    >
+  </div>
+</div>

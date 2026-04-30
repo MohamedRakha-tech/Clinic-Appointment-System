@@ -1,0 +1,174 @@
+{% extends "scheduling/base_scheduling_fixed.html" %}
+{% block title %}Doctor My Schedule{% endblock %}
+
+{% block scheduling_topnav %}{% endblock scheduling_topnav %}
+
+{% block scheduling_content %}
+{% if no_doctor_profile %}
+<div class="schedule-card p-5 text-center">
+  <div class="avatar-chip blue mx-auto mb-3">
+    <i class="bi bi-person-badge"></i>
+  </div>
+  <h1 class="page-title">Doctor My Schedule</h1>
+  <p class="page-subtitle mb-4">
+    This page shows schedule data only for a logged-in doctor profile. Your
+    current account can access scheduling management, but it is not linked to a
+    doctor profile.
+  </p>
+  <a class="btn btn-primary" href="{% url 'accounts:doctor_dashboard' %}">
+    Back to Dashboard
+  </a>
+</div>
+{% else %}
+<section class="doctor-view-shell">
+  <div class="doctor-view-head">
+    <div>
+      <div class="page-kicker">Practitioner Overview</div>
+      <h1 class="doctor-view-title">{{ doctor }}</h1>
+      <p class="doctor-view-subtitle">
+        Lead {{ doctor.specialization }} • Week of {{ week_start|date:"F d, Y" }}
+      </p>
+    </div>
+    <div class="doctor-view-range">
+      <i class="bi bi-calendar3"></i>
+      <span>{{ week_start|date:"M d" }} - {{ week_end|date:"M d" }}</span>
+    </div>
+  </div>
+
+  <div class="doctor-view-grid">
+    <div class="doctor-view-main">
+      <article class="doctor-panel doctor-panel-schedule">
+        <div class="doctor-panel-head">
+          <div>
+            <h2 class="doctor-panel-title">Weekly Schedule</h2>
+            <p class="doctor-panel-subtitle">Recurring availability for the current week.</p>
+          </div>
+          <span class="status-badge status-active">Active Template</span>
+        </div>
+
+        <div class="doctor-schedule-stack">
+          {% for day in schedule_days %}
+          <div class="doctor-schedule-row">
+            <div class="doctor-schedule-day">
+              <div class="doctor-schedule-day-name">{{ day.date|date:"D" }}</div>
+              <div class="doctor-schedule-day-date">{{ day.date|date:"M d" }}</div>
+            </div>
+            <div class="doctor-schedule-blocks">
+              {% for schedule in day.schedules %}
+              <div class="doctor-shift-card">
+                <div class="doctor-shift-meta">Recurring Block</div>
+                <div class="doctor-shift-time">
+                  {{ schedule.start_time|time:"H:i" }} - {{ schedule.end_time|time:"H:i" }}
+                </div>
+              </div>
+              {% empty %}
+              <div class="doctor-shift-card doctor-shift-card-empty">
+                <div class="doctor-shift-meta">No Template</div>
+                <div class="doctor-shift-time">No automated recurring blocks</div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% if not upcoming_slots and not exceptions %}
+        <div class="doctor-view-empty-callout">
+          <div class="doctor-view-empty-title">No generated schedule data yet</div>
+          <div class="doctor-view-empty-copy">
+            Your weekly view is working, but this doctor currently has no recurring schedule, no generated slots, and no upcoming exceptions to display.
+          </div>
+        </div>
+        {% endif %}
+      </article>
+
+      <article class="doctor-panel">
+        <div class="doctor-panel-head">
+          <div>
+            <h2 class="doctor-panel-title">Upcoming Generated Slots</h2>
+            <p class="doctor-panel-subtitle">Next available appointment windows generated from your schedule.</p>
+          </div>
+          <span class="status-badge status-available">{{ available_slots_count }} Available</span>
+        </div>
+
+        <div class="doctor-slot-grid">
+          {% for slot in upcoming_slots %}
+          <div class="doctor-slot-card">
+            <div class="doctor-slot-day">{{ slot.slot_date|date:"D, M d" }}</div>
+            <div class="doctor-slot-time">{{ slot.start_datetime|date:"h:i A" }}</div>
+            <div class="doctor-slot-meta">{{ slot.get_status_display }}</div>
+          </div>
+          {% empty %}
+          <div class="doctor-slot-card doctor-slot-card-empty">
+            <div class="doctor-slot-day">No Upcoming Slots</div>
+            <div class="doctor-slot-meta">Generated appointment slots will appear here.</div>
+          </div>
+          {% endfor %}
+        </div>
+      </article>
+    </div>
+
+    <aside class="doctor-view-side">
+      <article class="doctor-panel">
+        <div class="doctor-panel-head doctor-panel-head-compact">
+          <div>
+            <h2 class="doctor-panel-title">Schedule Exceptions</h2>
+            <p class="doctor-panel-subtitle">Approved adjustments affecting this period.</p>
+          </div>
+        </div>
+
+        <div class="doctor-exception-stack">
+          {% for exception in exceptions %}
+          <div class="doctor-exception-card">
+            <div class="doctor-exception-status">
+              {% if exception.type == "VACATION" %}
+              <span class="status-badge status-vacation">Current Exception</span>
+              {% elif exception.type == "DAY_OFF" %}
+              <span class="status-badge status-day-off">Upcoming</span>
+              {% else %}
+              <span class="status-badge status-special-working-day">Upcoming</span>
+              {% endif %}
+            </div>
+            <div class="doctor-exception-title">{{ exception.get_type_display }}</div>
+            <div class="doctor-exception-date">{{ exception.exception_date|date:"M d, Y" }}</div>
+            <div class="doctor-exception-note">{{ exception.reason|default:"No additional details provided."|truncatechars:80 }}</div>
+          </div>
+          {% empty %}
+          <div class="doctor-exception-card doctor-exception-card-empty">
+            <div class="doctor-exception-title">No Exceptions</div>
+            <div class="doctor-exception-note">No schedule exceptions in the upcoming window.</div>
+          </div>
+          {% endfor %}
+        </div>
+      </article>
+
+      <article class="doctor-insight-card">
+        <div class="doctor-insight-label">Capacity Utilization</div>
+        <div class="doctor-insight-value">
+          {% widthratio available_slots_count 12 100 %}%
+        </div>
+        <p class="doctor-insight-copy">
+          {{ available_slots_count }} future available generated slots across this view.
+        </p>
+      </article>
+
+      <article class="doctor-panel doctor-distribution-panel">
+        <div class="doctor-panel-head doctor-panel-head-compact">
+          <div>
+            <h2 class="doctor-panel-title">Patient Load Distribution</h2>
+            <p class="doctor-panel-subtitle">A visual week pattern based on scheduled workdays.</p>
+          </div>
+        </div>
+        <div class="doctor-distribution-chart">
+          {% for day in schedule_days %}
+          <div class="doctor-distribution-bar-group">
+            <div class="doctor-distribution-bar doctor-distribution-bar-{% if day.schedules %}active{% else %}idle{% endif %} doctor-distribution-bar-level-{{ forloop.counter }}"></div>
+            <div class="doctor-distribution-label">{{ day.date|date:"D"|upper }}</div>
+          </div>
+          {% endfor %}
+        </div>
+      </article>
+    </aside>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

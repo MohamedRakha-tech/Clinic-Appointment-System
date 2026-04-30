@@ -1,0 +1,146 @@
+{% extends "auth/auth_base.html" %}
+
+{% block title %}Sign Up | Sanctuary Health{% endblock %}
+
+{% block left_panel %}{% endblock %}
+
+{% block auth_content %}
+<section class="w-full flex flex-col">
+  <header class="flex justify-center items-center py-8 w-full bg-transparent docked full-width top-0">
+    <div class="flex items-center gap-2">
+      <span class="material-symbols-outlined text-primary text-[2rem]">health_and_safety</span>
+      <span class="text-2xl font-semibold tracking-tighter text-on-surface">Sanctuary Health</span>
+    </div>
+  </header>
+
+  <main class="flex-grow flex items-center justify-center px-4 py-12">
+    <div class="max-w-2xl w-full">
+      <div class="bg-surface-container-lowest ambient-shadow rounded-xl p-8 md:p-12 border border-outline-variant/15">
+        <div class="mb-10 text-center">
+          <h1 class="text-3xl font-bold tracking-tight text-on-surface mb-2">Create Your Sanctuary Account</h1>
+          <p class="text-on-surface-variant body-md">Join our clinical sanctuary for precision care and wellness.</p>
+        </div>
+
+        {% if form.non_field_errors %}
+        <div class="mb-6 bg-error-container border border-error/20 rounded-lg px-4 py-3">
+          {% for error in form.non_field_errors %}
+          <p class="text-sm text-error font-medium">{{ error }}</p>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <form class="space-y-10" data-validate-form="signup" method="POST" novalidate>
+          {% csrf_token %}
+          <section>
+            <div class="flex items-center gap-2 mb-6">
+              <span class="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary-fixed px-2 py-0.5 rounded">Step 01</span>
+              <h2 class="text-sm font-semibold uppercase tracking-wider text-on-surface-variant">Personal Information</h2>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="col-span-full">
+                <label class="block text-xs font-medium uppercase tracking-wider text-outline mb-1.5 ml-1" for="first_name">First Name</label>
+                <input class="w-full bg-surface-container-high border-x-0 border-t-0 border-b-2 {% if form.first_name.errors %}border-error focus:border-error{% else %}border-outline-variant focus:border-primary{% endif %} focus:ring-0 focus-visible:outline-none px-4 py-3 text-on-surface placeholder:text-outline-variant transition-all rounded-t-lg" data-error-required="First name is required" id="first_name" name="first_name" placeholder="Julianne" required type="text" value="{{ form.first_name.value|default:'' }}"/>
+                {% for error in form.first_name.errors %}<p class="text-xs text-error mt-1 ml-1">{{ error }}</p>{% endfor %}
+                <p class="text-xs text-error mt-1 ml-1 hidden" data-error-for="first_name"></p>
+              </div>
+              <div class="col-span-full">
+                <label class="block text-xs font-medium uppercase tracking-wider text-outline mb-1.5 ml-1" for="last_name">Last Name</label>
+                <input class="w-full bg-surface-container-high border-x-0 border-t-0 border-b-2 {% if form.last_name.errors %}border-error focus:border-error{% else %}border-outline-variant focus:border-primary{% endif %} focus:ring-0 focus-visible:outline-none px-4 py-3 text-on-surface placeholder:text-outline-variant transition-all rounded-t-lg" data-error-required="Last name is required" id="last_name" name="last_name" placeholder="Smith" required type="text" value="{{ form.last_name.value|default:'' }}"/>
+                {% for error in form.last_name.errors %}<p class="text-xs text-error mt-1 ml-1">{{ error }}</p>{% endfor %}
+                <p class="text-xs text-error mt-1 ml-1 hidden" data-error-for="last_name"></p>
+              </div>
+              <div class="col-span-full">
+                <label class="block text-xs font-medium uppercase tracking-wider text-outline mb-1.5 ml-1" for="username">Username</label>
+                <input class="w-full bg-surface-container-high border-x-0 border-t-0 border-b-2 {% if form.username.errors %}border-error focus:border-error{% else %}border-outline-variant focus:border-primary{% endif %} focus:ring-0 focus-visible:outline-none px-4 py-3 text-on-surface placeholder:text-outline-variant transition-all rounded-t-lg" data-error-required="Username is required" id="username" name="username" placeholder="julianne_smith" required type="text" value="{{ form.username.value|default:'' }}"/>
+                {% for error in form.username.errors %}<p class="text-xs text-error mt-1 ml-1">{{ error }}</p>{% endfor %}
+                <p class="text-xs text-error mt-1 ml-1 hidden" data-error-for="username"></p>
+              </div>
+              <div>
+                <label class="block text-xs font-medium uppercase tracking-wider text-outline mb-1.5 ml-1" for="date_of_birth">Date of Birth</label>
+                <input class="w-full bg-surface-container-high border-x-0 border-t-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 focus-visible:outline-none px-4 py-3 text-on-surface transition-all rounded-t-lg" data-error-required="Date of birth is required" id="date_of_birth" name="date_of_birth" required type="date" value="{{ form.data.date_of_birth|default:'' }}"/>
+                <p class="text-xs text-error mt-1 ml-1 hidden" data-error-for="date_of_birth"></p>
+              </div>
+              <div>
+                <label class="block text-xs font-medium uppercase tracking-wider text-outline mb-1.5 ml-1" for="gender">Gender</label>
+                <select class="w-full bg-surface-container-high border-x-0 border-t-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 focus-visible:outline-none px-4 py-3 text-on-surface transition-all rounded-t-lg" data-error-required="Gender is required" id="gender" name="gender" required>
+                  <option value="">Select Option</option>
+                  <option value="Female" {% if form.data.gender == 'Female' %}selected{% endif %}>Female</option>
+                  <option value="Male" {% if form.data.gender == 'Male' %}selected{% endif %}>Male</option>
+                  <option value="Non-binary" {% if form.data.gender == 'Non-binary' %}selected{% endif %}>Non-binary</option>
+                  <option value="Prefer not to say" {% if form.data.gender == 'Prefer not to say' %}selected{% endif %}>Prefer not to say</option>
+                </select>
+                <p class="text-xs text-error mt-1 ml-1 hidden" data-error-for="gender"></p>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <div class="flex items-center gap-2 mb-6">
+              <span class="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary-fixed px-2 py-0.5 rounded">Step 02</span>
+              <h2 class="text-sm font-semibold uppercase tracking-wider text-on-surface-variant">Contact Details</h2>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="col-span-full">
+                <label class="block text-xs font-medium uppercase tracking-wider text-outline mb-1.5 ml-1" for="email">Email Address</label>
+                <input class="w-full bg-surface-container-high border-x-0 border-t-0 border-b-2 {% if form.email.errors %}border-error focus:border-error{% else %}border-outline-variant focus:border-primary{% endif %} focus:ring-0 focus-visible:outline-none px-4 py-3 text-on-surface placeholder:text-outline-variant transition-all rounded-t-lg" data-error-email="Enter a valid email address" data-error-required="Email is required" id="email" name="email" placeholder="julianne.smith@example.com" required type="email" value="{{ form.email.value|default:'' }}"/>
+                {% for error in form.email.errors %}<p class="text-xs text-error mt-1 ml-1">{{ error }}</p>{% endfor %}
+                <p class="text-xs text-error mt-1 ml-1 hidden" data-error-for="email"></p>
+              </div>
+              <div>
+                <label class="block text-xs font-medium uppercase tracking-wider text-outline mb-1.5 ml-1" for="phone">Phone Number</label>
+                <input class="w-full bg-surface-container-high border-x-0 border-t-0 border-b-2 {% if form.phone.errors %}border-error focus:border-error{% else %}border-outline-variant focus:border-primary{% endif %} focus:ring-0 focus-visible:outline-none px-4 py-3 text-on-surface placeholder:text-outline-variant transition-all rounded-t-lg" data-error-required="Phone number is required" id="phone" name="phone" placeholder="+1 (555) 000-0000" required type="tel" value="{{ form.phone.value|default:'' }}"/>
+                {% for error in form.phone.errors %}<p class="text-xs text-error mt-1 ml-1">{{ error }}</p>{% endfor %}
+                <p class="text-xs text-error mt-1 ml-1 hidden" data-error-for="phone"></p>
+              </div>
+              <div class="col-span-full">
+                <label class="block text-xs font-medium uppercase tracking-wider text-outline mb-1.5 ml-1" for="address">Home Address</label>
+                <input class="w-full bg-surface-container-high border-x-0 border-t-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 focus-visible:outline-none px-4 py-3 text-on-surface placeholder:text-outline-variant transition-all rounded-t-lg" data-error-required="Address is required" id="address" name="address" placeholder="123 Sanctuary Lane, Suite 400" required type="text" value="{{ form.data.address|default:'' }}"/>
+                <p class="text-xs text-error mt-1 ml-1 hidden" data-error-for="address"></p>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <div class="flex items-center gap-2 mb-6">
+              <span class="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary-fixed px-2 py-0.5 rounded">Step 03</span>
+              <h2 class="text-sm font-semibold uppercase tracking-wider text-on-surface-variant">Account Security</h2>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-xs font-medium uppercase tracking-wider text-outline mb-1.5 ml-1" for="password1">Password</label>
+                <input class="w-full bg-surface-container-high border-x-0 border-t-0 border-b-2 {% if form.password1.errors %}border-error focus:border-error{% else %}border-outline-variant focus:border-primary{% endif %} focus:ring-0 focus-visible:outline-none px-4 py-3 text-on-surface placeholder:text-outline-variant transition-all rounded-t-lg" data-error-minlength="Password must be at least 8 characters" data-error-required="Password is required" id="password1" minlength="8" name="password1" placeholder="********" required type="password"/>
+                {% for error in form.password1.errors %}<p class="text-xs text-error mt-1 ml-1">{{ error }}</p>{% endfor %}
+                <p class="text-xs text-error mt-1 ml-1 hidden" data-error-for="password1"></p>
+              </div>
+              <div>
+                <label class="block text-xs font-medium uppercase tracking-wider text-outline mb-1.5 ml-1" for="password2">Confirm Password</label>
+                <input class="w-full bg-surface-container-high border-x-0 border-t-0 border-b-2 {% if form.password2.errors %}border-error focus:border-error{% else %}border-outline-variant focus:border-primary{% endif %} focus:ring-0 focus-visible:outline-none px-4 py-3 text-on-surface placeholder:text-outline-variant transition-all rounded-t-lg" data-error-match="Passwords do not match" data-error-required="Confirm password is required" data-match-field="password1" id="password2" minlength="8" name="password2" placeholder="********" required type="password"/>
+                {% for error in form.password2.errors %}<p class="text-xs text-error mt-1 ml-1">{{ error }}</p>{% endfor %}
+                <p class="text-xs text-error mt-1 ml-1 hidden" data-error-for="password2"></p>
+              </div>
+            </div>
+          </section>
+
+          <div class="space-y-4 pt-4">
+            <label class="flex items-start gap-3 cursor-pointer group">
+              <input class="mt-1 rounded-sm border-outline-variant text-primary focus:ring-primary/20 bg-surface" type="checkbox"/>
+              <span class="text-sm text-on-surface-variant leading-relaxed">
+                I agree to the <a class="text-primary font-medium hover:underline" href="#">Terms of Service</a> and acknowledge the <a class="text-primary font-medium hover:underline" href="#">Privacy Policy</a>.
+              </span>
+            </label>
+          </div>
+
+          <div class="pt-6">
+            <button class="w-full py-4 px-6 bg-gradient-to-b from-primary to-primary-container text-on-primary font-semibold rounded-xl ambient-shadow hover:opacity-90 transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25" type="submit">
+              Create Account
+            </button>
+            <p class="mt-6 text-center text-sm text-on-surface-variant">
+              Already have an account? <a class="text-primary font-bold hover:underline underline-offset-4" href="{% url 'accounts:patient_login' %}">Log in</a>
+            </p>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+</section>
+{% endblock %}

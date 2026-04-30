@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/scheduling.css' %}" />
+{% endblock %}
+
+{% block topbar_subtitle %}Scheduling Management{% endblock %}
+
+{% block topbar_role %}Scheduling Workspace{% endblock %}
+
+{% block content %}
+<div class="scheduling-shell">
+  <div class="scheduling-topnav mb-4">
+    <div class="scheduling-topnav-inner">
+      <div class="scheduling-header-left">
+        <div class="scheduling-brand">Scheduling Management</div>
+        {% comment %} <div class="scheduling-brand-subtitle">Workspace for schedules, slots, exceptions, and availability control</div> {% endcomment %}
+      </div>
+      <div class="scheduling-header-center">
+        <nav class="scheduling-tabs nav" aria-label="Scheduling navigation">
+          {% if not can_manage_scheduling %}
+          <a class="nav-link {% if request.resolver_match.url_name == 'doctor_my_schedule' %}active{% endif %}" href="{% url 'scheduling:doctor_my_schedule' %}">Weekly View</a>
+          {% endif %}
+          {% if can_manage_scheduling %}
+          <a class="nav-link {% if 'slot' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'scheduling:appointment_slot_list' %}">Doctor Slots</a>
+          <a class="nav-link {% if 'exception' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'scheduling:schedule_exception_list' %}">Exceptions</a>
+          <a class="nav-link {% if 'schedule' in request.resolver_match.url_name and request.resolver_match.url_name != 'doctor_my_schedule' and 'exception' not in request.resolver_match.url_name %}active{% endif %}" href="{% url 'scheduling:weekly_schedule_list' %}">Schedules</a>
+          {% endif %}
+        </nav>
+      </div>
+      <div class="scheduling-header-right">
+        {% if can_manage_scheduling %}
+        <div class="scheduling-actions">
+          <form method="GET" class="scheduling-search-form">
+            {% for key, value in request.GET.items %}{% if key != "search" and key != "page" %}<input type="hidden" name="{{ key }}" value="{{ value }}" />{% endif %}{% endfor %}
+            <div class="scheduling-search-wrap">
+              <i class="bi bi-search scheduling-search-icon"></i>
+              <input class="scheduling-search" type="search" name="search" placeholder="Search records..." value="{{ request.GET.search }}" aria-label="Search" />
+            </div>
+            <button class="btn scheduling-search-button" type="submit">Search</button>
+          </form>
+          {% if can_manage_scheduling %}<a class="btn scheduling-generate-btn" href="{% url 'scheduling:generate_slots' %}"><i class="bi bi-arrow-repeat"></i> Generate</a>{% endif %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <main>{% block scheduling_content %}{% endblock scheduling_content %}</main>
+</div>
+{% endblock %}

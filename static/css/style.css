@@ -1,0 +1,140 @@
+/* Global UI Polish & Component Overrides */
+
+/* Mobile/Tablet Behavior - Responsive Paddings */
+@media (max-width: 991.98px) {
+    main.p-4.p-xl-5 {
+        padding: 1.5rem !important;
+    }
+}
+
+/* Button Consistency & Hover States */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    padding: 0.6rem 1.25rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+.btn:hover:not(:disabled) {
+    transform: translateY(-1.5px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+}
+.btn:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+/* Form Layout Upgrades */
+.form-group, .mb-3 { margin-bottom: 1.25rem !important; }
+.form-label {
+    font-weight: 600;
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+    color: var(--ink, #141d23);
+}
+.form-control, .form-select {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid #ced4da;
+    background-color: #fff;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.025);
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+.form-control:focus, .form-select:focus {
+    border-color: var(--brand, #0b4ea2);
+    box-shadow: 0 0 0 0.25rem rgba(11, 78, 162, 0.15), inset 0 1px 2px rgba(0, 0, 0, 0.025);
+}
+
+/* Table Readability */
+.table-responsive {
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.015);
+    border: 1px solid #dee2e6;
+    background-color: #fff;
+}
+.table { margin-bottom: 0; }
+.table > :not(caption) > * > * {
+    padding: 1rem 1.25rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #dee2e6;
+}
+.table-hover tbody tr { transition: background-color 0.15s ease; }
+.table th {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted, #5f6975);
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    white-space: nowrap;
+}
+
+/* Badge & Status Pill Tweaks */
+.badge {
+    padding: 0.5em 0.8em;
+    font-weight: 600;
+    font-size: 0.75rem;
+    letter-spacing: 0.03em;
+    border-radius: 50rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* Empty States */
+.empty-state {
+    padding: 4rem 2rem;
+    text-align: center;
+    color: var(--muted);
+    background: var(--soft-bg);
+    border-radius: 1rem;
+    border: 2px dashed #dde8f4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+}
+.empty-state:hover { background: #e8f1ff; }
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1.25rem;
+    color: #aab5c3;
+}
+.empty-state h4 { color: var(--ink); font-weight: 600; margin-bottom: 0.5rem; }
+.empty-state p { max-width: 400px; margin: 0 auto 1.5rem auto; font-size: 0.95rem; }
+
+/* Error Messages / Notifications */
+.form-error, .invalid-feedback, ul.errorlist {
+    color: #dc3545;
+    font-size: 0.85rem;
+    margin-top: 0.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding-left: 0;
+    list-style: none;
+    font-weight: 500;
+}
+ul.errorlist li { display: flex; align-items: flex-start; gap: 0.4rem; }
+ul.errorlist li::before {
+    content: "\F33B";
+    font-family: "bootstrap-icons";
+    margin-top: 0.1rem;
+}
+.alert {
+    border-radius: 0.75rem;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    padding: 1rem 1.25rem;
+    font-weight: 500;
+}

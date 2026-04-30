@@ -1,0 +1,234 @@
+{% extends "auth/auth_base.html" %}
+
+{% block title %}Sign Up | Sanctuary Health{% endblock %}
+
+{% block left_panel %}{% endblock %}
+
+{% block auth_content %}
+<section class="w-full flex flex-col">
+  <header class="flex justify-center items-center py-8 w-full bg-transparent docked full-width top-0">
+    <div class="flex items-center gap-2">
+      <span class="material-symbols-outlined text-[#003f87] text-[2rem]">health_and_safety</span>
+      <span class="text-2xl font-semibold tracking-tighter text-[#141d23]">Sanctuary Health</span>
+    </div>
+  </header>
+
+  <main class="flex-grow flex items-center justify-center px-4 py-12">
+    <div class="max-w-2xl w-full">
+      <div class="bg-surface-container-lowest ambient-shadow rounded-xl p-8 md:p-12 border border-outline-variant/15">
+        <div class="mb-10 text-center">
+          <h1 class="text-3xl font-bold tracking-tight text-on-surface mb-2">Create Your Sanctuary Account</h1>
+          <p class="text-on-surface-variant body-md">Join our clinical sanctuary for precision care and wellness.</p>
+        </div>
+
+        {% if form.non_field_errors %}
+        <div class="mb-6 bg-error-container border border-error/20 rounded-lg px-4 py-3">
+          {% for error in form.non_field_errors %}
+          <p class="text-sm text-error font-medium">{{ error }}</p>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <form class="space-y-10" method="POST" novalidate data-validate-form="signup">
+          {% csrf_token %}
+
+          <!-- Step 01: Personal Information -->
+          <section>
+            <div class="flex items-center gap-2 mb-6">
+              <span class="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary-fixed px-2 py-0.5 rounded">Step 01</span>
+              <h2 class="text-sm font-semibold uppercase tracking-wider text-on-surface-variant">Personal Information</h2>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+              <div class="col-span-full">
+                <label class="block text-xs font-medium uppercase tracking-wider text-outline mb-1.5 ml-1" for="first_name">First Name</label>
+                <input
+                  id="first_name" name="first_name" type="text"
+                  placeholder="Julianne"
+                  required
+                  data-error-required="First name is required"
+                  class="w-full bg-surface-container-high border-x-0 border-t-0 border-b-2 {% if form.first_name.errors %}border-error focus:border-error{% else %}border-outline-variant focus:border-primary{% endif %} focus:ring-0 px-4 py-3 text-on-surface placeholder:text-outline-variant transition-all rounded-t-lg"
+                  value="{{ form.first_name.value|default:'' }}"
+                />
+                {% if form.first_name.errors %}{% for error in form.first_name.errors %}
+                <p class="text-xs text-error mt-1 ml-1">{{ error }}</p>
+                {% endfor %}{% endif %}
+                <p class="text-xs text-error mt-1 ml-1 hidden" data-error-for="first_name"></p>
+              </div>
+
+              <div class="col-span-full">
+                <label class="block text-xs font-medium uppercase tracking-wider text-outline mb-1.5 ml-1" for="last_name">Last Name</label>
+                <input
+                  id="last_name" name="last_name" type="text"
+                  placeholder="Smith"
+                  required
+                  data-error-required="Last name is required"
+                  class="w-full bg-surface-container-high border-x-0 border-t-0 border-b-2 {% if form.last_name.errors %}border-error focus:border-error{% else %}border-outline-variant focus:border-primary{% endif %} focus:ring-0 px-4 py-3 text-on-surface placeholder:text-outline-variant transition-all rounded-t-lg"
+                  value="{{ form.last_name.value|default:'' }}"
+                />
+                {% if form.last_name.errors %}{% for error in form.last_name.errors %}
+                <p class="text-xs text-error mt-1 ml-1">{{ error }}</p>
+                {% endfor %}{% endif %}
+                <p class="text-xs text-error mt-1 ml-1 hidden" data-error-for="last_name"></p>
+              </div>
+
+              <div class="col-span-full">
+                <label class="block text-xs font-medium uppercase tracking-wider text-outline mb-1.5 ml-1" for="username">Username</label>
+                <input
+                  id="username" name="username" type="text"
+                  placeholder="julianne_smith"
+                  required
+                  data-error-required="Username is required"
+                  class="w-full bg-surface-container-high border-x-0 border-t-0 border-b-2 {% if form.username.errors %}border-error focus:border-error{% else %}border-outline-variant focus:border-primary{% endif %} focus:ring-0 px-4 py-3 text-on-surface placeholder:text-outline-variant transition-all rounded-t-lg"
+                  value="{{ form.username.value|default:'' }}"
+                />
+                {% if form.username.errors %}{% for error in form.username.errors %}
+                <p class="text-xs text-error mt-1 ml-1">{{ error }}</p>
+                {% endfor %}{% endif %}
+                <p class="text-xs text-error mt-1 ml-1 hidden" data-error-for="username"></p>
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium uppercase tracking-wider text-outline mb-1.5 ml-1" for="date_of_birth">Date of Birth</label>
+                <input
+                  id="date_of_birth" name="date_of_birth" type="date"
+                  class="w-full bg-surface-container-high border-x-0 border-t-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 px-4 py-3 text-on-surface transition-all rounded-t-lg"
+                  value="{{ form.date_of_birth.value|default:'' }}"
+                />
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium uppercase tracking-wider text-outline mb-1.5 ml-1" for="gender">Gender</label>
+                <select
+                  id="gender" name="gender"
+                  class="w-full bg-surface-container-high border-x-0 border-t-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 px-4 py-3 text-on-surface transition-all rounded-t-lg"
+                >
+                  <option value="">Select Option</option>
+                  <option value="Female" {% if form.gender.value == 'Female' %}selected{% endif %}>Female</option>
+                  <option value="Male" {% if form.gender.value == 'Male' %}selected{% endif %}>Male</option>
+                  <option value="Non-binary" {% if form.gender.value == 'Non-binary' %}selected{% endif %}>Non-binary</option>
+                  <option value="Prefer not to say" {% if form.gender.value == 'Prefer not to say' %}selected{% endif %}>Prefer not to say</option>
+                </select>
+              </div>
+
+            </div>
+          </section>
+
+          <!-- Step 02: Contact Details -->
+          <section>
+            <div class="flex items-center gap-2 mb-6">
+              <span class="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary-fixed px-2 py-0.5 rounded">Step 02</span>
+              <h2 class="text-sm font-semibold uppercase tracking-wider text-on-surface-variant">Contact Details</h2>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+              <div class="col-span-full">
+                <label class="block text-xs font-medium uppercase tracking-wider text-outline mb-1.5 ml-1" for="email">Email Address</label>
+                <input
+                  id="email" name="email" type="email"
+                  placeholder="julianne.smith@example.com"
+                  required
+                  data-error-required="Email address is required"
+                  class="w-full bg-surface-container-high border-x-0 border-t-0 border-b-2 {% if form.email.errors %}border-error focus:border-error{% else %}border-outline-variant focus:border-primary{% endif %} focus:ring-0 px-4 py-3 text-on-surface placeholder:text-outline-variant transition-all rounded-t-lg"
+                  value="{{ form.email.value|default:'' }}"
+                />
+                {% if form.email.errors %}{% for error in form.email.errors %}
+                <p class="text-xs text-error mt-1 ml-1">{{ error }}</p>
+                {% endfor %}{% endif %}
+                <p class="text-xs text-error mt-1 ml-1 hidden" data-error-for="email"></p>
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium uppercase tracking-wider text-outline mb-1.5 ml-1" for="phone">Phone Number</label>
+                <input
+                  id="phone" name="phone" type="tel"
+                  placeholder="+1 (555) 000-0000"
+                  class="w-full bg-surface-container-high border-x-0 border-t-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 px-4 py-3 text-on-surface placeholder:text-outline-variant transition-all rounded-t-lg"
+                  value="{{ form.phone.value|default:'' }}"
+                />
+              </div>
+
+              <div class="col-span-full">
+                <label class="block text-xs font-medium uppercase tracking-wider text-outline mb-1.5 ml-1" for="address">Home Address</label>
+                <input
+                  id="address" name="address" type="text"
+                  placeholder="123 Sanctuary Lane, Suite 400"
+                  class="w-full bg-surface-container-high border-x-0 border-t-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 px-4 py-3 text-on-surface placeholder:text-outline-variant transition-all rounded-t-lg"
+                  value="{{ form.address.value|default:'' }}"
+                />
+              </div>
+
+            </div>
+          </section>
+
+          <!-- Step 03: Account Security -->
+          <section>
+            <div class="flex items-center gap-2 mb-6">
+              <span class="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary-fixed px-2 py-0.5 rounded">Step 03</span>
+              <h2 class="text-sm font-semibold uppercase tracking-wider text-on-surface-variant">Account Security</h2>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+              <div>
+                <label class="block text-xs font-medium uppercase tracking-wider text-outline mb-1.5 ml-1" for="password1">Password</label>
+                <input
+                  id="password1" name="password1" type="password"
+                  placeholder="********"
+                  required
+                  data-error-required="Password is required"
+                  class="w-full bg-surface-container-high border-x-0 border-t-0 border-b-2 {% if form.password1.errors %}border-error focus:border-error{% else %}border-outline-variant focus:border-primary{% endif %} focus:ring-0 px-4 py-3 text-on-surface placeholder:text-outline-variant transition-all rounded-t-lg"
+                />
+                {% if form.password1.errors %}{% for error in form.password1.errors %}
+                <p class="text-xs text-error mt-1 ml-1">{{ error }}</p>
+                {% endfor %}{% endif %}
+                <p class="text-xs text-error mt-1 ml-1 hidden" data-error-for="password1"></p>
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium uppercase tracking-wider text-outline mb-1.5 ml-1" for="password2">Confirm Password</label>
+                <input
+                  id="password2" name="password2" type="password"
+                  placeholder="********"
+                  required
+                  data-error-required="Please confirm your password"
+                  class="w-full bg-surface-container-high border-x-0 border-t-0 border-b-2 {% if form.password2.errors %}border-error focus:border-error{% else %}border-outline-variant focus:border-primary{% endif %} focus:ring-0 px-4 py-3 text-on-surface placeholder:text-outline-variant transition-all rounded-t-lg"
+                />
+                {% if form.password2.errors %}{% for error in form.password2.errors %}
+                <p class="text-xs text-error mt-1 ml-1">{{ error }}</p>
+                {% endfor %}{% endif %}
+                <p class="text-xs text-error mt-1 ml-1 hidden" data-error-for="password2"></p>
+              </div>
+
+            </div>
+          </section>
+
+          <!-- Terms -->
+          <div class="space-y-4 pt-4">
+            <label class="flex items-start gap-3 cursor-pointer group">
+              <input
+                id="terms" name="terms" type="checkbox"
+                required
+                data-error-required="You must agree to the Terms of Service"
+                class="mt-1 rounded-sm border-outline-variant text-primary focus:ring-primary/20 bg-surface"
+              />
+              <span class="text-sm text-on-surface-variant leading-relaxed">
+                I agree to the <a class="text-primary font-medium hover:underline" href="#">Terms of Service</a> and acknowledge the <a class="text-primary font-medium hover:underline" href="#">Privacy Policy</a>.
+              </span>
+            </label>
+            <p class="text-xs text-error mt-1 ml-1 hidden" data-error-for="terms"></p>
+          </div>
+
+          <div class="pt-6">
+            <button class="w-full flex items-center justify-center gap-2 py-4 px-6 bg-gradient-to-b from-primary to-primary-container text-on-primary font-semibold rounded-xl ambient-shadow hover:opacity-90 transition-all active:scale-[0.98]" type="submit">
+              Create Account
+            </button>
+            <p class="mt-6 text-center text-sm text-on-surface-variant">
+              Already have an account? <a class="text-primary font-bold hover:underline underline-offset-4" href="{% url 'accounts:patient_login' %}">Log in</a>
+            </p>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+</section>
+{% endblock %}
