@@ -19,7 +19,9 @@
       </div>
       <div class="scheduling-header-center">
         <nav class="scheduling-tabs nav" aria-label="Scheduling navigation">
+          {% if not can_manage_scheduling %}
           <a class="nav-link {% if request.resolver_match.url_name == 'doctor_my_schedule' %}active{% endif %}" href="{% url 'scheduling:doctor_my_schedule' %}">Weekly View</a>
+          {% endif %}
           {% if can_manage_scheduling %}
           <a class="nav-link {% if 'slot' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'scheduling:appointment_slot_list' %}">Doctor Slots</a>
           <a class="nav-link {% if 'exception' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'scheduling:schedule_exception_list' %}">Exceptions</a>

@@ -1,7 +1,8 @@
 asgiref==3.11.1
 Django==6.0.4
-factory_boy==3.3.0
+factory-boy==3.3.0
 mysqlclient==2.2.8
 pillow==12.2.0
 python-dotenv==1.2.2
+djangorestframework==3.16.1
 sqlparse==0.5.5

@@ -365,6 +365,42 @@ class SchedulingAccessTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
 
+    def test_doctor_sees_only_weekly_view_tab(self):
+        self.client.login(username="doctor_access", password="password")
+
+        response = self.client.get(reverse("scheduling:doctor_my_schedule"))
+
+        self.assertContains(response, 'href="/scheduling/my-schedule/"')
+        self.assertNotContains(response, 'href="/scheduling/slots/"')
+        self.assertNotContains(response, 'href="/scheduling/exceptions/"')
+        self.assertNotContains(response, 'href="/scheduling/schedules/"')
+        self.assertNotContains(response, 'href="/scheduling/generate-slots/"')
+        self.assertNotContains(response, 'class="scheduling-topnav mb-4"')
+
+    def test_receptionist_does_not_see_weekly_view_tab(self):
+        self.client.login(username="reception_access", password="password")
+
+        response = self.client.get(reverse("scheduling:weekly_schedule_list"))
+
+        self.assertContains(response, 'class="scheduling-topnav mb-4"')
+        self.assertNotContains(response, 'href="/scheduling/my-schedule/"')
+        self.assertContains(response, 'href="/scheduling/slots/"')
+        self.assertContains(response, 'href="/scheduling/exceptions/"')
+        self.assertContains(response, 'href="/scheduling/schedules/"')
+        self.assertContains(response, 'href="/scheduling/generate-slots/"')
+
+    def test_admin_does_not_see_weekly_view_tab(self):
+        self.client.login(username="admin_access", password="password")
+
+        response = self.client.get(reverse("scheduling:weekly_schedule_list"))
+
+        self.assertContains(response, 'class="scheduling-topnav mb-4"')
+        self.assertNotContains(response, 'href="/scheduling/my-schedule/"')
+        self.assertContains(response, 'href="/scheduling/slots/"')
+        self.assertContains(response, 'href="/scheduling/exceptions/"')
+        self.assertContains(response, 'href="/scheduling/schedules/"')
+        self.assertContains(response, 'href="/scheduling/generate-slots/"')
+
     def test_patient_cannot_access_scheduling_pages(self):
         self.client.login(username="patient_access", password="password")
 
@@ -373,3 +409,170 @@ class SchedulingAccessTests(TestCase):
 
         self.assertEqual(schedules_response.status_code, 403)
         self.assertEqual(my_schedule_response.status_code, 403)
+
+
+class AppointmentSlotApiTests(TestCase):
+    def setUp(self):
+        self.api_user = User.objects.create_user(
+            username="slot_api_user",
+            email="slot_api_user@example.com",
+            password="password",
+            first_name="Ahmed",
+            last_name="Ali",
+        )
+        self.doctor_user = User.objects.create_user(
+            username="slot_doctor",
+            email="slot_doctor@example.com",
+            password="password",
+            first_name="Sara",
+            last_name="Hassan",
+        )
+        self.doctor = DoctorProfile.objects.create(
+            user=self.doctor_user,
+            specialization="Cardiology",
+            license_number="DOC-API-001",
+            consultation_duration_minutes=30,
+            buffer_before_minutes=0,
+            buffer_after_minutes=0,
+        )
+        self.other_doctor_user = User.objects.create_user(
+            username="slot_doctor_two",
+            email="slot_doctor_two@example.com",
+            password="password",
+            first_name="Mona",
+            last_name="Salem",
+        )
+        self.other_doctor = DoctorProfile.objects.create(
+            user=self.other_doctor_user,
+            specialization="Dermatology",
+            license_number="DOC-API-002",
+            consultation_duration_minutes=30,
+            buffer_before_minutes=0,
+            buffer_after_minutes=0,
+        )
+
+        self.slot = AppointmentSlot.objects.create(
+            doctor=self.doctor,
+            slot_date=date(2026, 5, 1),
+            start_datetime=timezone.make_aware(timezone.datetime(2026, 5, 1, 9, 0)),
+            end_datetime=timezone.make_aware(timezone.datetime(2026, 5, 1, 9, 30)),
+            status=AppointmentSlot.Status.AVAILABLE,
+            generated_from=AppointmentSlot.GeneratedFrom.WEEKLY_SCHEDULE,
+        )
+        self.booked_slot = AppointmentSlot.objects.create(
+            doctor=self.doctor,
+            slot_date=date(2026, 5, 1),
+            start_datetime=timezone.make_aware(timezone.datetime(2026, 5, 1, 10, 0)),
+            end_datetime=timezone.make_aware(timezone.datetime(2026, 5, 1, 10, 30)),
+            status=AppointmentSlot.Status.BOOKED,
+            generated_from=AppointmentSlot.GeneratedFrom.EXCEPTION,
+        )
+        self.other_slot = AppointmentSlot.objects.create(
+            doctor=self.other_doctor,
+            slot_date=date(2026, 5, 2),
+            start_datetime=timezone.make_aware(timezone.datetime(2026, 5, 2, 11, 0)),
+            end_datetime=timezone.make_aware(timezone.datetime(2026, 5, 2, 11, 30)),
+            status=AppointmentSlot.Status.AVAILABLE,
+            generated_from=AppointmentSlot.GeneratedFrom.MANUAL,
+        )
+
+    def test_slot_list_requires_authentication(self):
+        response = self.client.get("/api/slots/")
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_slot_list_returns_paginated_json(self):
+        self.client.login(username="slot_api_user", password="password")
+
+        response = self.client.get("/api/slots/")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertIn("results", payload)
+        self.assertEqual(len(payload["results"]), 3)
+        self.assertEqual(payload["results"][0]["doctor_name"], "Sara Hassan")
+        self.assertEqual(payload["results"][0]["specialization"], "Cardiology")
+
+    def test_slot_list_filters_by_doctor_date_status_and_generated_from(self):
+        self.client.login(username="slot_api_user", password="password")
+
+        response = self.client.get(
+            "/api/slots/",
+            {
+                "doctor": self.doctor.pk,
+                "slot_date": "2026-05-01",
+                "status": AppointmentSlot.Status.AVAILABLE,
+                "generated_from": AppointmentSlot.GeneratedFrom.WEEKLY_SCHEDULE,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(len(payload["results"]), 1)
+        self.assertEqual(payload["results"][0]["id"], self.slot.pk)
+
+    def test_slot_detail_returns_single_slot(self):
+        self.client.login(username="slot_api_user", password="password")
+
+        response = self.client.get(f"/api/slots/{self.slot.pk}/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["id"], self.slot.pk)
+
+    def test_available_endpoint_returns_only_available_slots(self):
+        self.client.login(username="slot_api_user", password="password")
+
+        response = self.client.get("/api/slots/available/")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(len(payload["results"]), 2)
+        self.assertTrue(
+            all(item["status"] == AppointmentSlot.Status.AVAILABLE for item in payload["results"])
+        )
+
+    def test_available_endpoint_supports_filters(self):
+        self.client.login(username="slot_api_user", password="password")
+
+        response = self.client.get(
+            "/api/slots/available/",
+            {
+                "doctor": self.doctor.pk,
+                "slot_date": "2026-05-01",
+                "generated_from": AppointmentSlot.GeneratedFrom.WEEKLY_SCHEDULE,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(len(payload["results"]), 1)
+        self.assertEqual(payload["results"][0]["id"], self.slot.pk)
+
+    def test_slot_api_is_read_only(self):
+        self.client.login(username="slot_api_user", password="password")
+
+        post_response = self.client.post("/api/slots/", {})
+        put_response = self.client.put(f"/api/slots/{self.slot.pk}/", data={})
+        patch_response = self.client.patch(f"/api/slots/{self.slot.pk}/", data={})
+        delete_response = self.client.delete(f"/api/slots/{self.slot.pk}/")
+
+        self.assertEqual(post_response.status_code, 405)
+        self.assertEqual(put_response.status_code, 405)
+        self.assertEqual(patch_response.status_code, 405)
+        self.assertEqual(delete_response.status_code, 405)
+
+    def test_invalid_filters_do_not_crash_slot_api(self):
+        self.client.login(username="slot_api_user", password="password")
+
+        response = self.client.get(
+            "/api/slots/",
+            {
+                "doctor": "abc",
+                "slot_date": "not-a-date",
+                "status": "INVALID",
+                "generated_from": "INVALID",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("results", response.json())
