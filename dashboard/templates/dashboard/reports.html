@@ -1,0 +1,514 @@
+{% extends "base.html" %}
+
+{% block title %}Reports | Clinical Sanctuary{% endblock %}
+{% block topbar_subtitle %}Reports & Exports{% endblock %}
+{% block topbar_role %}Role: Administrator{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chart-card {
+        background: var(--panel-bg);
+        border: 1px solid #dde8f4;
+        border-radius: 1rem;
+        box-shadow: 0 8px 30px rgba(15,55,110,.06);
+        padding: 1.75rem;
+    }
+    .filter-label {
+        font-size: .65rem; font-weight: 800; letter-spacing: .1em;
+        text-transform: uppercase; color: var(--muted); margin-bottom: .4rem; display: block;
+    }
+    .filter-input {
+        background: var(--soft-bg); border: 1.5px solid #dde8f4; border-radius: .6rem;
+        padding: .5rem .9rem; font-size: .85rem; font-weight: 600; color: var(--ink);
+        transition: border-color .2s; width: 100%;
+    }
+    .filter-input:focus { outline: none; border-color: var(--brand); }
+    /* In-bar action buttons — single system */
+    .filter-action-btn {
+        display: inline-flex; align-items: center; gap: .45rem;
+        padding: .52rem 1.15rem; border-radius: .65rem; font-size: .82rem; font-weight: 700;
+        cursor: pointer; text-decoration: none; white-space: nowrap;
+        transition: all .18s; border: none; line-height: 1.2;
+    }
+    .filter-action-reset {
+        background: transparent; color: var(--muted); border: 1.5px solid #dde8f4;
+    }
+    .filter-action-reset:hover { border-color: #b91c1c; color: #b91c1c; background: #fef2f2; }
+    .filter-action-search {
+        background: linear-gradient(160deg, #0d4d99, #0b4488); color: #fff;
+        box-shadow: 0 3px 12px rgba(11,68,136,.28);
+    }
+    .filter-action-search:hover { filter: brightness(1.08); color: #fff; }
+    .filter-action-export {
+        background: #006877; color: #fff;
+        box-shadow: 0 3px 10px rgba(0,104,119,.25);
+    }
+    .filter-action-export:hover { filter: brightness(1.1); color: #fff; }
+    .filter-action-export-sm {
+        background: var(--soft-bg); color: var(--ink); border: 1.5px solid #dde8f4;
+    }
+    .filter-action-export-sm:hover { border-color: #006877; color: #006877; background: #e0f7fa33; }
+    /* export-btn for the quick-exports card at top */
+    .export-btn {
+        font-size: .8rem; font-weight: 700; padding: .5rem 1.1rem; border-radius: .6rem;
+        border: 1.5px solid #dde8f4; background: var(--panel-bg); color: var(--ink);
+        display: inline-flex; align-items: center; gap: .4rem;
+        transition: border-color .2s, color .2s; text-decoration: none; white-space: nowrap;
+    }
+    .export-btn:hover { border-color: var(--brand); color: var(--brand); }
+
+    .page-btn {
+        width: 32px; height: 32px; border-radius: .5rem; border: 1.5px solid #dde8f4;
+        background: var(--panel-bg); font-size: .8rem; font-weight: 700;
+        display: flex; align-items: center; justify-content: center;
+        text-decoration: none; color: var(--ink); transition: all .2s;
+    }
+    .page-btn:hover  { border-color: var(--brand); color: var(--brand); }
+    .page-btn.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+
+    .status-badge {
+        font-size: .68rem; font-weight: 800; padding: .25rem .6rem;
+        border-radius: .4rem; letter-spacing: .04em; white-space: nowrap;
+    }
+    .status-REQUESTED  { background: #fff3cd; color: #856404; }
+    .status-CONFIRMED  { background: #e0eaff; color: #1a3fa0; }
+    .status-CHECKED_IN { background: #e6f4ea; color: #1e7e34; }
+    .status-COMPLETED  { background: #e0f7fa; color: #006877; }
+    .status-CANCELLED  { background: #fde8e8; color: #b91c1c; }
+    .status-NO_SHOW    { background: #ede9fe; color: #5b21b6; }
+
+    .audit-action { font-size: .68rem; font-weight: 800; padding: .2rem .5rem; border-radius: .3rem; letter-spacing: .05em; }
+    .action-CREATE  { background: #e6f4ea; color: #1e7e34; }
+    .action-UPDATE  { background: #fff3cd; color: #856404; }
+    .action-DELETE  { background: #fde8e8; color: #b91c1c; }
+    .action-LOGIN   { background: #e0eaff; color: #1a3fa0; }
+    .action-LOGOUT  { background: #ede9fe; color: #5b21b6; }
+    .action-EXPORT  { background: #e0f7fa; color: #006877; }
+
+    /* Tab pills — same as dashboard */
+    .dash-tab-nav { gap: .5rem; }
+    .dash-tab-nav .nav-link {
+        border-radius: .6rem; font-weight: 700; font-size: .88rem;
+        color: var(--muted); padding: .5rem 1.25rem;
+        border: 1.5px solid transparent; transition: all .2s;
+    }
+    .dash-tab-nav .nav-link:hover { background: var(--soft-bg); color: var(--ink); }
+    .dash-tab-nav .nav-link.active {
+        background: var(--brand); color: #fff;
+        border-color: var(--brand); box-shadow: 0 4px 14px rgba(11,78,162,.25);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-end mb-4">
+    <div>
+        <h3 class="fw-black mb-1" style="font-size:1.6rem;">Reports</h3>
+        <p class="text-muted mb-0" style="font-size:.85rem;">Search, filter, and export clinic data.</p>
+    </div>
+</div>
+
+<!-- Tab Nav Pills -->
+<ul class="nav dash-tab-nav mb-4" id="reportTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link {% if active_tab != 'audit' %}active{% endif %}"
+                id="appt-tab" data-bs-toggle="tab" data-bs-target="#appt-panel"
+                type="button" role="tab">
+            <i class="bi bi-calendar2-week me-1"></i> Appointments
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link {% if active_tab == 'audit' %}active{% endif %}"
+                id="audit-tab" data-bs-toggle="tab" data-bs-target="#audit-panel"
+                type="button" role="tab">
+            <i class="bi bi-card-list me-1"></i> Audit Log
+        </button>
+    </li>
+</ul>
+
+<!-- Tab Content -->
+<div class="tab-content" id="reportTabContent">
+
+<!-- ============================================================ -->
+<!-- TAB 1: APPOINTMENTS -->
+<!-- ============================================================ -->
+<div class="tab-pane fade {% if active_tab != 'audit' %}show active{% endif %}" id="appt-panel" role="tabpanel">
+
+    <!-- Filter Bar -->
+    <div class="chart-card mb-4">
+        <div class="d-flex align-items-center gap-2 mb-4">
+            <i class="bi bi-sliders" style="color:var(--brand);font-size:1rem;"></i>
+            <span style="font-size:.7rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);">
+                Filter Appointments
+            </span>
+        </div>
+        <form method="get">
+            <input type="hidden" name="tab" value="appointments">
+            <div class="row g-3 align-items-end">
+
+                <!-- Search -->
+                <div class="col-12 col-md-3">
+                    <label class="filter-label">Search</label>
+                    <div class="position-relative">
+                        <i class="bi bi-search position-absolute"
+                           style="left:.75rem;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.85rem;"></i>
+                        <input type="text" name="search" value="{{ appt_filters.search }}"
+                               placeholder="Name or appointment ID..."
+                               class="filter-input" style="padding-left:2.2rem;">
+                    </div>
+                </div>
+
+                <!-- Status -->
+                <div class="col-6 col-md-2">
+                    <label class="filter-label">Status</label>
+                    <select name="status" class="filter-input">
+                        <option value="">All Statuses</option>
+                        {% for s in status_list %}
+                        <option value="{{ s }}" {% if appt_filters.status == s %}selected{% endif %}>
+                            {{ s|lower|capfirst }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Date From -->
+                <div class="col-6 col-md-2">
+                    <label class="filter-label">Date From</label>
+                    <input type="date" name="date_from" value="{{ appt_filters.date_from }}" class="filter-input">
+                </div>
+
+                <!-- Date To -->
+                <div class="col-6 col-md-2">
+                    <label class="filter-label">Date To</label>
+                    <input type="date" name="date_to" value="{{ appt_filters.date_to }}" class="filter-input">
+                </div>
+
+                <!-- Doctor -->
+                <div class="col-6 col-md-2">
+                    <label class="filter-label">Doctor</label>
+                    <select name="doctor_id" class="filter-input">
+                        <option value="">All Doctors</option>
+                        {% for doc in doctors %}
+                        <option value="{{ doc.user.id }}"
+                            {% if appt_filters.doctor_id == doc.user.id|stringformat:"s" %}selected{% endif %}>
+                            Dr. {{ doc.user.first_name }} {{ doc.user.last_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Action + Export buttons -->
+                <div class="col-12 d-flex flex-wrap justify-content-end align-items-center gap-2 mt-3 pt-3" style="border-top:1.5px solid #eef4fa;">
+                    <a href="{% url 'dashboard:reports' %}?tab=appointments" class="filter-action-btn filter-action-reset">
+                        <i class="bi bi-x-lg"></i> Reset
+                    </a>
+                    <button type="submit" class="filter-action-btn filter-action-search">
+                        <i class="bi bi-search"></i> Search
+                    </button>
+                    <div class="vr mx-1" style="opacity:.25;"></div>
+                    <a href="{% url 'dashboard:export-appointments' %}?status={{ appt_filters.status }}&date_from={{ appt_filters.date_from }}&date_to={{ appt_filters.date_to }}&doctor_id={{ appt_filters.doctor_id }}&search={{ appt_filters.search }}"
+                       class="filter-action-btn filter-action-export">
+                        <i class="bi bi-download"></i> Export CSV
+                    </a>
+                    <a href="{% url 'dashboard:export-noshow' %}" class="filter-action-btn filter-action-export-sm">
+                        <i class="bi bi-person-x"></i> No-Show
+                    </a>
+                    <a href="{% url 'dashboard:export-revenue' %}" class="filter-action-btn filter-action-export-sm">
+                        <i class="bi bi-graph-up"></i> Revenue
+                    </a>
+                </div>
+
+            </div>
+        </form>
+    </div>
+
+    <!-- Results Table -->
+    <div class="chart-card">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <div style="font-size:1rem;font-weight:800;color:var(--ink);">Results</div>
+                <div style="font-size:.78rem;color:var(--muted);">
+                    Showing {{ appt_page.start_index|default:0 }}–{{ appt_page.end_index|default:0 }}
+                    of {{ appt_page.paginator.count }} appointments
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table align-middle" style="font-size:.85rem;">
+                <thead>
+                    <tr style="font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);">
+                        <th class="border-0 pb-3">ID</th>
+                        <th class="border-0 pb-3">Patient</th>
+                        <th class="border-0 pb-3">Doctor</th>
+                        <th class="border-0 pb-3">Date</th>
+                        <th class="border-0 pb-3">Time</th>
+                        <th class="border-0 pb-3">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for appt in appt_page %}
+                    <tr style="border-color:#eef4fa;">
+                        <td style="font-weight:700;color:var(--brand);font-family:monospace;">
+                            #{{ appt.id }}
+                        </td>
+                        <td style="font-weight:700;">
+                            {{ appt.patient.user.first_name }} {{ appt.patient.user.last_name }}
+                        </td>
+                        <td style="color:var(--muted);">
+                            Dr. {{ appt.doctor.user.first_name }} {{ appt.doctor.user.last_name }}
+                        </td>
+                        <td>{{ appt.scheduled_start|date:"M j, Y" }}</td>
+                        <td style="font-weight:700;color:var(--brand);">{{ appt.scheduled_start|time:"H:i" }}</td>
+                        <td>
+                            <span class="status-badge status-{{ appt.status }}">
+                                {{ appt.status|lower|capfirst }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="bi bi-search" style="font-size:2rem;"></i>
+                            <p class="mt-2 fw-bold">No appointments found.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if appt_page.paginator.num_pages > 1 %}
+        <div class="d-flex justify-content-between align-items-center pt-4 border-top" style="border-color:#eef4fa!important;">
+            <span style="font-size:.75rem;color:var(--muted);font-weight:600;">
+                Page {{ appt_page.number }} of {{ appt_page.paginator.num_pages }}
+            </span>
+            <div class="d-flex gap-2">
+                {% if appt_page.has_previous %}
+                <a href="?page={{ appt_page.previous_page_number }}&search={{ appt_filters.search }}&status={{ appt_filters.status }}&date_from={{ appt_filters.date_from }}&date_to={{ appt_filters.date_to }}&doctor_id={{ appt_filters.doctor_id }}&tab=appointments"
+                   class="page-btn"><i class="bi bi-chevron-left"></i></a>
+                {% endif %}
+                {% for num in appt_page.paginator.page_range %}
+                    {% if num == appt_page.number %}
+                    <span class="page-btn active">{{ num }}</span>
+                    {% elif num >= appt_page.number|add:"-2" and num <= appt_page.number|add:"2" %}
+                    <a href="?page={{ num }}&search={{ appt_filters.search }}&status={{ appt_filters.status }}&date_from={{ appt_filters.date_from }}&date_to={{ appt_filters.date_to }}&doctor_id={{ appt_filters.doctor_id }}&tab=appointments"
+                       class="page-btn">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+                {% if appt_page.has_next %}
+                <a href="?page={{ appt_page.next_page_number }}&search={{ appt_filters.search }}&status={{ appt_filters.status }}&date_from={{ appt_filters.date_from }}&date_to={{ appt_filters.date_to }}&doctor_id={{ appt_filters.doctor_id }}&tab=appointments"
+                   class="page-btn"><i class="bi bi-chevron-right"></i></a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+
+</div><!-- end #appt-panel -->
+
+
+<!-- ============================================================ -->
+<!-- TAB 2: AUDIT LOG -->
+<!-- ============================================================ -->
+<div class="tab-pane fade {% if active_tab == 'audit' %}show active{% endif %}" id="audit-panel" role="tabpanel">
+
+    <!-- Filter Bar -->
+    <div class="chart-card mb-4">
+        <div class="d-flex align-items-center gap-2 mb-4">
+            <i class="bi bi-sliders" style="color:var(--brand);font-size:1rem;"></i>
+            <span style="font-size:.7rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);">
+                Filter Audit Log
+            </span>
+        </div>
+        <form method="get">
+            <input type="hidden" name="tab" value="audit">
+            <div class="row g-3 align-items-end">
+
+                <!-- Search -->
+                <div class="col-12 col-md-3">
+                    <label class="filter-label">Search</label>
+                    <div class="position-relative">
+                        <i class="bi bi-search position-absolute"
+                           style="left:.75rem;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.85rem;"></i>
+                        <input type="text" name="audit_search" value="{{ audit_filters.search }}"
+                               placeholder="User or model..."
+                               class="filter-input" style="padding-left:2.2rem;">
+                    </div>
+                </div>
+
+                <!-- Action -->
+                <div class="col-6 col-md-2">
+                    <label class="filter-label">Action</label>
+                    <select name="action" class="filter-input">
+                        <option value="">All Actions</option>
+                        {% for act in action_list %}
+                        <option value="{{ act }}" {% if audit_filters.action == act %}selected{% endif %}>
+                            {{ act }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- User -->
+                <div class="col-6 col-md-2">
+                    <label class="filter-label">User</label>
+                    <select name="user_id" class="filter-input">
+                        <option value="">All Users</option>
+                        {% for u in staff_users %}
+                        <option value="{{ u.id }}"
+                            {% if audit_filters.user_id == u.id|stringformat:"s" %}selected{% endif %}>
+                            {{ u.first_name }} {{ u.last_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Date From -->
+                <div class="col-6 col-md-2">
+                    <label class="filter-label">Date From</label>
+                    <input type="date" name="audit_date_from" value="{{ audit_filters.date_from }}" class="filter-input">
+                </div>
+
+                <!-- Date To -->
+                <div class="col-6 col-md-1">
+                    <label class="filter-label">Date To</label>
+                    <input type="date" name="audit_date_to" value="{{ audit_filters.date_to }}" class="filter-input">
+                </div>
+
+                <!-- Action + Export buttons -->
+                <div class="col-12 d-flex flex-wrap justify-content-end align-items-center gap-2 mt-3 pt-3" style="border-top:1.5px solid #eef4fa;">
+                    <a href="{% url 'dashboard:reports' %}?tab=audit" class="filter-action-btn filter-action-reset">
+                        <i class="bi bi-x-lg"></i> Reset
+                    </a>
+                    <button type="submit" class="filter-action-btn filter-action-search">
+                        <i class="bi bi-search"></i> Search
+                    </button>
+                    <div class="vr mx-1" style="opacity:.25;"></div>
+                    <a href="{% url 'dashboard:export-audit-log' %}?action={{ audit_filters.action }}&user_id={{ audit_filters.user_id }}&date_from={{ audit_filters.date_from }}&date_to={{ audit_filters.date_to }}&search={{ audit_filters.search }}"
+                       class="filter-action-btn filter-action-export">
+                        <i class="bi bi-download"></i> Export CSV
+                    </a>
+                    <a href="{% url 'dashboard:export-noshow' %}" class="filter-action-btn filter-action-export-sm">
+                        <i class="bi bi-person-x"></i> No-Show
+                    </a>
+                    <a href="{% url 'dashboard:export-revenue' %}" class="filter-action-btn filter-action-export-sm">
+                        <i class="bi bi-graph-up"></i> Revenue
+                    </a>
+                </div>
+
+            </div>
+        </form>
+    </div>
+
+    <!-- Results Table -->
+    <div class="chart-card">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <div style="font-size:1rem;font-weight:800;color:var(--ink);">Audit Trail</div>
+                <div style="font-size:.78rem;color:var(--muted);">
+                    Showing {{ audit_page.start_index|default:0 }}–{{ audit_page.end_index|default:0 }}
+                    of {{ audit_page.paginator.count }} records
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table align-middle" style="font-size:.85rem;">
+                <thead>
+                    <tr style="font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);">
+                        <th class="border-0 pb-3">Timestamp</th>
+                        <th class="border-0 pb-3">User</th>
+                        <th class="border-0 pb-3">Action</th>
+                        <th class="border-0 pb-3">Target</th>
+                        <th class="border-0 pb-3">Description</th>
+                        <th class="border-0 pb-3">IP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in audit_page %}
+                    <tr style="border-color:#eef4fa;">
+                        <td style="color:var(--muted);white-space:nowrap;">
+                            {{ log.timestamp|date:"M j, Y H:i" }}
+                        </td>
+                        <td style="font-weight:700;">
+                            {% if log.user %}{{ log.user.first_name }} {{ log.user.last_name }}{% else %}System{% endif %}
+                        </td>
+                        <td>
+                            <span class="audit-action action-{{ log.action }}">{{ log.action }}</span>
+                        </td>
+                        <td style="font-weight:700;color:var(--brand);font-family:monospace;">
+                            {{ log.target_model }}{% if log.target_id %} #{{ log.target_id }}{% endif %}
+                        </td>
+                        <td style="color:var(--muted);">{{ log.description }}</td>
+                        <td style="color:var(--muted);font-family:monospace;font-size:.75rem;">
+                            {{ log.ip_address|default:"—" }}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="bi bi-search" style="font-size:2rem;"></i>
+                            <p class="mt-2 fw-bold">No audit logs found.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Audit Pagination -->
+        {% if audit_page.paginator.num_pages > 1 %}
+        <div class="d-flex justify-content-between align-items-center pt-4 border-top" style="border-color:#eef4fa!important;">
+            <span style="font-size:.75rem;color:var(--muted);font-weight:600;">
+                Page {{ audit_page.number }} of {{ audit_page.paginator.num_pages }}
+            </span>
+            <div class="d-flex gap-2">
+                {% if audit_page.has_previous %}
+                <a href="?audit_page={{ audit_page.previous_page_number }}&audit_search={{ audit_filters.search }}&action={{ audit_filters.action }}&user_id={{ audit_filters.user_id }}&audit_date_from={{ audit_filters.date_from }}&audit_date_to={{ audit_filters.date_to }}&tab=audit"
+                   class="page-btn"><i class="bi bi-chevron-left"></i></a>
+                {% endif %}
+                {% for num in audit_page.paginator.page_range %}
+                    {% if num == audit_page.number %}
+                    <span class="page-btn active">{{ num }}</span>
+                    {% elif num >= audit_page.number|add:"-2" and num <= audit_page.number|add:"2" %}
+                    <a href="?audit_page={{ num }}&audit_search={{ audit_filters.search }}&action={{ audit_filters.action }}&user_id={{ audit_filters.user_id }}&audit_date_from={{ audit_filters.date_from }}&audit_date_to={{ audit_filters.date_to }}&tab=audit"
+                       class="page-btn">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+                {% if audit_page.has_next %}
+                <a href="?audit_page={{ audit_page.next_page_number }}&audit_search={{ audit_filters.search }}&action={{ audit_filters.action }}&user_id={{ audit_filters.user_id }}&audit_date_from={{ audit_filters.date_from }}&audit_date_to={{ audit_filters.date_to }}&tab=audit"
+                   class="page-btn"><i class="bi bi-chevron-right"></i></a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+
+</div><!-- end #audit-panel -->
+
+</div><!-- end tab-content -->
+
+{% block extra_js %}
+<script>
+    // ---- Tab persistence via ?tab= query param ----
+    // The server already activates the correct tab via active_tab context.
+    // This JS keeps the URL in sync when the user clicks tabs client-side.
+    document.querySelectorAll('#reportTabs button[data-bs-toggle="tab"]').forEach(btn => {
+        btn.addEventListener('shown.bs.tab', function(e) {
+            const target = e.target.getAttribute('data-bs-target');
+            const tabName = target === '#audit-panel' ? 'audit' : 'appointments';
+            const url = new URL(window.location.href);
+            url.searchParams.set('tab', tabName);
+            history.replaceState(null, '', url.toString());
+        });
+    });
+</script>
+{% endblock %}
+
+{% endblock %}{# closes block content #}

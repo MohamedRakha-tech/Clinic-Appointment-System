@@ -27,6 +27,7 @@ urlpatterns = [
     path('accounts/', include('accounts.urls')),
     path('queueing/', include('queueing.urls')),
     path('emr/', include('emr.urls')),
+    path('dashboard/', include('dashboard.urls')),
     path('scheduling/', include('scheduling.urls')),
     path('notifications/', include('notifications.urls')),
 ]

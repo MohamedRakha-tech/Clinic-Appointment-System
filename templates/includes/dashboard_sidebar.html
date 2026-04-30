@@ -1,99 +1,51 @@
-<aside class="sidebar-shell d-flex flex-column">
-    <div class="sidebar-brand px-3 pt-3 pb-4">
-        <div class="d-flex align-items-center gap-2">
-            <div class="brand-icon d-inline-flex align-items-center justify-content-center">
-                <i class="bi bi-shield-check"></i>
-            </div>
-            <div>
-                <h1 class="h5 fw-bold mb-0 lh-1">Sanctuary<br>Health</h1>
-                <small class="brand-subtitle">PRECISION CARE</small>
-            </div>
-        </div>
+<aside class="sidebar-shell d-flex flex-column py-4" style="z-index: 1040;">
+    <div class="mb-4 px-4">
+        <h1 class="h5 fw-bolder mb-0 lh-1" style="color: #141d23;">Sanctuary Health</h1>
+        <small class="text-uppercase" style="font-size: .7rem; letter-spacing: .1em; opacity: 0.7; color: #141d23;">Precision Care</small>
     </div>
-    
+
     <nav class="nav flex-column gap-1 px-2">
-        {% if request.user.is_authenticated and request.user.is_superuser %}
-        <a class="nav-link sidebar-link {% if '/admin-panel/' in request.path or '/accounts/dashboard/admin/' in request.path %}active{% endif %}" href="{% url 'dashboard:index' %}">
+        <a class="nav-link sidebar-link {% if '/admin-panel/' in request.path %}active{% endif %}" href="/admin-panel/">
             <i class="bi bi-grid-1x2-fill"></i>
             <span>Admin Dashboard</span>
         </a>
-        <a class="nav-link sidebar-link {% if '/admin-panel/users' in request.path or '/admin/accounts/user/' in request.path %}active{% endif %}" href="{% url 'dashboard:users' %}">
-            <i class="bi bi-people-fill"></i>
-            <span>User Management</span>
-        </a>
-        <a class="nav-link sidebar-link {% if '/scheduling/' in request.path and '/scheduling/my-schedule/' not in request.path %}active{% endif %}" href="{% url 'scheduling:weekly_schedule_list' %}">
-            <i class="bi bi-calendar-check-fill"></i>
-            <span>Scheduling Management</span>
-        </a>
-        {% elif request.user.is_authenticated and request.user.admin_profile %}
-        <a class="nav-link sidebar-link {% if '/admin-panel/' in request.path or '/accounts/dashboard/admin/' in request.path %}active{% endif %}" href="{% url 'dashboard:index' %}">
-            <i class="bi bi-grid-1x2-fill"></i>
-            <span>Admin Dashboard</span>
-        </a>
-        <a class="nav-link sidebar-link {% if '/admin-panel/users' in request.path or '/admin/accounts/user/' in request.path %}active{% endif %}" href="{% url 'dashboard:users' %}">
-            <i class="bi bi-people-fill"></i>
-            <span>User Management</span>
-        </a>
-        <a class="nav-link sidebar-link {% if '/scheduling/' in request.path and '/scheduling/my-schedule/' not in request.path %}active{% endif %}" href="{% url 'scheduling:weekly_schedule_list' %}">
-            <i class="bi bi-calendar-check-fill"></i>
-            <span>Scheduling Management</span>
-        </a>
-        {% elif request.user.is_authenticated and request.user.receptionist_profile %}
-        <a class="nav-link sidebar-link {% if '/accounts/dashboard/reception/' in request.path %}active{% endif %}" href="{% url 'accounts:reception_dashboard' %}">
-            <i class="bi bi-speedometer2"></i>
-            <span>Reception Dashboard</span>
-        </a>
-        <a class="nav-link sidebar-link {% if '/queueing/reception/' in request.path %}active{% endif %}" href="{% url 'queueing:reception_queue' %}">
-            <i class="bi bi-clipboard2-pulse-fill"></i>
-            <span>Reception Monitor</span>
-        </a>
-        <a class="nav-link sidebar-link {% if '/scheduling/' in request.path and '/scheduling/my-schedule/' not in request.path %}active{% endif %}" href="{% url 'scheduling:weekly_schedule_list' %}">
-            <i class="bi bi-calendar-check-fill"></i>
-            <span>Scheduling Management</span>
-        </a>
-        {% elif request.user.is_authenticated and request.user.doctor_profile %}
-        <a class="nav-link sidebar-link {% if '/accounts/dashboard/doctor/' in request.path %}active{% endif %}" href="{% url 'accounts:doctor_dashboard' %}">
-            <i class="bi bi-speedometer2"></i>
-            <span>Doctor Dashboard</span>
-        </a>
-        <a class="nav-link sidebar-link {% if '/queueing/doctor/' in request.path %}active{% endif %}" href="{% url 'queueing:doctor_queue' %}">
+        <a class="nav-link sidebar-link {% if '/queueing/' in request.path or '/emr/' in request.path %}active{% endif %}" href="{% url 'queueing:doctor_queue' %}">
             <i class="bi bi-calendar2-week-fill"></i>
             <span>Doctor Queue</span>
         </a>
-        <a class="nav-link sidebar-link {% if '/scheduling/my-schedule/' in request.path %}active{% endif %}" href="{% url 'scheduling:doctor_my_schedule' %}">
+        <a class="nav-link sidebar-link" href="#">
             <i class="bi bi-calendar-check-fill"></i>
-            <span>Weekly View</span>
+            <span>Schedule</span>
         </a>
-        <a class="nav-link sidebar-link {% if '/emr/consultations/' in request.path %}active{% endif %}" href="{% url 'emr:list' %}">
-            <i class="bi bi-journal-medical"></i>
-            <span>My Consultations</span>
+        <a class="nav-link sidebar-link" href="#">
+            <i class="bi bi-people-fill"></i>
+            <span>Patients</span>
         </a>
-        {% elif request.user.is_authenticated and request.user.patient_profile %}
-        <a class="nav-link sidebar-link {% if '/accounts/dashboard/patient/' in request.path %}active{% endif %}" href="{% url 'accounts:patient_dashboard' %}">
-            <i class="bi bi-person-badge-fill"></i>
-            <span>Patient Portal</span>
+        <a class="nav-link sidebar-link" href="#">
+            <i class="bi bi-bar-chart-fill"></i>
+            <span>Reports</span>
         </a>
-        <a class="nav-link sidebar-link {% if '/emr/patient/' in request.path %}active{% endif %}" href="{% url 'emr:patient_list' %}">
-            <i class="bi bi-file-medical-fill"></i>
-            <span>My EMR</span>
+        <a class="nav-link sidebar-link" href="#">
+            <i class="bi bi-gear-fill"></i>
+            <span>Settings</span>
         </a>
         {% endif %}
     </nav>
-    
+
     <div class="px-2 mt-auto pb-3">
         <button type="button" class="btn sidebar-cta w-100 mb-3">
             <i class="bi bi-plus-lg"></i>
             <span>New Appointment</span>
         </button>
-        
+
         <div class="pt-2 border-top border-secondary-subtle">
             <a class="nav-link sidebar-link" href="#">
                 <i class="bi bi-question-circle-fill"></i>
-                <span>Support</span>
+                <span style="font-size: .875rem;">Support</span>
             </a>
-            <a class="nav-link sidebar-link danger" href="{% url 'accounts:logout' %}">
+            <a class="nav-link sidebar-link danger" href="/admin/logout/">
                 <i class="bi bi-box-arrow-right"></i>
-                <span>Sign Out</span>
+                <span style="font-size: .875rem;">Sign Out</span>
             </a>
         </div>
     </div>
