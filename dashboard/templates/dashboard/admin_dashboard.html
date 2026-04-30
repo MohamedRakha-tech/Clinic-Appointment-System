@@ -630,7 +630,7 @@
     const volDatasets    = { '7d': {{ vol_7d_json|safe }}, '30d': {{ appointments_last_30_json|safe }}, '90d': {{ vol_90d_json|safe }} };
     const revDatasets    = { '7d': {{ rev_7d_json|safe }}, '30d': {{ rev_30d_json|safe }}, '90d': {{ rev_90d_json|safe }} };
     const allDatesData   = {{ all_dates_json|safe }};
-    const allRevenueData = {{ all_dates_json|safe }}; // We will use allDatesData which has dates, and calculate mock revenue on the fly below
+    const allRevenueData = {{ all_revenue_dates_json|safe }};
     const peakData       = {{ peak_hours_json|safe }};
     const noshowDoctorData = {{ noshow_per_doctor_json|safe }};
     const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -770,7 +770,7 @@
             return;
         }
 
-        let filtered = allDatesData; // using daily data
+        let filtered = allRevenueData; // using daily data
         let subtitle = 'Daily revenue';
         
         if (year) {

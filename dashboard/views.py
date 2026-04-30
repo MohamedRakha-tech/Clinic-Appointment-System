@@ -61,6 +61,10 @@ class AdminDashboardView(PermissionRequiredMixin, TemplateView):
         ctx['all_dates_json']   = json.dumps(all_dates, cls=DjangoJSONEncoder)
         all_revenue = list(selectors.get_revenue_all_months(years_back=3))
         ctx['all_revenue_json'] = json.dumps(all_revenue, cls=DjangoJSONEncoder)
+        
+        all_revenue_dates = list(selectors.get_revenue_all_dates(years_back=3))
+        ctx['all_revenue_dates_json'] = json.dumps(all_revenue_dates, cls=DjangoJSONEncoder)
+        
         ctx['available_years']  = sorted(set(d['date'].year for d in all_dates), reverse=True)
 
         appts_30 = ctx['appointments_last_30']

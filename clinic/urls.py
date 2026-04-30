@@ -23,7 +23,7 @@ handler500 = "clinic.views.error_500"
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('admin-panel/', include('dashboard.urls')),
+    # path('admin-panel/', include('dashboard.urls')),
     path('accounts/', include('accounts.urls')),
     path('queueing/', include('queueing.urls')),
     path('emr/', include('emr.urls')),

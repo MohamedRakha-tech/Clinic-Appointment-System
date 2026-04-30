@@ -1,12 +1,13 @@
-# dashboard/selectors.py
 from datetime import timedelta
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Value
 from django.db.models.functions import ExtractHour, ExtractWeekDay, TruncDate, TruncMonth
 from django.utils import timezone
 from appointments.models import Appointment
 from accounts.models import PatientProfile, DoctorProfile, User
 from datetime import timedelta
 from .models import AuditLog
+from django.db.models.functions import Concat
+import re
 
 
 def get_today_appointments_count():
@@ -24,7 +25,7 @@ def get_appointments_by_status(date=None):
 
 def get_appointments_last_n_days(n=30):
     since = timezone.localdate() - timedelta(days=n)
-    return (
+    rows = (
         Appointment.objects
         .filter(scheduled_start__date__gte=since)
         .annotate(date=TruncDate('scheduled_start'))
@@ -32,6 +33,20 @@ def get_appointments_last_n_days(n=30):
         .annotate(count=Count('id'))
         .order_by('date')
     )
+    
+    data_dict = {}
+    for row in rows:
+        if row['date']:
+            data_dict[str(row['date'])[:10]] = row['count']
+            
+    results = []
+    for i in range(n + 1):
+        current_date = since + timedelta(days=i)
+        results.append({
+            'date': current_date,
+            'count': data_dict.get(str(current_date), 0)
+        })
+    return results
 
 
 def get_pending_appointments_count():
@@ -110,12 +125,19 @@ def get_revenue_last_n_days(n=30):
         .order_by('date')
     )
     
-    results = []
+    data_dict = {}
     for row in rows:
+        if row['date']:
+            data_dict[str(row['date'])[:10]] = row['count']
+            
+    results = []
+    for i in range(n + 1):
+        current_date = since + timedelta(days=i)
+        count = data_dict.get(str(current_date), 0)
         results.append({
-            'date': row['date'],
-            'count': row['count'],
-            'revenue': row['count'] * 150.00
+            'date': current_date,
+            'count': count,
+            'revenue': count * 150.00
         })
     return results
 
@@ -257,7 +279,6 @@ def get_filtered_appointments(
     doctor_id=None,
     search=None,
 ):
-    from appointments.models import Appointment
 
     qs = (
         Appointment.objects
@@ -278,9 +299,13 @@ def get_filtered_appointments(
         qs = qs.filter(doctor__user__id=doctor_id)
 
     if search:
-        from django.db.models import Q
-        qs = qs.filter(
+        search = search.strip()
+        search = re.sub(r'\s+', ' ', search)
+        qs = qs.annotate(
+            full_name=Concat('patient__user__first_name', Value(' '), 'patient__user__last_name')
+        ).filter(
             Q(appointment_code__icontains=search) |
+            Q(full_name__icontains=search) |
             Q(patient__user__first_name__icontains=search) |
             Q(patient__user__last_name__icontains=search)
         )
@@ -304,10 +329,14 @@ def get_filtered_audit_logs(action=None, user_id=None, date_from=None, date_to=N
     if date_to:
         qs = qs.filter(timestamp__date__lte=date_to)
     if search:
-        from django.db.models import Q
-        qs = qs.filter(
+        search = search.strip()
+        search = re.sub(r'\s+', ' ', search)
+        qs = qs.annotate(
+            full_name=Concat('user__first_name', Value(' '), 'user__last_name')
+        ).filter(
             Q(target_model__icontains=search) |
             Q(description__icontains=search)  |
+            Q(full_name__icontains=search) |
             Q(user__first_name__icontains=search) |
             Q(user__last_name__icontains=search)
         )
@@ -318,8 +347,9 @@ def get_all_staff_users():
 
 
 def get_appointments_all_dates(years_back=3):
-    since = timezone.localdate() - timedelta(days=years_back * 365)
-    return (
+    today = timezone.localdate()
+    since = today - timedelta(days=years_back * 365)
+    rows = (
         Appointment.objects
         .filter(scheduled_start__date__gte=since)
         .annotate(date=TruncDate('scheduled_start'))
@@ -327,6 +357,50 @@ def get_appointments_all_dates(years_back=3):
         .annotate(count=Count('id'))
         .order_by('date')
     )
+    
+    data_dict = {}
+    for row in rows:
+        if row['date']:
+            data_dict[str(row['date'])[:10]] = row['count']
+            
+    results = []
+    current_date = since
+    while current_date <= today:
+        results.append({
+            'date': current_date,
+            'count': data_dict.get(str(current_date), 0)
+        })
+        current_date += timedelta(days=1)
+    return results
+
+def get_revenue_all_dates(years_back=3):
+    today = timezone.localdate()
+    since = today - timedelta(days=years_back * 365)
+    rows = (
+        Appointment.objects
+        .filter(status='COMPLETED', scheduled_start__date__gte=since)
+        .annotate(date=TruncDate('scheduled_start'))
+        .values('date')
+        .annotate(count=Count('id'))
+        .order_by('date')
+    )
+    
+    data_dict = {}
+    for row in rows:
+        if row['date']:
+            data_dict[str(row['date'])[:10]] = row['count']
+            
+    results = []
+    current_date = since
+    while current_date <= today:
+        count = data_dict.get(str(current_date), 0)
+        results.append({
+            'date': current_date,
+            'count': count,
+            'revenue': count * 150.00
+        })
+        current_date += timedelta(days=1)
+    return results
 
 
 def get_revenue_all_months(years_back=3):
