@@ -150,7 +150,7 @@ class ConsultationDetailView(LoginRequiredMixin, View):
         )
 
         patient_profile = _get_patient_profile(request)
-        can_manage = consultation.doctor.user == request.user or request.user.is_staff
+        can_manage = consultation.doctor.user == request.user or request.user.is_superuser or hasattr(request.user, "admin_profile")
         can_view = can_manage or (patient_profile and consultation.appointment.patient_id == patient_profile.id)
 
         if not can_view:

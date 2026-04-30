@@ -1,0 +1,74 @@
+{% extends "appointments/base.html" %}
+
+{% block title %}Reschedule Appointment{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'appointment-detail' pk=appointment.pk %}">Detail #{{ appointment.pk }}</a></li>
+<li class="breadcrumb-item active" aria-current="page">Reschedule</li>
+{% endblock %}
+
+{% block appointment_content %}
+<div class="row g-4">
+    <div class="col-12 col-lg-8">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4">
+                <h1 class="h4 fw-bold mb-3">Reschedule Appointment</h1>
+
+                <div class="p-3 border rounded-3 bg-light mb-4">
+                    <div class="fw-semibold">Current Appointment</div>
+                    <div class="text-muted small">Dr. {{ appointment.doctor.user.first_name|default:appointment.doctor.user.username }}</div>
+                    <div class="text-muted small">{{ appointment.scheduled_start|date:"M d, Y" }} at {{ appointment.scheduled_start|time:"h:i A" }}</div>
+                    <div class="text-muted small">Status: {{ appointment.get_status_display }}</div>
+                </div>
+
+                <form method="post" action="{% url 'appointment-reschedule' pk=appointment.pk %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="{{ form.reason.id_for_label }}" class="form-label">Reason for Rescheduling</label>
+                        {{ form.reason }}
+                        {% if form.reason.errors %}
+                            <div class="text-danger small mt-1">{{ form.reason.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">{{ form.non_field_errors|striptags }}</div>
+                    {% endif %}
+
+                    <div class="card border-0 bg-light">
+                        <div class="card-body">
+                            <div class="text-uppercase text-muted small fw-semibold mb-2">Available Times</div>
+                            <div class="row g-3">
+                                {% for slot in available_slots %}
+                                <div class="col-12 col-md-6">
+                                    <button type="submit" name="slot_id" value="{{ slot.id }}" class="btn btn-outline-primary w-100 text-start">
+                                        <div class="fw-semibold">{{ slot.start_datetime|date:"M d, Y" }}</div>
+                                        <div class="small">{{ slot.start_datetime|time:"h:i A" }} - {{ slot.end_datetime|time:"h:i A" }}</div>
+                                    </button>
+                                </div>
+                                {% empty %}
+                                <div class="col-12">
+                                    <div class="text-muted">No available slots for this doctor on the selected date.</div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h2 class="h6 text-uppercase text-muted fw-semibold">New Schedule</h2>
+                <p class="mb-2 fw-semibold">Doctor</p>
+                <p class="text-muted small">Dr. {{ appointment.doctor.user.first_name|default:appointment.doctor.user.username }}</p>
+                <p class="mb-2 fw-semibold">Selected Date</p>
+                <p class="text-muted small">{{ selected_date|date:"M d, Y" }}</p>
+                <p class="text-muted small mb-0">Rescheduling moves the appointment back to REQUESTED until the staff reconfirms it.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

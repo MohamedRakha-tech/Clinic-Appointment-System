@@ -25,6 +25,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     # path('admin-panel/', include('dashboard.urls')),
     path('api/', include('scheduling.api.urls')),
+    path('api/', include('appointments.api.urls')),
     path('accounts/', include('accounts.urls')),
     path('queueing/', include('queueing.urls')),
     path('emr/', include('emr.urls')),

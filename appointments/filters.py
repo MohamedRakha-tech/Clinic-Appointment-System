@@ -22,6 +22,22 @@ def is_clinic_staff(user):
     return False
 
 
+def can_manage_all_appointments(user):
+    if not user.is_authenticated:
+        return False
+
+    if user.is_superuser:
+        return True
+
+    if hasattr(user, "receptionist_profile") or hasattr(user, "admin_profile"):
+        return True
+
+    if user.is_staff and not hasattr(user, "doctor_profile"):
+        return True
+
+    return False
+
+
 def appointments_for_user(user):
     queryset = (
         Appointment.objects.select_related(
@@ -36,11 +52,14 @@ def appointments_for_user(user):
     if not user.is_authenticated:
         return queryset.none()
 
-    if is_clinic_staff(user):
-        return queryset
-
     if hasattr(user, "patient_profile"):
         return queryset.filter(patient=user.patient_profile)
+
+    if hasattr(user, "doctor_profile") and not can_manage_all_appointments(user):
+        return queryset.filter(doctor=user.doctor_profile)
+
+    if can_manage_all_appointments(user):
+        return queryset
 
     return queryset.none()
 
@@ -70,12 +89,13 @@ def appointment_history_queryset_for_user(user):
     return appointments_for_user(user)
 
 
-def apply_appointment_list_filters(queryset, params):
+def apply_appointment_list_filters(queryset, params, is_staff=False):
     status = (params.get("status") or "").strip()
     query = (params.get("q") or params.get("search") or "").strip()
     date_from = (params.get("date_from") or "").strip()
     date_to = (params.get("date_to") or "").strip()
     doctor_id = (params.get("doctor_id") or "").strip()
+    patient_id = (params.get("patient_id") or "").strip()
 
     if status:
         queryset = queryset.filter(status=status)
@@ -83,17 +103,24 @@ def apply_appointment_list_filters(queryset, params):
     if doctor_id.isdigit():
         queryset = queryset.filter(doctor_id=doctor_id)
 
+    if is_staff and patient_id.isdigit():
+        queryset = queryset.filter(patient_id=patient_id)
+
     if query:
-        queryset = queryset.filter(
+        search_filter = (
             Q(appointment_code__icontains=query)
-            | Q(patient__user__username__icontains=query)
-            | Q(patient__user__first_name__icontains=query)
-            | Q(patient__user__last_name__icontains=query)
             | Q(doctor__user__username__icontains=query)
             | Q(doctor__user__first_name__icontains=query)
             | Q(doctor__user__last_name__icontains=query)
             | Q(doctor__specialization__icontains=query)
         )
+        if is_staff:
+            search_filter |= (
+                Q(patient__user__username__icontains=query)
+                | Q(patient__user__first_name__icontains=query)
+                | Q(patient__user__last_name__icontains=query)
+            )
+        queryset = queryset.filter(search_filter)
 
     if date_from:
         try:

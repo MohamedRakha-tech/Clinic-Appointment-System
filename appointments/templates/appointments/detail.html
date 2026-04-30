@@ -79,14 +79,45 @@
                         <span>Cancel</span>
                     </a>
                 {% endif %}
-                {% if can_manage %}
-                    <form method="post" action="{% url 'appointment-confirm' pk=appointment.pk %}">
+
+                {# Status transition buttons - Staff only #}
+                {% if can_confirm %}
+                    <form method="post" action="{% url 'appointment-confirm' pk=appointment.pk %}" class="inline">
                         {% csrf_token %}
-                        <button type="submit" class="px-5 py-2.5 bg-tertiary-container/20 text-tertiary font-bold text-sm rounded-xl hover:bg-tertiary hover:text-on-primary transition-all">Confirm</button>
+                        <button type="submit" class="px-5 py-2.5 bg-tertiary-container/20 text-tertiary font-bold text-sm rounded-xl hover:bg-tertiary hover:text-on-primary transition-all flex items-center space-x-2">
+                            <span class="material-symbols-outlined text-sm">check_circle</span>
+                            <span>Confirm</span>
+                        </button>
                     </form>
-                    <form method="post" action="{% url 'appointment-no-show' pk=appointment.pk %}">
+                {% endif %}
+
+                {% if can_check_in %}
+                    <form method="post" action="{% url 'appointment-check-in' pk=appointment.pk %}" class="inline">
                         {% csrf_token %}
-                        <button type="submit" class="px-5 py-2.5 bg-surface-container-high text-on-surface font-bold text-sm rounded-xl hover:bg-error hover:text-on-error transition-all">No Show</button>
+                        <button type="submit" class="px-5 py-2.5 bg-primary-container/20 text-primary font-bold text-sm rounded-xl hover:bg-primary hover:text-on-primary transition-all flex items-center space-x-2">
+                            <span class="material-symbols-outlined text-sm">login</span>
+                            <span>Check In</span>
+                        </button>
+                    </form>
+                {% endif %}
+
+                {% if can_complete %}
+                    <form method="post" action="{% url 'appointment-complete' pk=appointment.pk %}" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="px-5 py-2.5 bg-green-100 text-green-700 font-bold text-sm rounded-xl hover:bg-green-600 hover:text-white transition-all flex items-center space-x-2">
+                            <span class="material-symbols-outlined text-sm">check</span>
+                            <span>Complete</span>
+                        </button>
+                    </form>
+                {% endif %}
+
+                {% if can_mark_no_show %}
+                    <form method="post" action="{% url 'appointment-no-show' pk=appointment.pk %}" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="px-5 py-2.5 bg-surface-container-high text-on-surface-variant font-bold text-sm rounded-xl hover:bg-error hover:text-on-error transition-all flex items-center space-x-2">
+                            <span class="material-symbols-outlined text-sm">person_off</span>
+                            <span>No Show</span>
+                        </button>
                     </form>
                 {% endif %}
             </div>

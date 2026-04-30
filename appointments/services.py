@@ -3,6 +3,7 @@ from uuid import uuid4
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
+from datetime import timedelta
 
 from accounts.models import PatientProfile
 from appointments.models import (
@@ -31,6 +32,55 @@ def _booking_source_for_user(user):
     return Appointment.BookingSource.ADMIN
 
 
+def _active_appointment_queryset(exclude_appointment_id=None):
+    queryset = Appointment.objects.filter(
+        status__in={
+            Appointment.Status.REQUESTED,
+            Appointment.Status.CONFIRMED,
+            Appointment.Status.CHECKED_IN,
+        }
+    ).select_related("doctor", "doctor__user", "patient", "patient__user")
+
+    if exclude_appointment_id:
+        queryset = queryset.exclude(pk=exclude_appointment_id)
+
+    return queryset
+
+
+def _patient_has_overlapping_appointment(patient: PatientProfile, start, end, exclude_appointment_id=None) -> bool:
+    return _active_appointment_queryset(exclude_appointment_id).filter(
+        patient=patient,
+        scheduled_start__lt=end,
+        scheduled_end__gt=start,
+    ).exists()
+
+
+def _doctor_has_buffer_conflict(doctor, start, end, exclude_appointment_id=None) -> bool:
+    buffer_before = getattr(doctor, "buffer_before_minutes", 5) or 0
+    buffer_after = getattr(doctor, "buffer_after_minutes", 5) or 0
+    conflict_start = start - timedelta(minutes=buffer_before)
+    conflict_end = end + timedelta(minutes=buffer_after)
+
+    return _active_appointment_queryset(exclude_appointment_id).filter(
+        doctor=doctor,
+        scheduled_start__lt=conflict_end,
+        scheduled_end__gt=conflict_start,
+    ).exists()
+
+
+def _validate_booking_window(patient: PatientProfile, doctor, start, end, exclude_appointment_id=None):
+    errors = []
+
+    if _patient_has_overlapping_appointment(patient, start, end, exclude_appointment_id=exclude_appointment_id):
+        errors.append("You already have another appointment that overlaps with this time.")
+
+    if _doctor_has_buffer_conflict(doctor, start, end, exclude_appointment_id=exclude_appointment_id):
+        errors.append("This time conflicts with the doctor's existing appointments or buffer window.")
+
+    if errors:
+        raise ValidationError(errors)
+
+
 @transaction.atomic
 def book_appointment(patient: PatientProfile, slot_id: int, booked_by=None, notes_for_staff: str = "") -> Appointment:
     slot = AppointmentSlot.objects.select_for_update().select_related("doctor", "doctor__user").get(pk=slot_id)
@@ -40,6 +90,8 @@ def book_appointment(patient: PatientProfile, slot_id: int, booked_by=None, note
 
     if hasattr(slot, "appointment"):
         raise ValidationError("This slot has already been booked.")
+
+    _validate_booking_window(patient, slot.doctor, slot.start_datetime, slot.end_datetime)
 
     appointment = Appointment.objects.create(
         appointment_code=_generate_temporary_code(),
@@ -82,7 +134,11 @@ def transition_appointment(appointment_or_id, new_status: str, changed_by=None, 
         return appointment
 
     allowed = {
-        Appointment.Status.REQUESTED: {Appointment.Status.CONFIRMED, Appointment.Status.CANCELLED},
+        Appointment.Status.REQUESTED: {
+            Appointment.Status.CONFIRMED,
+            Appointment.Status.CANCELLED,
+            Appointment.Status.NO_SHOW,
+        },
         Appointment.Status.CONFIRMED: {
             Appointment.Status.CHECKED_IN,
             Appointment.Status.CANCELLED,
@@ -96,6 +152,9 @@ def transition_appointment(appointment_or_id, new_status: str, changed_by=None, 
     }
     if new_status not in allowed.get(old_status, set()):
         raise ValidationError(f"Cannot transition from {old_status} to {new_status}.")
+
+    if new_status == Appointment.Status.COMPLETED and not hasattr(appointment, "consultation_record"):
+        raise ValidationError("A consultation record must exist before completing the appointment.")
 
     appointment.status = new_status
 
@@ -177,6 +236,14 @@ def reschedule_appointment(appointment_or_id, new_slot_id: int, changed_by=None,
 
     if new_slot.status != AppointmentSlot.Status.AVAILABLE:
         raise ValidationError("Selected slot is no longer available.")
+
+    _validate_booking_window(
+        appointment.patient,
+        new_slot.doctor,
+        new_slot.start_datetime,
+        new_slot.end_datetime,
+        exclude_appointment_id=appointment.id,
+    )
 
     old_slot.status = AppointmentSlot.Status.AVAILABLE
     new_slot.status = AppointmentSlot.Status.BOOKED

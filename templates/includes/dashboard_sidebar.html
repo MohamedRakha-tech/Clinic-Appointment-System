@@ -68,7 +68,7 @@
                 <i class="bi bi-calendar2-event-fill"></i>
                 <span>Appointments</span>
             </a>
-            {% elif request.user.patient_profile %}
+            {% elif current_user_role == "patient" %}
             <a class="nav-link sidebar-link {% if '/accounts/dashboard/patient/' in request.path %}active{% endif %}" href="{% url 'accounts:patient_dashboard' %}">
                 <i class="bi bi-person-badge-fill"></i>
                 <span>Patient Portal</span>
@@ -86,15 +86,10 @@
     </nav>
 
     <div class="px-2 mt-auto pb-3">
-        {% if request.user.is_authenticated and request.user.patient_profile %}
+        {% if request.user.is_authenticated and can_book_appointments %}
         <a class="btn sidebar-cta w-100 mb-3" href="{% url 'appointment-book' %}">
             <i class="bi bi-plus-lg"></i>
             <span>New Appointment</span>
-        </a>
-        {% elif request.user.is_authenticated %}
-        <a class="btn sidebar-cta w-100 mb-3" href="{% url 'appointment-list' %}">
-            <i class="bi bi-calendar2-event-fill"></i>
-            <span>Appointments</span>
         </a>
         {% endif %}
 
