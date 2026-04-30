@@ -100,43 +100,43 @@
 </div>
 </div>
 <nav class="flex-1 space-y-1">
-<a class="flex items-center space-x-3 px-4 py-3 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all rounded-lg" href="#">
+<a class="flex items-center space-x-3 px-4 py-3 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all rounded-lg" href="{% url 'accounts:patient_dashboard' %}">
 <span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
 <span class="font-inter body-md tracking-wide">Dashboard</span>
 </a>
-<a class="flex items-center space-x-3 px-4 py-3 bg-white dark:bg-slate-800 text-[#0056b3] font-bold rounded-lg shadow-sm" href="#">
+<a class="flex items-center space-x-3 px-4 py-3 bg-white dark:bg-slate-800 text-[#0056b3] font-bold rounded-lg shadow-sm" href="{% url 'appointment-list' %}">
 <span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
 <span class="font-inter body-md tracking-wide">Appointments</span>
 </a>
-<a class="flex items-center space-x-3 px-4 py-3 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all rounded-lg" href="#">
+<a class="flex items-center space-x-3 px-4 py-3 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all rounded-lg" href="{% url 'scheduling:weekly_schedule_list' %}">
 <span class="material-symbols-outlined" data-icon="event_note">event_note</span>
 <span class="font-inter body-md tracking-wide">Schedule</span>
 </a>
-<a class="flex items-center space-x-3 px-4 py-3 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all rounded-lg" href="#">
+<a class="flex items-center space-x-3 px-4 py-3 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all rounded-lg" href="{% url 'accounts:patient_dashboard' %}">
 <span class="material-symbols-outlined" data-icon="group">group</span>
 <span class="font-inter body-md tracking-wide">Patients</span>
 </a>
-<a class="flex items-center space-x-3 px-4 py-3 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all rounded-lg" href="#">
+<a class="flex items-center space-x-3 px-4 py-3 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all rounded-lg" href="{% url 'accounts:admin_dashboard' %}">
 <span class="material-symbols-outlined" data-icon="analytics">analytics</span>
 <span class="font-inter body-md tracking-wide">Reports</span>
 </a>
-<a class="flex items-center space-x-3 px-4 py-3 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all rounded-lg" href="#">
+<a class="flex items-center space-x-3 px-4 py-3 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all rounded-lg" href="{% url 'accounts:patient_dashboard' %}">
 <span class="material-symbols-outlined" data-icon="settings">settings</span>
 <span class="font-inter body-md tracking-wide">Settings</span>
 </a>
 </nav>
 <div class="pt-4 mt-4 border-t border-outline-variant/10">
-<button class="w-full py-3 px-4 bg-primary text-on-primary rounded-xl font-bold text-sm shadow-lg shadow-primary/20 flex items-center justify-center space-x-2 active:scale-95 transition-transform">
+<a class="w-full py-3 px-4 bg-primary text-on-primary rounded-xl font-bold text-sm shadow-lg shadow-primary/20 flex items-center justify-center space-x-2 active:scale-95 transition-transform" href="{% url 'appointment-book' %}">
 <span class="material-symbols-outlined text-sm" data-icon="add">add</span>
 <span>New Appointment</span>
-</button>
+</a>
 </div>
 <div class="mt-auto space-y-1">
-<a class="flex items-center space-x-3 px-4 py-2 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] rounded-lg" href="#">
+<a class="flex items-center space-x-3 px-4 py-2 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] rounded-lg" href="{% url 'accounts:support' %}">
 <span class="material-symbols-outlined" data-icon="contact_support">contact_support</span>
 <span class="font-inter body-md tracking-wide">Support</span>
 </a>
-<a class="flex items-center space-x-3 px-4 py-2 text-error hover:bg-error-container/20 rounded-lg" href="#">
+<a class="flex items-center space-x-3 px-4 py-2 text-error hover:bg-error-container/20 rounded-lg" href="{% url 'accounts:logout' %}">
 <span class="material-symbols-outlined" data-icon="logout">logout</span>
 <span class="font-inter body-md tracking-wide">Sign Out</span>
 </a>
@@ -404,9 +404,9 @@
 </div>
 <h4 class="text-lg font-bold text-on-surface mb-2">Need to Reschedule?</h4>
 <p class="text-sm text-on-surface-variant mb-6 leading-relaxed">Our clinical coordinators are available 24/7 for urgent changes.</p>
-<button class="w-full py-3 bg-white text-primary border border-primary/20 rounded-xl font-bold text-sm hover:bg-primary hover:text-white transition-all active:scale-95">
+<a class="w-full py-3 bg-white text-primary border border-primary/20 rounded-xl font-bold text-sm hover:bg-primary hover:text-white transition-all active:scale-95 inline-flex items-center justify-center" href="{% url 'accounts:support' %}">
                         Contact Support
-                    </button>
+                    </a>
 </div>
 </div>
 </div>
@@ -414,7 +414,7 @@
 <div class="h-12 w-full"></div>
 </main>
 <!-- Contextual FAB - Only for main dashboards -->
-<button class="fixed bottom-8 right-8 w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50 md:hidden">
+<a class="fixed bottom-8 right-8 w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50 md:hidden" href="{% url 'appointment-book' %}">
 <span class="material-symbols-outlined" data-icon="add">add</span>
-</button>
+</a>
 </body></html>

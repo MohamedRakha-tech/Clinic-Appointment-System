@@ -1,6 +1,7 @@
 from django.test import TestCase
 from django.urls import reverse
 
+from accounts.factories import DoctorProfileFactory, PatientProfileFactory
 from accounts.models import User
 
 
@@ -58,3 +59,26 @@ class AuthRoutingTests(TestCase):
 
 		response = self.client.get(reverse("accounts:staff_login"))
 		self.assertRedirects(response, reverse("accounts:patient_dashboard"))
+
+	def test_patient_dashboard_sidebar_matches_patient_permissions(self):
+		patient = PatientProfileFactory(user=self.patient)
+		self.client.force_login(patient.user)
+
+		response = self.client.get(reverse("accounts:patient_dashboard"))
+
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(response, "New Appointment")
+		self.assertContains(response, "My EMR")
+		self.assertNotContains(response, "Doctor Queue")
+
+	def test_doctor_dashboard_sidebar_matches_doctor_permissions(self):
+		doctor = DoctorProfileFactory(user=self.doctor)
+		self.client.force_login(doctor.user)
+
+		response = self.client.get(reverse("accounts:doctor_dashboard"))
+
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(response, "Doctor Queue")
+		self.assertContains(response, "Weekly View")
+		self.assertContains(response, "Appointments")
+		self.assertNotContains(response, "New Appointment")

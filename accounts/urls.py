@@ -15,4 +15,7 @@ urlpatterns = [
     path("dashboard/doctor/", views.DoctorDashboardView.as_view(), name="doctor_dashboard"),
     path("dashboard/reception/", views.ReceptionDashboardView.as_view(), name="reception_dashboard"),
     path("dashboard/admin/", views.AdminDashboardView.as_view(), name="admin_dashboard"),
+    path("privacy/", views.PrivacyPolicyView.as_view(), name="privacy_policy"),
+    path("terms/", views.TermsOfServiceView.as_view(), name="terms_of_service"),
+    path("support/", views.SupportView.as_view(), name="support"),
 ]
