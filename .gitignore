@@ -16,3 +16,11 @@ dev_role_credentials.txt
 
 
 .codex
+# Seed & development scripts
+scripts/management/commands/seed.py
+*.seed.json
+seed_data/
+/.seed/
+seed_output.txt
+scripts/
+.idea/

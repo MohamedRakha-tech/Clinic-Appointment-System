@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}User Details - Clinic{% endblock %}
+{% block topbar_subtitle %}User Profile{% endblock %}
+{% block topbar_role %}Role: Admin{% endblock %}
+
+{% block content %}
+<section class="surface-card p-4 p-lg-5 d-grid gap-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+            <h1 class="h4 fw-bold mb-1">{{ user_item.username }}</h1>
+            <p class="text-muted mb-0">Role: {{ role|default:"Unassigned"|title }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-secondary" href="{% url 'dashboard:users' %}">Back</a>
+            <a class="btn btn-primary" href="{% url 'dashboard:user_edit' user_item.id %}">Edit</a>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="soft-card p-3">
+                <div class="text-muted small">Email</div>
+                <div class="fw-semibold">{{ user_item.email }}</div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="soft-card p-3">
+                <div class="text-muted small">Phone</div>
+                <div class="fw-semibold">{{ user_item.phone|default:"-" }}</div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="soft-card p-3">
+                <div class="text-muted small">Full Name</div>
+                <div class="fw-semibold">{{ user_item.first_name }} {{ user_item.last_name }}</div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="soft-card p-3">
+                <div class="text-muted small">Status</div>
+                <div class="fw-semibold">{% if user_item.is_active %}Active{% else %}Inactive{% endif %}</div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
