@@ -1,9 +1,7 @@
 {% extends "base.html" %}
 
-{% block title %}My Consultations - Clinic{% endblock %}
+{% block title %}Consultations - Clinic{% endblock %}
 {% block topbar_subtitle %}Clinical Hub{% endblock %}
-{% block topbar_role %}Role: Doctor{% endblock %}
-
 {% block extra_css %}
 <style>
     .list-shell {
@@ -241,18 +239,20 @@
 <section class="list-shell">
     <div class="hero-card d-flex flex-wrap justify-content-between align-items-center gap-3">
         <div>
-            <h3 class="hero-title">Consultation Timeline</h3>
-            <p class="hero-subtitle">Review, continue, and manage your clinical notes quickly.</p>
+            <h3 class="hero-title">{{ header_title|default:"Consultation Timeline" }}</h3>
+            <p class="hero-subtitle">{{ header_subtitle|default:"Review, continue, and manage your clinical notes quickly." }}</p>
         </div>
         <div class="hero-meta">
             <span class="pill total">Total Records: {{ consultations|length }}</span>
-            <span class="pill doctor">Dr. {{ doctor.user.first_name|default:doctor.user.username }}</span>
+            {% if viewer_label %}
+            <span class="pill doctor">{{ viewer_label }}</span>
+            {% endif %}
         </div>
     </div>
 
     <div class="records-card">
         <div class="records-head">
-            <h4 class="records-title">My Consultation Records</h4>
+            <h4 class="records-title">{{ records_title|default:"My Consultation Records" }}</h4>
         </div>
 
         {% if consultations %}
@@ -295,7 +295,9 @@
                         <td>
                             <div class="action-row">
                                 <a href="{% url 'emr:detail' consultation.id %}" class="btn btn-sm btn-primary">Open</a>
+                                {% if show_edit_actions %}
                                 <a href="{% url 'emr:edit' consultation.id %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                {% endif %}
                             </div>
                         </td>
                     </tr>

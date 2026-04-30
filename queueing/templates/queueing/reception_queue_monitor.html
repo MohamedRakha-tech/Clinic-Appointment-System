@@ -195,6 +195,21 @@
 
 {% block content %}
 <div class="d-grid gap-3">
+    <section class="surface-card p-3">
+        <form method="get" class="d-flex flex-wrap align-items-center gap-2">
+            <label class="small fw-semibold text-muted" for="queue-date">Queue date</label>
+            <input
+                type="date"
+                id="queue-date"
+                name="date"
+                class="form-control form-control-sm w-auto"
+                value="{{ selected_date|date:'Y-m-d' }}"
+            />
+            <button class="btn btn-sm btn-outline-primary" type="submit">Apply</button>
+            <a class="btn btn-sm btn-outline-secondary" href="{% url 'queueing:reception_queue' %}">Today</a>
+        </form>
+    </section>
+
     <section class="monitor-grid">
         <div class="metric-card">
             <div class="metric-label">Doctor Streams</div>
@@ -208,8 +223,8 @@
         </div>
         <div class="metric-card">
             <div class="metric-label">Scope</div>
-            <div class="metric-value">Today</div>
-            <div class="small text-muted">Daily reception monitoring board</div>
+            <div class="metric-value">{{ selected_date|date:"d M Y" }}</div>
+            <div class="small text-muted">Queue board for selected day</div>
         </div>
     </section>
 
@@ -217,7 +232,13 @@
         <div class="doctor-head">
             <div>
                 <h4 class="doctor-name">Pending Check-Ins</h4>
-                <small class="text-muted">Confirmed appointments waiting at reception</small>
+                <small class="text-muted">
+                    {% if read_only %}
+                    Read-only view for selected date
+                    {% else %}
+                    Confirmed appointments waiting at reception
+                    {% endif %}
+                </small>
             </div>
             <span class="queue-badge">{{ pending_checkins|length }} waiting</span>
         </div>
@@ -229,10 +250,18 @@
                     <div class="fw-semibold">{{ appointment.patient.user.first_name|default:appointment.patient.user.username }} {{ appointment.patient.user.last_name }}</div>
                     <small class="text-muted">Dr. {{ appointment.doctor.user.first_name|default:appointment.doctor.user.username }} {{ appointment.doctor.user.last_name }} | {{ appointment.scheduled_start|time:"H:i" }}</small>
                 </div>
+                {% if not read_only %}
                 <a href="{% url 'queueing:checkin' appointment.id %}" class="btn-checkin-sm">Check In</a>
+                {% else %}
+                <span class="text-muted small">Read-only</span>
+                {% endif %}
             </div>
             {% empty %}
+            {% if read_only %}
+            <p class="text-muted mb-0 px-2">No confirmed appointments on this date.</p>
+            {% else %}
             <p class="text-muted mb-0 px-2">No confirmed appointments waiting to be checked in.</p>
+            {% endif %}
             {% endfor %}
         </div>
     </section>
@@ -266,7 +295,7 @@
         {% endfor %}
     </section>
     {% else %}
-    <div class="alert alert-info mb-0">No patients checked in today.</div>
+    <div class="alert alert-info mb-0">No patients checked in on this date.</div>
     {% endif %}
 </div>
 {% endblock %}

@@ -107,9 +107,20 @@ class ReceptionQueueMonitorView(ReceptionistRequiredMixin, View):
     login_url = '/accounts/login/'
 
     def get(self, request):
+        today = date.today()
+        selected_date = today
+        raw_date = request.GET.get("date")
+        if raw_date:
+            try:
+                selected_date = date.fromisoformat(raw_date)
+            except ValueError:
+                selected_date = today
+
+        read_only = selected_date != today
+
         pending_checkins = Appointment.objects.filter(
             status=Appointment.Status.CONFIRMED,
-            scheduled_start__date=date.today(),
+            scheduled_start__date=selected_date,
         ).select_related(
             'patient',
             'patient__user',
@@ -118,7 +129,7 @@ class ReceptionQueueMonitorView(ReceptionistRequiredMixin, View):
         ).order_by('scheduled_start')
 
         queue_entries = AppointmentCheckin.objects.filter(
-            appointment__scheduled_start__date=date.today(),
+            appointment__scheduled_start__date=selected_date,
             appointment__status=Appointment.Status.CHECKED_IN,
         ).select_related(
             'appointment',
@@ -141,4 +152,6 @@ class ReceptionQueueMonitorView(ReceptionistRequiredMixin, View):
         return render(request, 'queueing/reception_queue_monitor.html', {
             'doctors_queue': doctors_queue,
             'pending_checkins': pending_checkins,
+            'selected_date': selected_date,
+            'read_only': read_only,
         })

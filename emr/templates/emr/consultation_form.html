@@ -546,14 +546,6 @@
                 </div>
             </div>
 
-            <!-- Keep legacy text tests hidden to avoid form validation errors since it is still in the form class -->
-            <div class="visually-collapsed">
-                {% for field in form.visible_fields %}
-                    {% if field.name == 'requested_tests' %}
-                        {{ field }}
-                    {% endif %}
-                {% endfor %}
-            </div>
         </form>
     </section>
 

@@ -2,7 +2,6 @@
 
 {% block title %}Consultation Details - Clinic{% endblock %}
 {% block topbar_subtitle %}Consultation Summary{% endblock %}
-{% block topbar_role %}Role: Doctor{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -230,10 +229,8 @@
             {% if can_manage %}
             <a href="{% url 'emr:edit' consultation.id %}" class="btn btn-primary">Edit</a>
             <a href="{% url 'emr:delete' consultation.id %}" class="btn btn-outline-danger">Delete</a>
-            <a href="{% url 'emr:list' %}" class="btn btn-outline-secondary">Back</a>
-            {% else %}
-            <a href="{% url 'emr:patient_list' %}" class="btn btn-outline-secondary">Back to My Consultations</a>
             {% endif %}
+            <a href="{{ back_url }}" class="btn btn-outline-secondary">{{ back_label }}</a>
         </div>
     </div>
 
@@ -244,18 +241,15 @@
                 <p class="section-copy">{{ consultation.diagnosis }}</p>
             </div>
 
+            {% if show_clinical_notes %}
             <div class="segment">
-                <h4 class="section-label">Clinical Narrative</h4>
+                <h4 class="section-label">Clinical Notes</h4>
                 <p class="section-copy">{{ consultation.notes }}</p>
             </div>
+            {% endif %}
 
             <div class="segment">
-                <h4 class="section-label">Requested Tests (Text)</h4>
-                <p class="section-copy">{{ consultation.requested_tests|default:"No text tests entered." }}</p>
-            </div>
-
-            <div class="segment">
-                <h4 class="section-label">Summary For Patient</h4>
+                <h4 class="section-label">Patient Summary</h4>
                 <p class="section-copy">{{ consultation.summary_for_patient }}</p>
             </div>
         </div>

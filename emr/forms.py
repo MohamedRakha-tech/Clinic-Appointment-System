@@ -8,7 +8,7 @@ class ConsultationRecordForm(forms.ModelForm):
 
     class Meta:
         model = ConsultationRecord
-        fields = ['diagnosis', 'notes', 'requested_tests', 'summary_for_patient']
+        fields = ['diagnosis', 'notes', 'summary_for_patient']
         widgets = {
             'diagnosis': forms.Textarea(attrs={
                 'class': 'form-control',
@@ -19,12 +19,6 @@ class ConsultationRecordForm(forms.ModelForm):
                 'class': 'form-control',
                 'rows': 4,
                 'placeholder': 'Clinical examination notes...'
-            }),
-            'requested_tests': forms.Textarea(attrs={
-                'class': 'form-control',
-                'rows': 3,
-                'placeholder': 'Requested tests...',
-                'form': 'consultationForm'
             }),
             'summary_for_patient': forms.Textarea(attrs={
                 'class': 'form-control',

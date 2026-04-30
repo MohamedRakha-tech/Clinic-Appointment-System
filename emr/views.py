@@ -1,12 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.core.exceptions import ValidationError
 
 from appointments.models import Appointment
-from accounts.mixins import DoctorRequiredMixin, PatientRequiredMixin
+from accounts.mixins import DoctorRequiredMixin, PatientRequiredMixin, ReceptionistRequiredMixin
 from accounts.models import DoctorProfile
+from accounts.utils import get_user_role
 from .models import ConsultationRecord, PrescriptionItem, RequestedTest
 from .forms import ConsultationRecordForm, PrescriptionItemForm, RequestedTestForm, PrescriptionItemFormSet, RequestedTestFormSet
 
@@ -101,6 +103,34 @@ class ConsultationListView(DoctorRequiredMixin, View):
         return render(request, 'emr/consultations_list.html', {
             'consultations': consultations,
             'doctor': doctor_profile,
+            'header_title': 'Consultation Timeline',
+            'header_subtitle': 'Review, continue, and manage your clinical notes quickly.',
+            'records_title': 'My Consultation Records',
+            'viewer_label': f"Dr. {doctor_profile.user.first_name or doctor_profile.user.username}",
+            'show_edit_actions': True,
+        })
+
+
+class ReceptionConsultationListView(ReceptionistRequiredMixin, View):
+
+    login_url = '/accounts/login/'
+
+    def get(self, request):
+        consultations = ConsultationRecord.objects.select_related(
+            'doctor',
+            'doctor__user',
+            'appointment',
+            'appointment__patient',
+            'appointment__patient__user'
+        ).order_by('-created_at')
+
+        return render(request, 'emr/consultations_list.html', {
+            'consultations': consultations,
+            'header_title': 'EMR Records',
+            'header_subtitle': 'Access completed consultation summaries and orders.',
+            'records_title': 'Consultation Records',
+            'viewer_label': 'Reception',
+            'show_edit_actions': False,
         })
 
 
@@ -149,14 +179,26 @@ class ConsultationDetailView(LoginRequiredMixin, View):
             pk=pk
         )
 
+        role = get_user_role(request.user)
         patient_profile = _get_patient_profile(request)
+        is_receptionist = role == "receptionist"
         can_manage = consultation.doctor.user == request.user or request.user.is_superuser or hasattr(request.user, "admin_profile")
-        can_view = can_manage or (patient_profile and consultation.appointment.patient_id == patient_profile.id)
+        can_view = can_manage or is_receptionist or (patient_profile and consultation.appointment.patient_id == patient_profile.id)
 
         if not can_view:
             return render(request, 'error.html', {
                 'error': 'Permission denied'
             }, status=403)
+
+        if is_receptionist:
+            back_url = reverse('emr:reception_list')
+            back_label = 'Back to EMR Records'
+        elif patient_profile and consultation.appointment.patient_id == patient_profile.id:
+            back_url = reverse('emr:patient_list')
+            back_label = 'Back to My Consultations'
+        else:
+            back_url = reverse('emr:list')
+            back_label = 'Back'
 
         return render(request, 'emr/consultation_detail.html', {
             'consultation': consultation,
@@ -164,6 +206,9 @@ class ConsultationDetailView(LoginRequiredMixin, View):
             'tests': consultation.requested_tests_normalized.all(),
             'can_manage': can_manage,
             'is_patient_view': bool(patient_profile and consultation.appointment.patient_id == patient_profile.id),
+            'show_clinical_notes': role == "doctor",
+            'back_url': back_url,
+            'back_label': back_label,
         })
 
 
