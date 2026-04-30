@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block topbar_subtitle %}Appointments Workspace{% endblock %}
+{% block topbar_role %}Role: {{ user.get_role_display|default:"User" }}{% endblock %}
+
+{% block extra_css %}{% endblock %}
+
+{% block content %}
+<div class="container-xxl py-4">
+    {% if messages %}
+        <div class="mb-4 d-grid gap-2">
+            {% for message in messages %}
+                <div class="alert {% if message.tags == 'error' %}alert-danger{% elif message.tags == 'success' %}alert-success{% else %}alert-primary{% endif %} mb-0">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'appointment-list' %}">Appointments</a></li>
+            {% block breadcrumb %}{% endblock %}
+        </ol>
+    </nav>
+
+    {% block appointment_content %}{% endblock %}
+</div>
+{% endblock %}
+
+{% block extra_js %}{% endblock %}

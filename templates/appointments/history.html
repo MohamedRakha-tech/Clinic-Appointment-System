@@ -1,0 +1,73 @@
+{% extends "appointments/base.html" %}
+
+{% block title %}Appointment History{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'appointment-detail' pk=appointment.pk %}">Detail #{{ appointment.pk }}</a></li>
+<li class="breadcrumb-item active" aria-current="page">History</li>
+{% endblock %}
+
+{% block appointment_content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-4">
+    <div>
+        <h1 class="h3 fw-bold mb-1">Appointment History</h1>
+        <p class="text-muted mb-0">Complete audit trail for {{ appointment.appointment_code }}</p>
+    </div>
+    <a href="{% url 'appointment-detail' pk=appointment.pk %}" class="btn btn-outline-secondary">Back to Detail</a>
+</div>
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white">
+        <h2 class="h6 mb-0 fw-bold">Status Changes</h2>
+    </div>
+    <div class="card-body">
+        {% for entry in status_history %}
+            <div class="border rounded-3 p-3 mb-3">
+                <div class="d-flex flex-wrap justify-content-between gap-2 mb-1">
+                    <span class="badge text-bg-primary">{{ entry.old_status|default:"" }} → {{ entry.new_status }}</span>
+                    <span class="text-muted small">{{ entry.created_at|date:"M d, Y h:i A" }}</span>
+                </div>
+                <div class="text-muted small">Changed by: {{ entry.changed_by.username|default:"System" }}</div>
+                {% if entry.change_reason %}
+                    <div class="text-muted small">Reason: {{ entry.change_reason }}</div>
+                {% endif %}
+            </div>
+        {% empty %}
+            <div class="text-muted">No status changes recorded yet.</div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white">
+        <h2 class="h6 mb-0 fw-bold">Reschedule History</h2>
+    </div>
+    <div class="card-body">
+        {% for entry in reschedule_history %}
+            <div class="border rounded-3 p-3 mb-3">
+                <div class="d-flex flex-wrap justify-content-between gap-2 mb-2">
+                    <span class="badge text-bg-secondary">Reschedule</span>
+                    <span class="text-muted small">{{ entry.created_at|date:"M d, Y h:i A" }}</span>
+                </div>
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <div class="text-uppercase text-muted small fw-semibold">Old Slot</div>
+                        <div class="fw-semibold">{{ entry.old_start_datetime|date:"M d, Y" }}</div>
+                        <div class="text-muted small">{{ entry.old_start_datetime|time:"h:i A" }} - {{ entry.old_end_datetime|time:"h:i A" }}</div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <div class="text-uppercase text-muted small fw-semibold">New Slot</div>
+                        <div class="fw-semibold">{{ entry.new_start_datetime|date:"M d, Y" }}</div>
+                        <div class="text-muted small">{{ entry.new_start_datetime|time:"h:i A" }} - {{ entry.new_end_datetime|time:"h:i A" }}</div>
+                    </div>
+                </div>
+                <div class="text-muted small mt-2">Changed by: {{ entry.changed_by.username|default:"System" }}</div>
+                {% if entry.reason %}
+                    <div class="text-muted small">Reason: {{ entry.reason }}</div>
+                {% endif %}
+            </div>
+        {% empty %}
+            <div class="text-muted">No reschedules recorded yet.</div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

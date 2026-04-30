@@ -1,4 +1,5 @@
 from django import forms
+from django.forms import inlineformset_factory
 from .models import ConsultationRecord, PrescriptionItem, RequestedTest
 from django.core.validators import MinLengthValidator
 
@@ -22,7 +23,8 @@ class ConsultationRecordForm(forms.ModelForm):
             'requested_tests': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 3,
-                'placeholder': 'Requested tests...'
+                'placeholder': 'Requested tests...',
+                'form': 'consultationForm'
             }),
             'summary_for_patient': forms.Textarea(attrs={
                 'class': 'form-control',
@@ -56,7 +58,7 @@ class PrescriptionItemForm(forms.ModelForm):
 
     class Meta:
         model = PrescriptionItem
-        fields = ['drug_name', 'dose', 'duration', 'instructions']
+        fields = ['drug_name', 'dose', 'duration', 'frequency', 'instructions']
         widgets = {
             'drug_name': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -99,7 +101,7 @@ class RequestedTestForm(forms.ModelForm):
 
     class Meta:
         model = RequestedTest
-        fields = ['test_name', 'notes']
+        fields = ['test_name', 'urgency', 'notes']
         widgets = {
             'test_name': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -117,3 +119,17 @@ class RequestedTestForm(forms.ModelForm):
         if test_name and len(test_name.strip()) < 3:
             raise forms.ValidationError("Test name must be at least 3 characters.")
         return test_name
+
+PrescriptionItemFormSet = inlineformset_factory(
+    ConsultationRecord, PrescriptionItem,
+    form=PrescriptionItemForm,
+    extra=0,
+    can_delete=True
+)
+
+RequestedTestFormSet = inlineformset_factory(
+    ConsultationRecord, RequestedTest,
+    form=RequestedTestForm,
+    extra=0,
+    can_delete=True
+)

@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications - Clinic{% endblock %}
+{% block topbar_subtitle %}Notifications{% endblock %}
+{% block topbar_role %}Role: {{ request.user.username }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .notifications-shell {
+        display: grid;
+        gap: 1.5rem;
+        max-width: 960px;
+        margin: 0 auto;
+    }
+
+    .notifications-header {
+        background: #ffffff;
+        border: 1px solid #e2edf8;
+        border-radius: 1.25rem;
+        padding: 1.5rem;
+        box-shadow: 0 8px 24px rgba(15, 55, 110, 0.04);
+    }
+    
+    .header-title {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #121c24;
+        margin-bottom: 0.25rem;
+        letter-spacing: -0.01em;
+    }
+    
+    .header-subtitle {
+        color: #606f80;
+        font-size: 0.95rem;
+        margin: 0;
+    }
+
+    .filter-tabs {
+        display: flex;
+        gap: 0.5rem;
+        background: #f4f8fc;
+        padding: 0.35rem;
+        border-radius: 1rem;
+        border: 1px solid #dce8f3;
+        flex-wrap: wrap;
+    }
+    
+    .filter-tab {
+        padding: 0.5rem 1.25rem;
+        border-radius: 0.75rem;
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: #606f80;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+    
+    .filter-tab:hover {
+        color: #152836;
+        background: rgba(255, 255, 255, 0.5);
+    }
+    
+    .filter-tab.active {
+        background: #ffffff;
+        color: #0a6f8b;
+        box-shadow: 0 2px 8px rgba(10, 111, 139, 0.1);
+    }
+
+    .notifications-list {
+        display: grid;
+        gap: 0.75rem;
+    }
+
+    .notification-item {
+        background: #ffffff;
+        border: 1px solid #e2edf8;
+        border-radius: 1rem;
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        position: relative;
+    }
+    
+    @media (min-width: 768px) {
+        .notification-item {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+        }
+    }
+    
+    .notification-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(15, 55, 110, 0.05);
+        border-color: #cbdced;
+    }
+    
+    .notification-item.unread {
+        background: #f8fbff;
+        border-left: 4px solid #0a6f8b;
+    }
+    
+    .notification-item.unread::before {
+        content: '';
+        position: absolute;
+        top: 1.5rem;
+        left: -4px;
+        width: 10px;
+        height: 10px;
+        background: #0a6f8b;
+        border-radius: 50%;
+        transform: translateX(-50%);
+        box-shadow: 0 0 0 4px #e7f3ff;
+    }
+
+    .noti-content {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .noti-verb {
+        font-weight: 800;
+        color: #152836;
+        font-size: 1.05rem;
+    }
+
+    .noti-desc {
+        color: #4b5d6e;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    .noti-time {
+        color: #8c9eb0;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-top: 0.25rem;
+    }
+
+    .noti-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .badge-status {
+        padding: 0.35rem 0.75rem;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    .badge-read {
+        background: #f1f5f9;
+        color: #64748b;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .badge-unread {
+        background: linear-gradient(135deg, #e7f3ff 0%, #cce3ff 100%);
+        color: #094085;
+        border: 1px solid #b3d4ff;
+    }
+
+    .btn-mark-read {
+        background: #ffffff;
+        color: #0a6f8b;
+        border: 1px solid #cbdced;
+        border-radius: 0.75rem;
+        padding: 0.4rem 0.85rem;
+        font-weight: 700;
+        font-size: 0.8rem;
+        transition: all 0.2s;
+    }
+    
+    .btn-mark-read:hover {
+        background: #f4f8fc;
+        border-color: #0a6f8b;
+        box-shadow: 0 2px 8px rgba(10, 111, 139, 0.1);
+    }
+    
+    .btn-mark-all {
+        background: #ffffff;
+        color: #4b5d6e;
+        border: 1px solid #cbdced;
+        border-radius: 0.85rem;
+        padding: 0.6rem 1.25rem;
+        font-weight: 700;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+    }
+    
+    .btn-mark-all:hover:not(:disabled) {
+        background: #f8fbff;
+        color: #152836;
+        border-color: #a4b8cc;
+    }
+    
+    .btn-mark-all:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    .empty-state {
+        background: #ffffff;
+        border: 1px dashed #cbdced;
+        border-radius: 1.25rem;
+        padding: 4rem 2rem;
+        text-align: center;
+        color: #606f80;
+    }
+    
+    .empty-icon {
+        font-size: 2.5rem;
+        color: #a4b8cc;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="notifications-shell">
+    <div class="notifications-header d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+            <h1 class="header-title">Notifications</h1>
+            <p class="header-subtitle">Stay updated with your account activity.</p>
+        </div>
+        <form method="post" action="{% url 'notifications:mark_all_read' %}">
+            {% csrf_token %}
+            <button class="btn-mark-all" type="submit"{% if unread_count == 0 %} disabled{% endif %}>
+                <i class="bi bi-check2-all me-1"></i> Mark all read
+            </button>
+        </form>
+    </div>
+
+    <div class="filter-tabs">
+        <a class="filter-tab{% if status_filter == 'all' %} active{% endif %}" href="{% url 'notifications:list' %}">All</a>
+        <a class="filter-tab{% if status_filter == 'unread' %} active{% endif %}" href="{% url 'notifications:list' %}?status=unread">Unread</a>
+        <a class="filter-tab{% if status_filter == 'read' %} active{% endif %}" href="{% url 'notifications:list' %}?status=read">Read</a>
+    </div>
+
+    <div class="notifications-list">
+        {% for notification in notifications %}
+        <div class="notification-item {% if not notification.is_read %}unread{% endif %}">
+            <div class="noti-content">
+                <div class="noti-verb">{{ notification.verb }}</div>
+                {% if notification.description %}
+                <div class="noti-desc">{{ notification.description }}</div>
+                {% endif %}
+                <div class="noti-time">{{ notification.created_at|date:"d M Y H:i" }}</div>
+            </div>
+            
+            <div class="noti-actions">
+                {% if notification.is_read %}
+                <span class="badge-status badge-read">Read</span>
+                {% else %}
+                <span class="badge-status badge-unread">Unread</span>
+                <form method="post" action="{% url 'notifications:mark_read' notification.id %}">
+                    {% csrf_token %}
+                    <button class="btn-mark-read" type="submit">Mark read</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <div class="empty-icon"><i class="bi bi-bell-slash"></i></div>
+            <h4 class="fw-bold text-dark">All caught up!</h4>
+            <p class="mb-0">You have no notifications right now.</p>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

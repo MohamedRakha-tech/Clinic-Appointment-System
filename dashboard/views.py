@@ -211,7 +211,7 @@ class DashboardRedirectView(LoginRequiredMixin, View):
         if role == 'receptionist':
             return redirect('dashboard:receptionist')
 
-        return redirect('appointments:list')
+        return redirect('accounts:patient_dashboard')
 
 
 
@@ -280,5 +280,3 @@ class ExportRevenueReportView(AdminRequiredMixin, View):
         except (ValueError, TypeError):
             months = 6
         return exporters.export_revenue_report_csv(months=months)
-
-

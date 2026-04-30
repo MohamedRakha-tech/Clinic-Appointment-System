@@ -1,0 +1,98 @@
+{% extends "appointments/base.html" %}
+
+{% block title %}My Appointments{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item active" aria-current="page">List</li>
+{% endblock %}
+
+{% block appointment_content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-4">
+    <div>
+        <h1 class="h3 fw-bold mb-1">My Appointments</h1>
+        <p class="text-muted mb-0">Manage upcoming visits and review appointment status.</p>
+    </div>
+    {% if can_book_appointments %}
+    <a href="{% url 'appointment-book' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>
+        New Appointment
+    </a>
+    {% endif %}
+</div>
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-12 col-md-2">
+                <label class="form-label small text-uppercase fw-semibold">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All</option>
+                    <option value="REQUESTED" {% if selected_status == "REQUESTED" %}selected{% endif %}>Requested</option>
+                    <option value="CONFIRMED" {% if selected_status == "CONFIRMED" %}selected{% endif %}>Confirmed</option>
+                    <option value="CHECKED_IN" {% if selected_status == "CHECKED_IN" %}selected{% endif %}>Checked In</option>
+                    <option value="COMPLETED" {% if selected_status == "COMPLETED" %}selected{% endif %}>Completed</option>
+                    <option value="CANCELLED" {% if selected_status == "CANCELLED" %}selected{% endif %}>Cancelled</option>
+                    <option value="NO_SHOW" {% if selected_status == "NO_SHOW" %}selected{% endif %}>No Show</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-3">
+                <label class="form-label small text-uppercase fw-semibold">Search</label>
+                <input name="q" value="{{ search_query }}" class="form-control" placeholder="Appointment code, doctor, patient" type="text"/>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small text-uppercase fw-semibold">From</label>
+                <input name="date_from" value="{{ date_from }}" class="form-control" type="date"/>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small text-uppercase fw-semibold">To</label>
+                <input name="date_to" value="{{ date_to }}" class="form-control" type="date"/>
+            </div>
+            <div class="col-12 col-md-3">
+                <button class="btn btn-outline-primary w-100" type="submit">Apply Filters</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Code</th>
+                    <th>Date &amp; Time</th>
+                    <th>Doctor</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for appointment in appointments %}
+                <tr>
+                    <td class="fw-semibold">{{ appointment.appointment_code }}</td>
+                    <td>
+                        <div class="fw-semibold">{{ appointment.scheduled_start|date:"M d, Y" }}</div>
+                        <div class="text-muted small">{{ appointment.scheduled_start|time:"h:i A" }} - {{ appointment.scheduled_end|time:"h:i A" }}</div>
+                    </td>
+                    <td>
+                        <div class="fw-semibold">Dr. {% firstof appointment.doctor.user.first_name appointment.doctor.user.username %}</div>
+                        <div class="text-muted small">{{ appointment.doctor.specialization }}</div>
+                    </td>
+                    <td><span class="badge text-bg-primary">{{ appointment.get_status_display }}</span></td>
+                    <td class="text-end">
+                        <a href="{% url 'appointment-detail' pk=appointment.pk %}" class="btn btn-sm btn-outline-secondary">View</a>
+                        {% if appointment.status != "CANCELLED" and appointment.status != "COMPLETED" %}
+                            <a href="{% url 'appointment-reschedule' pk=appointment.pk %}" class="btn btn-sm btn-outline-primary">Reschedule</a>
+                            <a href="{% url 'appointment-cancel' pk=appointment.pk %}" class="btn btn-sm btn-outline-danger">Cancel</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-5">No appointments match your current filters.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

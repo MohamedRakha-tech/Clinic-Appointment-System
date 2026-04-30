@@ -25,6 +25,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     # path('admin-panel/', include('dashboard.urls')),
     path('api/', include('scheduling.api.urls')),
+    path('api/', include('appointments.api.urls')),
     path('accounts/', include('accounts.urls')),
     path('appointments/', include('appointments.urls')),
     path('social-auth/', include('allauth.urls')),
@@ -33,4 +34,5 @@ urlpatterns = [
     path('dashboard/', include('dashboard.urls')),
     path('scheduling/', include('scheduling.urls')),
     path('notifications/', include('notifications.urls')),
+    path('appointments/', include('appointments.urls')),
 ]

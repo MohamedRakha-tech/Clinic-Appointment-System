@@ -1,0 +1,94 @@
+{% extends "appointments/base.html" %}
+
+{% block title %}Appointment History{% endblock %}
+{% block breadcrumb %}
+    <li class="text-on-surface-variant/50">/</li>
+    <li><a href="{% url 'appointment-detail' pk=appointment.pk %}" class="hover:text-primary transition-colors">Detail #{{ appointment.pk }}</a></li>
+    <li class="text-on-surface-variant/50">/</li>
+    <li class="text-primary font-medium">History</li>
+{% endblock %}
+
+{% block appointment_content %}
+<div class="max-w-4xl mx-auto">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h2 class="text-3xl font-black text-on-background tracking-tighter">Appointment History</h2>
+            <p class="text-on-surface-variant mt-1">Complete audit trail for {{ appointment.appointment_code }}</p>
+        </div>
+        <a href="{% url 'appointment-detail' pk=appointment.pk %}" class="px-5 py-2.5 bg-surface-container-high text-on-surface font-bold text-sm rounded-xl hover:bg-primary hover:text-on-primary transition-all flex items-center space-x-2">
+            <span class="material-symbols-outlined text-sm">arrow_back</span>
+            <span>Back to Detail</span>
+        </a>
+    </div>
+
+    <div class="bg-surface-container-lowest rounded-[2rem] shadow-[0_8px_32px_rgba(20,29,35,0.06)] overflow-hidden mb-8">
+        <div class="p-6 border-b border-outline-variant/10">
+            <h3 class="text-lg font-bold text-on-surface flex items-center space-x-2">
+                <span class="material-symbols-outlined text-primary">swap_horiz</span>
+                <span>Status Changes</span>
+            </h3>
+        </div>
+        <div class="p-6 space-y-4">
+            {% for entry in status_history %}
+                <div class="bg-surface-container-low p-4 rounded-xl border border-outline-variant/10">
+                    <div class="flex flex-wrap items-center justify-between gap-3 mb-2">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-primary-fixed text-on-primary-fixed border border-primary/10">
+                            {{ entry.old_status|default:"" }} → {{ entry.new_status }}
+                        </span>
+                        <span class="text-xs text-on-surface-variant">{{ entry.created_at|date:"M d, Y h:i A" }}</span>
+                    </div>
+                    <p class="text-sm text-on-surface">
+                        Changed by: <span class="font-semibold">{{ entry.changed_by.username|default:"System" }}</span>
+                    </p>
+                    {% if entry.change_reason %}
+                        <p class="text-xs text-on-surface-variant mt-1">Reason: {{ entry.change_reason }}</p>
+                    {% endif %}
+                </div>
+            {% empty %}
+                <p class="text-sm text-on-surface-variant">No status changes recorded yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="bg-surface-container-lowest rounded-[2rem] shadow-[0_8px_32px_rgba(20,29,35,0.06)] overflow-hidden">
+        <div class="p-6 border-b border-outline-variant/10">
+            <h3 class="text-lg font-bold text-on-surface flex items-center space-x-2">
+                <span class="material-symbols-outlined text-secondary">event_repeat</span>
+                <span>Reschedule History</span>
+            </h3>
+        </div>
+        <div class="p-6 space-y-4">
+            {% for entry in reschedule_history %}
+                <div class="bg-surface-container-low p-6 rounded-xl border border-outline-variant/10">
+                    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                        <span class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Reschedule</span>
+                        <span class="text-xs text-on-surface-variant">{{ entry.created_at|date:"M d, Y h:i A" }}</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest">Old Slot</p>
+                            <p class="text-sm font-bold text-on-surface">{{ entry.old_start_datetime|date:"M d, Y" }}</p>
+                            <p class="text-xs text-on-surface-variant">{{ entry.old_start_datetime|time:"h:i A" }} — {{ entry.old_end_datetime|time:"h:i A" }}</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest">New Slot</p>
+                            <p class="text-sm font-bold text-on-surface">{{ entry.new_start_datetime|date:"M d, Y" }}</p>
+                            <p class="text-xs text-on-surface-variant">{{ entry.new_start_datetime|time:"h:i A" }} — {{ entry.new_end_datetime|time:"h:i A" }}</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-outline-variant/10">
+                        <p class="text-xs text-on-surface-variant">
+                            Changed by: <span class="font-semibold">{{ entry.changed_by.username|default:"System" }}</span>
+                        </p>
+                        {% if entry.reason %}
+                            <p class="text-xs text-on-surface-variant mt-1">Reason: {{ entry.reason }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% empty %}
+                <p class="text-sm text-on-surface-variant">No reschedules recorded yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

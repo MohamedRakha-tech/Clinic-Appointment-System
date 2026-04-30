@@ -1,21 +1,19 @@
-from datetime import timedelta
-
-import factory
-from factory.django import DjangoModelFactory
+from django.utils import timezone
 
 from accounts.factories import UserFactory
 from appointments.factories import AppointmentFactory
-from appointments.models import Appointment
-from .models import AppointmentCheckin
+from queueing.models import AppointmentCheckin
 
 
-class AppointmentCheckinFactory(DjangoModelFactory):
-    class Meta:
-        model = AppointmentCheckin
-
-    appointment = factory.SubFactory(AppointmentFactory, status=Appointment.Status.CHECKED_IN)
-    checked_in_at = factory.LazyAttribute(lambda obj: obj.appointment.scheduled_start - timedelta(minutes=15))
-    checked_in_by = factory.SubFactory(UserFactory)
-    queue_number = factory.Sequence(lambda n: n + 1)
-    called_at = None
-    served_at = None
+def AppointmentCheckinFactory(**kwargs):
+    appointment = kwargs.pop("appointment", None) or AppointmentFactory(status="CHECKED_IN")
+    checked_in_by = kwargs.pop("checked_in_by", None) or UserFactory()
+    kwargs.setdefault("checked_in_at", timezone.now())
+    kwargs.setdefault("queue_number", 1)
+    appointment.status = "CHECKED_IN"
+    appointment.save(update_fields=["status", "updated_at"])
+    return AppointmentCheckin.objects.create(
+        appointment=appointment,
+        checked_in_by=checked_in_by,
+        **kwargs,
+    )

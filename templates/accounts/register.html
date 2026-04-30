@@ -125,7 +125,7 @@
             <label class="flex items-start gap-3 cursor-pointer group">
               <input class="mt-1 rounded-sm border-outline-variant text-primary focus:ring-primary/20 bg-surface" type="checkbox"/>
               <span class="text-sm text-on-surface-variant leading-relaxed">
-                I agree to the <a class="text-primary font-medium hover:underline" href="#">Terms of Service</a> and acknowledge the <a class="text-primary font-medium hover:underline" href="#">Privacy Policy</a>.
+                I agree to the <a class="text-primary font-medium hover:underline" href="{% url 'accounts:terms_of_service' %}">Terms of Service</a> and acknowledge the <a class="text-primary font-medium hover:underline" href="{% url 'accounts:privacy_policy' %}">Privacy Policy</a>.
               </span>
             </label>
           </div>

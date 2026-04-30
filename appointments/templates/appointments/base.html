@@ -1,0 +1,242 @@
+{% load static %}
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>{% block title %}Appointments{% endblock %} | Clinical Sanctuary</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ba1a1a",
+                        "background": "#f6faff",
+                        "primary-container": "#0056b3",
+                        "surface": "#f6faff",
+                        "on-primary": "#ffffff",
+                        "surface-container-highest": "#dbe4ed",
+                        "on-background": "#141d23",
+                        "surface-variant": "#dbe4ed",
+                        "surface-tint": "#115cb9",
+                        "on-primary-container": "#bbd0ff",
+                        "surface-container": "#e6eff8",
+                        "secondary": "#006877",
+                        "on-secondary-container": "#006776",
+                        "on-surface": "#141d23",
+                        "primary": "#003f87",
+                        "outline": "#727784",
+                        "surface-container-low": "#ecf5fe",
+                        "surface-bright": "#f6faff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "surface-dim": "#d2dbe4",
+                        "outline-variant": "#c2c6d4",
+                        "error-container": "#ffdad6",
+                        "on-surface-variant": "#424752",
+                        "surface-container-high": "#e0e9f2",
+                        "secondary-container": "#75e7fe",
+                        "primary-fixed": "#d7e2ff",
+                        "on-primary-fixed": "#001a40",
+                        "tertiary": "#004c17",
+                        "tertiary-container": "#006722",
+                        "tertiary-fixed": "#83fc8e",
+                        "on-tertiary-fixed": "#002106"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(24px);
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-background text-on-background min-h-screen flex">
+    <!-- SideNavBar -->
+    <aside class="hidden md:flex flex-col h-screen w-64 bg-[#f0f4f8] dark:bg-slate-900 p-4 space-y-2 flex-shrink-0">
+        <div class="flex items-center space-x-3 mb-8 px-2">
+            <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-on-primary shadow-lg shadow-primary/20">
+                <span class="material-symbols-outlined">medical_services</span>
+            </div>
+            <div>
+                <h1 class="text-lg font-black text-[#141d23] dark:text-white leading-none">Sanctuary Health</h1>
+                <p class="text-[10px] uppercase tracking-widest text-primary font-bold">Precision Care</p>
+            </div>
+        </div>
+        <nav class="flex-1 space-y-1">
+            {% if request.user.is_authenticated %}
+                {% if request.user.is_superuser or request.user.admin_profile %}
+                <a class="flex items-center space-x-3 px-4 py-3 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all rounded-lg" href="{% url 'accounts:admin_dashboard' %}">
+                    <span class="material-symbols-outlined">dashboard</span>
+                    <span class="font-medium">Admin Dashboard</span>
+                </a>
+                <a class="flex items-center space-x-3 px-4 py-3 bg-white dark:bg-slate-800 text-[#0056b3] font-bold rounded-lg shadow-sm" href="{% url 'appointment-list' %}">
+                    <span class="material-symbols-outlined">calendar_today</span>
+                    <span class="font-medium">Appointments</span>
+                </a>
+                <a class="flex items-center space-x-3 px-4 py-3 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all rounded-lg" href="{% url 'scheduling:weekly_schedule_list' %}">
+                    <span class="material-symbols-outlined">event_note</span>
+                    <span class="font-medium">Scheduling Management</span>
+                </a>
+                <a class="flex items-center space-x-3 px-4 py-3 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all rounded-lg" href="{% url 'dashboard:index' %}">
+                    <span class="material-symbols-outlined">analytics</span>
+                    <span class="font-medium">Reports</span>
+                </a>
+                {% elif request.user.receptionist_profile %}
+                <a class="flex items-center space-x-3 px-4 py-3 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all rounded-lg" href="{% url 'accounts:reception_dashboard' %}">
+                    <span class="material-symbols-outlined">dashboard</span>
+                    <span class="font-medium">Reception Dashboard</span>
+                </a>
+                <a class="flex items-center space-x-3 px-4 py-3 bg-white dark:bg-slate-800 text-[#0056b3] font-bold rounded-lg shadow-sm" href="{% url 'appointment-list' %}">
+                    <span class="material-symbols-outlined">calendar_today</span>
+                    <span class="font-medium">Appointments</span>
+                </a>
+                <a class="flex items-center space-x-3 px-4 py-3 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all rounded-lg" href="{% url 'queueing:reception_queue' %}">
+                    <span class="material-symbols-outlined">groups</span>
+                    <span class="font-medium">Reception Queue</span>
+                </a>
+                <a class="flex items-center space-x-3 px-4 py-3 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all rounded-lg" href="{% url 'scheduling:weekly_schedule_list' %}">
+                    <span class="material-symbols-outlined">event_note</span>
+                    <span class="font-medium">Scheduling Management</span>
+                </a>
+                {% elif request.user.doctor_profile %}
+                <a class="flex items-center space-x-3 px-4 py-3 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all rounded-lg" href="{% url 'accounts:doctor_dashboard' %}">
+                    <span class="material-symbols-outlined">dashboard</span>
+                    <span class="font-medium">Doctor Dashboard</span>
+                </a>
+                <a class="flex items-center space-x-3 px-4 py-3 bg-white dark:bg-slate-800 text-[#0056b3] font-bold rounded-lg shadow-sm" href="{% url 'appointment-list' %}">
+                    <span class="material-symbols-outlined">calendar_today</span>
+                    <span class="font-medium">Appointments</span>
+                </a>
+                <a class="flex items-center space-x-3 px-4 py-3 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all rounded-lg" href="{% url 'queueing:doctor_queue' %}">
+                    <span class="material-symbols-outlined">event_note</span>
+                    <span class="font-medium">Doctor Queue</span>
+                </a>
+                <a class="flex items-center space-x-3 px-4 py-3 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all rounded-lg" href="{% url 'scheduling:doctor_my_schedule' %}">
+                    <span class="material-symbols-outlined">schedule</span>
+                    <span class="font-medium">Weekly View</span>
+                </a>
+                <a class="flex items-center space-x-3 px-4 py-3 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all rounded-lg" href="{% url 'emr:list' %}">
+                    <span class="material-symbols-outlined">journal_medical</span>
+                    <span class="font-medium">My Consultations</span>
+                </a>
+                {% elif current_user_role == "patient" %}
+                <a class="flex items-center space-x-3 px-4 py-3 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all rounded-lg" href="{% url 'accounts:patient_dashboard' %}">
+                    <span class="material-symbols-outlined">dashboard</span>
+                    <span class="font-medium">Patient Portal</span>
+                </a>
+                <a class="flex items-center space-x-3 px-4 py-3 bg-white dark:bg-slate-800 text-[#0056b3] font-bold rounded-lg shadow-sm" href="{% url 'appointment-list' %}">
+                    <span class="material-symbols-outlined">calendar_today</span>
+                    <span class="font-medium">Appointments</span>
+                </a>
+                <a class="flex items-center space-x-3 px-4 py-3 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all rounded-lg" href="{% url 'emr:patient_list' %}">
+                    <span class="material-symbols-outlined">medical_services</span>
+                    <span class="font-medium">My EMR</span>
+                </a>
+                {% endif %}
+            {% endif %}
+        </nav>
+        <div class="mt-auto pt-4 border-t border-outline-variant/10 space-y-1">
+            {% if request.user.is_authenticated and can_book_appointments %}
+            <a class="flex items-center space-x-3 px-4 py-3 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] transition-all" href="{% url 'appointment-book' %}">
+                <span class="material-symbols-outlined">add</span>
+                <span class="font-medium">New Appointment</span>
+            </a>
+            {% endif %}
+            <a class="flex items-center space-x-3 px-4 py-3 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] transition-all" href="{% url 'accounts:support' %}">
+                <span class="material-symbols-outlined">contact_support</span>
+                <span class="font-medium">Support</span>
+            </a>
+            <a class="flex items-center space-x-3 px-4 py-3 text-[#141d23] dark:text-slate-400 hover:text-error transition-all" href="{% url 'accounts:logout' %}">
+                <span class="material-symbols-outlined">logout</span>
+                <span class="font-medium">Sign Out</span>
+            </a>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col min-w-0 bg-surface overflow-y-auto">
+        <!-- TopAppBar -->
+        <header class="flex justify-between items-center w-full px-8 h-16 bg-[#f6faff] dark:bg-slate-950 sticky top-0 z-50">
+            <div class="flex items-center space-x-4">
+                <span class="text-xl font-bold tracking-tight text-[#141d23] dark:text-slate-100">Clinical Sanctuary</span>
+                <div class="h-6 w-px bg-outline-variant/20 mx-2"></div>
+                <nav class="flex space-x-6">
+                    <a class="text-[#0056b3] border-b-2 border-[#0056b3] pb-1 font-medium text-sm" href="{% url 'appointment-list' %}">Appointments</a>
+                    {% if request.user.is_authenticated and can_book_appointments %}
+                    <a class="text-[#141d23] opacity-70 font-medium text-sm hover:opacity-100 transition-opacity" href="{% url 'appointment-book' %}">Book</a>
+                    {% endif %}
+                </nav>
+            </div>
+            <div class="flex items-center space-x-6">
+                <span class="text-xs font-semibold text-on-surface-variant/70 uppercase tracking-wider">
+                    Role: {% if user.is_superuser or user.admin_profile %}Admin
+                    {% elif user.receptionist_profile %}Receptionist
+                    {% elif user.doctor_profile %}Doctor
+                    {% elif user.patient_profile %}Patient
+                    {% else %}User{% endif %}
+                </span>
+                <div class="flex items-center space-x-3">
+                    <button class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        <span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+                    </button>
+                    <button class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        <span class="material-symbols-outlined text-on-surface-variant">help_outline</span>
+                    </button>
+                    <div class="w-8 h-8 rounded-full bg-surface-container-highest overflow-hidden flex items-center justify-center bg-primary text-on-primary font-bold">
+                        {{ user.username|first|upper }}
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Breadcrumb -->
+        <div class="px-8 py-4">
+            <nav aria-label="breadcrumb" class="text-sm">
+                <ol class="flex items-center space-x-2 text-on-surface-variant">
+                    <li><a href="{% url 'appointment-list' %}" class="hover:text-primary transition-colors">Appointments</a></li>
+                    {% block breadcrumb %}{% endblock %}
+                </ol>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 p-8">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="mb-4 p-4 rounded-xl {% if message.tags == 'error' %}bg-error-container text-error{% elif message.tags == 'success' %}bg-tertiary-container/20 text-tertiary{% else %}bg-primary-fixed text-on-primary-fixed{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+            {% block appointment_content %}{% endblock %}
+        </div>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

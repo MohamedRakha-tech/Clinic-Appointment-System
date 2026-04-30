@@ -1,38 +1,33 @@
-import factory
-from factory.django import DjangoModelFactory
-
+from accounts.factories import DoctorProfileFactory
 from appointments.factories import AppointmentFactory
-from appointments.models import Appointment
-from .models import ConsultationRecord, PrescriptionItem, RequestedTest
+from emr.models import ConsultationRecord, PrescriptionItem, RequestedTest
 
 
-class ConsultationRecordFactory(DjangoModelFactory):
-    class Meta:
-        model = ConsultationRecord
-
-    appointment = factory.SubFactory(AppointmentFactory, status=Appointment.Status.COMPLETED)
-    doctor = factory.SelfAttribute("appointment.doctor")
-    diagnosis = factory.Faker("sentence", nb_words=8)
-    notes = factory.Faker("paragraph", nb_sentences=3)
-    requested_tests = factory.Faker("sentence", nb_words=5)
-    summary_for_patient = factory.Faker("paragraph", nb_sentences=2)
-
-
-class PrescriptionItemFactory(DjangoModelFactory):
-    class Meta:
-        model = PrescriptionItem
-
-    consultation_record = factory.SubFactory(ConsultationRecordFactory)
-    drug_name = factory.Faker("word")
-    dose = factory.Iterator(["5mg", "10mg", "20mg", "1 tablet"])
-    duration = factory.Iterator(["3 days", "5 days", "1 week", "2 weeks"])
-    instructions = factory.Faker("sentence", nb_words=6)
+def ConsultationRecordFactory(**kwargs):
+    appointment = kwargs.pop("appointment", None) or AppointmentFactory(status="CHECKED_IN")
+    doctor = kwargs.pop("doctor", None) or appointment.doctor or DoctorProfileFactory()
+    kwargs.setdefault("diagnosis", "Acute viral upper respiratory infection")
+    kwargs.setdefault("notes", "Patient reports fever and cough.")
+    kwargs.setdefault("requested_tests", "CBC")
+    kwargs.setdefault("summary_for_patient", "Rest, hydration, and follow-up if symptoms worsen.")
+    appointment.status = "CHECKED_IN"
+    appointment.save(update_fields=["status", "updated_at"])
+    return ConsultationRecord.objects.create(
+        appointment=appointment,
+        doctor=doctor,
+        **kwargs,
+    )
 
 
-class RequestedTestFactory(DjangoModelFactory):
-    class Meta:
-        model = RequestedTest
+def PrescriptionItemFactory(**kwargs):
+    consultation_record = kwargs.pop("consultation_record", None) or ConsultationRecordFactory()
+    kwargs.setdefault("drug_name", "Amoxicillin")
+    kwargs.setdefault("dose", "500mg")
+    kwargs.setdefault("duration", "7 days")
+    return PrescriptionItem.objects.create(consultation_record=consultation_record, **kwargs)
 
-    consultation_record = factory.SubFactory(ConsultationRecordFactory)
-    test_name = factory.Iterator(["CBC", "Lipid Profile", "X-Ray", "MRI", "Liver Function Test"])
-    notes = factory.Faker("sentence", nb_words=5)
+
+def RequestedTestFactory(**kwargs):
+    consultation_record = kwargs.pop("consultation_record", None) or ConsultationRecordFactory()
+    kwargs.setdefault("test_name", "CBC")
+    return RequestedTest.objects.create(consultation_record=consultation_record, **kwargs)

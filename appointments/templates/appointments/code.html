@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>My Appointments | Clinical Sanctuary</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ba1a1a",
+                        "background": "#f6faff",
+                        "on-secondary-fixed": "#001f25",
+                        "primary-fixed-dim": "#acc7ff",
+                        "primary-container": "#0056b3",
+                        "on-secondary-fixed-variant": "#004e5a",
+                        "surface": "#f6faff",
+                        "on-primary": "#ffffff",
+                        "surface-container-highest": "#dbe4ed",
+                        "on-tertiary-container": "#6fe87c",
+                        "on-error": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "secondary-fixed": "#a4eeff",
+                        "primary-fixed": "#d7e2ff",
+                        "on-background": "#141d23",
+                        "tertiary": "#004c17",
+                        "on-primary-fixed-variant": "#004491",
+                        "tertiary-container": "#006722",
+                        "on-error-container": "#93000a",
+                        "inverse-on-surface": "#e9f2fb",
+                        "secondary": "#006877",
+                        "on-secondary-container": "#006776",
+                        "surface-variant": "#dbe4ed",
+                        "surface-tint": "#115cb9",
+                        "on-primary-container": "#bbd0ff",
+                        "surface-container": "#e6eff8",
+                        "inverse-surface": "#293138",
+                        "tertiary-fixed-dim": "#66df75",
+                        "secondary-container": "#75e7fe",
+                        "on-primary-fixed": "#001a40",
+                        "secondary-fixed-dim": "#62d6ed",
+                        "on-tertiary-fixed-variant": "#00531a",
+                        "on-surface": "#141d23",
+                        "inverse-primary": "#acc7ff",
+                        "tertiary-fixed": "#83fc8e",
+                        "on-tertiary-fixed": "#002106",
+                        "primary": "#003f87",
+                        "outline": "#727784",
+                        "surface-container-low": "#ecf5fe",
+                        "surface-bright": "#f6faff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "surface-dim": "#d2dbe4",
+                        "outline-variant": "#c2c6d4",
+                        "error-container": "#ffdad6",
+                        "on-surface-variant": "#424752",
+                        "surface-container-high": "#e0e9f2"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Hide scrollbars for a cleaner editorial look */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex overflow-hidden">
+<!-- SideNavBar Shell -->
+<aside class="hidden md:flex flex-col h-screen w-64 bg-[#f0f4f8] dark:bg-slate-900 p-4 space-y-2 border-r-0 fixed left-0 top-0 z-40">
+<div class="flex items-center space-x-3 mb-8 px-2">
+<div class="w-10 h-10 rounded-xl bg-primary-container flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined" data-icon="health_and_safety">health_and_safety</span>
+</div>
+<div>
+<h1 class="text-lg font-black text-[#141d23] dark:text-white leading-none">Sanctuary Health</h1>
+<p class="text-[10px] uppercase tracking-widest opacity-60">Precision Care</p>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center space-x-3 px-4 py-3 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all rounded-lg" href="{% url 'accounts:patient_dashboard' %}">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-inter body-md tracking-wide">Dashboard</span>
+</a>
+<a class="flex items-center space-x-3 px-4 py-3 bg-white dark:bg-slate-800 text-[#0056b3] font-bold rounded-lg shadow-sm" href="{% url 'appointment-list' %}">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+<span class="font-inter body-md tracking-wide">Appointments</span>
+</a>
+<a class="flex items-center space-x-3 px-4 py-3 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all rounded-lg" href="{% url 'scheduling:weekly_schedule_list' %}">
+<span class="material-symbols-outlined" data-icon="event_note">event_note</span>
+<span class="font-inter body-md tracking-wide">Schedule</span>
+</a>
+<a class="flex items-center space-x-3 px-4 py-3 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all rounded-lg" href="{% url 'accounts:patient_dashboard' %}">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-inter body-md tracking-wide">Patients</span>
+</a>
+<a class="flex items-center space-x-3 px-4 py-3 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all rounded-lg" href="{% url 'accounts:admin_dashboard' %}">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="font-inter body-md tracking-wide">Reports</span>
+</a>
+<a class="flex items-center space-x-3 px-4 py-3 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all rounded-lg" href="{% url 'accounts:patient_dashboard' %}">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-inter body-md tracking-wide">Settings</span>
+</a>
+</nav>
+<div class="pt-4 mt-4 border-t border-outline-variant/10">
+{% if request.user.is_authenticated and can_book_appointments %}
+<a class="w-full py-3 px-4 bg-primary text-on-primary rounded-xl font-bold text-sm shadow-lg shadow-primary/20 flex items-center justify-center space-x-2 active:scale-95 transition-transform" href="{% url 'appointment-book' %}">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+<span>New Appointment</span>
+</a>
+{% endif %}
+</div>
+<div class="mt-auto space-y-1">
+<a class="flex items-center space-x-3 px-4 py-2 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] rounded-lg" href="{% url 'accounts:support' %}">
+<span class="material-symbols-outlined" data-icon="contact_support">contact_support</span>
+<span class="font-inter body-md tracking-wide">Support</span>
+</a>
+<a class="flex items-center space-x-3 px-4 py-2 text-error hover:bg-error-container/20 rounded-lg" href="{% url 'accounts:logout' %}">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-inter body-md tracking-wide">Sign Out</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 flex flex-col md:ml-64 h-screen overflow-y-auto no-scrollbar relative">
+<!-- TopAppBar Shell -->
+<header class="sticky top-0 z-50 flex justify-between items-center w-full px-8 h-16 bg-[#f6faff] dark:bg-slate-950 transition-all duration-300">
+<div class="flex items-center space-x-6">
+<span class="text-xl font-bold tracking-tight text-[#141d23] dark:text-slate-100">Clinical Sanctuary</span>
+<div class="hidden lg:flex items-center space-x-2 bg-surface-container-low px-4 py-2 rounded-full border-none">
+<span class="material-symbols-outlined text-outline" data-icon="search">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm w-64 text-on-surface" placeholder="Search medical records..." type="text"/>
+</div>
+</div>
+<div class="flex items-center space-x-6">
+<span class="hidden sm:block text-sm font-medium text-outline-variant italic">Role: Administrator</span>
+<div class="flex items-center space-x-3">
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined text-[#0056b3]" data-icon="notifications">notifications</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined text-[#0056b3]" data-icon="help_outline">help_outline</span>
+</button>
+<div class="h-8 w-[1px] bg-outline-variant/20 mx-2"></div>
+<img alt="User profile avatar" class="w-9 h-9 rounded-full bg-surface-container-highest border-2 border-white" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB1Uk5zFrdmC8g67U3-s5b5R6b4uVdSdx_JSRPtn-kxHEp859LNYW2yuTW-otk9MVeeCmFx8Ce18JeqJkz8o0U2YizOsMNvxcRwmFVKlc5oSXPSG7U44woycEzOpKwBYMGymx90zzpKK3Zv3d4Cpc_U0LY8m0_rXCffRKfjr_Flz2NsV4AYeuKT8uIRu9Lwt4zG0Yeuz7qLGTL3K6SyT0Mo_sto5pHIUExUJjBmtwShHobNhg4d9t70ylxjrAHFu0wuj2uPifH2NWo"/>
+</div>
+</div>
+</header>
+<!-- Main Workspace -->
+<div class="p-8 max-w-7xl mx-auto w-full">
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
+<div>
+<h2 class="text-4xl font-black text-on-background tracking-tighter leading-none mb-2">My Appointments</h2>
+<p class="text-on-surface-variant font-medium">Manage your clinical visits and specialized care schedule.</p>
+</div>
+<!-- Filter Bar - Advanced Glassmorphism Surface -->
+<div class="flex items-center flex-wrap gap-3 bg-surface-container-lowest p-3 rounded-2xl shadow-sm border border-outline-variant/5">
+<div class="relative group">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline text-sm" data-icon="filter_list">filter_list</span>
+<select class="pl-10 pr-8 py-2 bg-surface-container-low border-none rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary appearance-none cursor-pointer">
+<option>All Statuses</option>
+<option>Confirmed</option>
+<option>Requested</option>
+<option>Completed</option>
+</select>
+</div>
+<div class="relative group">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline text-sm" data-icon="calendar_month">calendar_month</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container-low border-none rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary w-48" placeholder="Select Date Range" type="text"/>
+</div>
+<button class="px-5 py-2 bg-primary-container/10 text-primary font-bold text-sm rounded-xl hover:bg-primary-container hover:text-white transition-all">
+                        Apply Filters
+                    </button>
+</div>
+</div>
+<!-- Table Container: Tonal Layering (No Borders) -->
+<div class="bg-surface-container-lowest rounded-[2rem] shadow-[0_8px_32px_rgba(20,29,35,0.06)] overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low">
+<th class="px-8 py-6 text-[11px] font-bold uppercase tracking-[0.1em] text-on-surface-variant">Date &amp; Time</th>
+<th class="px-8 py-6 text-[11px] font-bold uppercase tracking-[0.1em] text-on-surface-variant">Doctor</th>
+<th class="px-8 py-6 text-[11px] font-bold uppercase tracking-[0.1em] text-on-surface-variant">Specialty</th>
+<th class="px-8 py-6 text-[11px] font-bold uppercase tracking-[0.1em] text-on-surface-variant">Status</th>
+<th class="px-8 py-6 text-[11px] font-bold uppercase tracking-[0.1em] text-on-surface-variant text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/10">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-bright transition-colors group">
+<td class="px-8 py-5">
+<div class="flex flex-col">
+<span class="text-sm font-bold text-on-surface">Oct 24, 2023</span>
+<span class="text-xs text-on-surface-variant">09:30 AM — 10:15 AM</span>
+</div>
+</td>
+<td class="px-8 py-5">
+<div class="flex items-center space-x-3">
+<img alt="Doctor profile" class="w-8 h-8 rounded-full object-cover border border-outline-variant/20" data-alt="professional portrait of a male doctor in a white clinical coat smiling gently against a soft blue background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDPsu6jylG-iblxiajk70IJJ-RmfPHvYy6Flwa0k1mV9Jq-_xQWFZkJhJLhuHiB99q6_8nJHdGLj13piAl9fkWfqdGBTpCkpXxnpdECurIfHeR8V9o_VJtuJCVtnBVI7VF30wcIe0K9P2glb3bA0PzfU4isSH75IEOeamtkzl5_XwqtjCiLLsFENaAgCdNrH4xqgGroWEceO4D-cu01Ouo8zbvyZ2XPWHUYjdlmWkP7QAWgXpCdul8WJZcSdCf1bajMmrW4tw90Zqw"/>
+<span class="text-sm font-semibold text-on-surface">Dr. Julian Vance</span>
+</div>
+</td>
+<td class="px-8 py-5">
+<span class="text-sm text-secondary font-medium px-3 py-1 bg-secondary-container/20 rounded-lg">Cardiology</span>
+</td>
+<td class="px-8 py-5">
+<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-primary-fixed text-on-primary-fixed border border-primary/10">
+                                        CONFIRMED
+                                    </span>
+</td>
+<td class="px-8 py-5 text-right">
+<div class="flex items-center justify-end space-x-1">
+<button class="p-2 text-outline hover:text-primary transition-colors" title="Reschedule">
+<span class="material-symbols-outlined text-xl" data-icon="event_repeat">event_repeat</span>
+</button>
+<button class="p-2 text-outline hover:text-error transition-colors" title="Cancel Appointment">
+<span class="material-symbols-outlined text-xl" data-icon="cancel">cancel</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-bright transition-colors group">
+<td class="px-8 py-5">
+<div class="flex flex-col">
+<span class="text-sm font-bold text-on-surface">Oct 28, 2023</span>
+<span class="text-xs text-on-surface-variant">14:00 PM — 15:00 PM</span>
+</div>
+</td>
+<td class="px-8 py-5">
+<div class="flex items-center space-x-3">
+<img alt="Doctor profile" class="w-8 h-8 rounded-full object-cover border border-outline-variant/20" data-alt="professional portrait of a female specialist doctor in clinic uniform against a blurred hospital interior background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAu580X5PwZFMvoAYSyJ-dDCXp5RbX1U-PfknUZVPArgKNQtCT5LE9YfAFiIwKp6OuMURx2Z8PQ_yXdrb9wiVrxyT-sc3WDIE9RFP0tVekih102scJRxEQwq0-aLmwWSU_eL14mrZKNs4uNdSGhRhWR-wLkm5O4PmRgBTIw2Ro2c9lcaNn5oOuTUMZlNN_P3mlJrKVjwpuH99wnqIQesQ2-rHGN1kuLkI21xqqS6Yt-2KVj7oYJ5_Ra5Hn3o5nk1ceBGI3WMKa1Ffg"/>
+<span class="text-sm font-semibold text-on-surface">Dr. Elena Rodriguez</span>
+</div>
+</td>
+<td class="px-8 py-5">
+<span class="text-sm text-secondary font-medium px-3 py-1 bg-secondary-container/20 rounded-lg">Neurology</span>
+</td>
+<td class="px-8 py-5">
+<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-surface-variant text-on-surface-variant border border-outline/10">
+                                        REQUESTED
+                                    </span>
+</td>
+<td class="px-8 py-5 text-right">
+<div class="flex items-center justify-end space-x-1">
+<button class="p-2 text-outline hover:text-primary transition-colors" title="Reschedule">
+<span class="material-symbols-outlined text-xl" data-icon="event_repeat">event_repeat</span>
+</button>
+<button class="p-2 text-outline hover:text-error transition-colors" title="Cancel Appointment">
+<span class="material-symbols-outlined text-xl" data-icon="cancel">cancel</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-bright transition-colors group">
+<td class="px-8 py-5">
+<div class="flex flex-col">
+<span class="text-sm font-bold text-on-surface">Nov 02, 2023</span>
+<span class="text-xs text-on-surface-variant">11:15 AM — 12:00 PM</span>
+</div>
+</td>
+<td class="px-8 py-5">
+<div class="flex items-center space-x-3">
+<img alt="Doctor profile" class="w-8 h-8 rounded-full object-cover border border-outline-variant/20" data-alt="senior male physician with stethoscope posing in a high-end medical sanctuary clinic setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAv31ZIDWhmr6dX3y5YtrKKuSgdK53WqqaXmJqURxKKR66-DzE6s2bsfh1-EHwCb8KMR0SlMUybm0G6woxSfhf9bjC6OY3q1RXQJewAIv8dy4Xcrx214uhpHayplFM0xL7sHHBKgmwcn242F7m9M6ynQnuxY5Ood1-OfUbkuToeV0l1XuyjrV72iJh9OghmgpdJifAv-aZfAlCY05NZvvOcGlyzpyXClIUWXC5MaiF0xop6PCs5mEmXDUzCI27mqYuF61gGDEi8z3w"/>
+<span class="text-sm font-semibold text-on-surface">Dr. Marcus Thorne</span>
+</div>
+</td>
+<td class="px-8 py-5">
+<span class="text-sm text-secondary font-medium px-3 py-1 bg-secondary-container/20 rounded-lg">General Surgery</span>
+</td>
+<td class="px-8 py-5">
+<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-secondary-fixed text-on-secondary-fixed border border-secondary/10">
+                                        CHECKED_IN
+                                    </span>
+</td>
+<td class="px-8 py-5 text-right">
+<div class="flex items-center justify-end space-x-1">
+<button class="p-2 text-outline hover:text-primary transition-colors" title="Reschedule">
+<span class="material-symbols-outlined text-xl" data-icon="event_repeat">event_repeat</span>
+</button>
+<button class="p-2 text-outline hover:text-error transition-colors" title="Cancel Appointment">
+<span class="material-symbols-outlined text-xl" data-icon="cancel">cancel</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-bright transition-colors group">
+<td class="px-8 py-5">
+<div class="flex flex-col">
+<span class="text-sm font-bold text-on-surface">Oct 15, 2023</span>
+<span class="text-xs text-on-surface-variant">10:00 AM — 10:30 AM</span>
+</div>
+</td>
+<td class="px-8 py-5">
+<div class="flex items-center space-x-3">
+<img alt="Doctor profile" class="w-8 h-8 rounded-full object-cover border border-outline-variant/20" data-alt="friendly female pediatrician smiling in a warm bright clinic with soft professional lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjmwQxKK5MQKNJe2EYwBjBCdPO-dyh2xYkqRxt7wRBGtC0Yz3PDoK9-6BEgQVY0g-cszjOd-tpE1LwL0ZnA-eY3YTjO8V-yDvz072CEsjhSaasqspc0GxySesCofmqetWlqXFqbK4x_EVOIoyva5mDSaMf0BjFZMbZPbhUsdJ8Vvrlk4Cv4Bvhwy4cOPNkB3NCIsMPxe11qka32TO3dQDwv9DF3JANERJMDNOOJ06-hB5EPF2MD1MyCwDYuwcATJHXmFH59kOHmIc"/>
+<span class="text-sm font-semibold text-on-surface">Dr. Sarah Luen</span>
+</div>
+</td>
+<td class="px-8 py-5">
+<span class="text-sm text-secondary font-medium px-3 py-1 bg-secondary-container/20 rounded-lg">Pediatrics</span>
+</td>
+<td class="px-8 py-5">
+<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-tertiary-fixed text-on-tertiary-fixed border border-tertiary/10">
+                                        COMPLETED
+                                    </span>
+</td>
+<td class="px-8 py-5 text-right opacity-40 grayscale pointer-events-none">
+<div class="flex items-center justify-end space-x-1">
+<button class="p-2">
+<span class="material-symbols-outlined text-xl" data-icon="event_repeat">event_repeat</span>
+</button>
+<button class="p-2">
+<span class="material-symbols-outlined text-xl" data-icon="cancel">cancel</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination Footer: Tonal Shift Separation -->
+<div class="bg-surface-container-low px-8 py-5 flex items-center justify-between border-t border-outline-variant/10">
+<div class="flex items-center space-x-2">
+<span class="text-xs font-bold text-on-surface-variant tracking-wider uppercase">Results:</span>
+<span class="text-sm font-medium text-on-surface">Showing 1 to 4 of 24 appointments</span>
+</div>
+<div class="flex items-center space-x-1">
+<button class="w-10 h-10 flex items-center justify-center rounded-xl bg-surface-container-lowest text-on-surface-variant border border-outline-variant/10 hover:border-primary hover:text-primary transition-all">
+<span class="material-symbols-outlined" data-icon="chevron_left">chevron_left</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-xl bg-primary text-on-primary shadow-lg shadow-primary/20 font-bold text-sm">
+                            1
+                        </button>
+<button class="w-10 h-10 flex items-center justify-center rounded-xl bg-surface-container-lowest text-on-surface-variant border border-outline-variant/10 hover:border-primary hover:text-primary transition-all font-bold text-sm">
+                            2
+                        </button>
+<button class="w-10 h-10 flex items-center justify-center rounded-xl bg-surface-container-lowest text-on-surface-variant border border-outline-variant/10 hover:border-primary hover:text-primary transition-all font-bold text-sm">
+                            3
+                        </button>
+<button class="w-10 h-10 flex items-center justify-center rounded-xl bg-surface-container-lowest text-on-surface-variant border border-outline-variant/10 hover:border-primary hover:text-primary transition-all">
+<span class="material-symbols-outlined" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Contextual Information / Secondary Layout Area -->
+<div class="mt-12 grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Specialized Medical Card -->
+<div class="lg:col-span-2 p-8 bg-surface-container-low rounded-[2rem] flex flex-col justify-between overflow-hidden relative group">
+<div class="z-10">
+<h3 class="text-xl font-bold text-on-surface mb-4">Patient Health Outlook</h3>
+<p class="text-on-surface-variant text-sm max-w-md leading-relaxed mb-8">Your next scheduled follow-up is in 4 days. Based on your recent Cardiology visit, your vitals are trending toward your target baseline.</p>
+<div class="flex space-x-12">
+<div>
+<span class="block text-[10px] font-black uppercase tracking-widest text-outline mb-1">Blood Pressure</span>
+<div class="flex items-baseline space-x-1">
+<span class="text-2xl font-black text-secondary">118/76</span>
+<span class="text-xs font-bold text-on-tertiary-fixed-variant">Normal</span>
+</div>
+</div>
+<div>
+<span class="block text-[10px] font-black uppercase tracking-widest text-outline mb-1">Heart Rate</span>
+<div class="flex items-baseline space-x-1">
+<span class="text-2xl font-black text-secondary">72</span>
+<span class="text-xs text-on-surface-variant">BPM</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Decorative Graphic Node -->
+<div class="absolute top-0 right-0 w-48 h-full bg-primary/5 -skew-x-12 translate-x-12"></div>
+<span class="absolute top-8 right-8 material-symbols-outlined text-primary/20 text-6xl" data-icon="monitoring">monitoring</span>
+</div>
+<!-- Quick Help / Support Card -->
+<div class="p-8 bg-surface-container-highest rounded-[2rem] border border-outline-variant/20 flex flex-col items-center text-center">
+<div class="w-16 h-16 rounded-full bg-primary-fixed flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="support_agent">support_agent</span>
+</div>
+<h4 class="text-lg font-bold text-on-surface mb-2">Need to Reschedule?</h4>
+<p class="text-sm text-on-surface-variant mb-6 leading-relaxed">Our clinical coordinators are available 24/7 for urgent changes.</p>
+<a class="w-full py-3 bg-white text-primary border border-primary/20 rounded-xl font-bold text-sm hover:bg-primary hover:text-white transition-all active:scale-95 inline-flex items-center justify-center" href="{% url 'accounts:support' %}">
+                        Contact Support
+                    </a>
+</div>
+</div>
+</div>
+<!-- Footer Padding -->
+<div class="h-12 w-full"></div>
+</main>
+<!-- Contextual FAB - Only for main dashboards -->
+{% if can_book_appointments %}
+<a class="fixed bottom-8 right-8 w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50 md:hidden" href="{% url 'appointment-book' %}">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+</a>
+{% endif %}
+</body></html>
