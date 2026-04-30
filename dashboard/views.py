@@ -60,7 +60,7 @@ class AdminDashboardView(PermissionRequiredMixin, TemplateView):
         
 
         revenue_30d = completed * 150.00
-        # Format as K or M
+
         if revenue_30d >= 1000000:
             ctx['analytics_revenue_30d'] = f"${revenue_30d / 1000000:.2f}m"
         elif revenue_30d >= 1000:
@@ -164,9 +164,6 @@ class ReportsView(PermissionRequiredMixin, View):
         })
 
 
-# ============================================================
-# EXPORT VIEWS
-# ============================================================
 
 class ExportAppointmentsView(PermissionRequiredMixin, View):
     permission_required = 'dashboard.export_data'

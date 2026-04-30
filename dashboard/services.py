@@ -1,4 +1,3 @@
-# dashboard/services.py
 
 from django.utils import timezone
 

@@ -4,8 +4,8 @@ from django.db.models import Count, Q
 from django.db.models.functions import ExtractHour, ExtractWeekDay, TruncDate, TruncMonth
 from django.utils import timezone
 from appointments.models import Appointment
-from accounts.models import PatientProfile
-
+from accounts.models import PatientProfile, DoctorProfile, User
+from datetime import timedelta
 from .models import AuditLog
 
 
@@ -74,6 +74,7 @@ def get_total_revenue():
 
 def get_total_completed_count():
     return Appointment.objects.filter(status='COMPLETED').count()
+
 def get_revenue_last_n_months(n=6):
 
     today = timezone.localdate()
@@ -288,14 +289,11 @@ def get_filtered_appointments(
 
 
 def get_all_doctors():
-    from accounts.models import DoctorProfile
     return DoctorProfile.objects.select_related('user').all()
 
 def get_total_doctors_count():
-    from accounts.models import DoctorProfile
     return DoctorProfile.objects.filter(user__is_active=True).count()
 def get_filtered_audit_logs(action=None, user_id=None, date_from=None, date_to=None, search=None):
-    from dashboard.models import AuditLog
     qs = AuditLog.objects.select_related('user').order_by('-timestamp')
     if action:
         qs = qs.filter(action=action)
@@ -316,12 +314,10 @@ def get_filtered_audit_logs(action=None, user_id=None, date_from=None, date_to=N
     return qs
 
 def get_all_staff_users():
-    from accounts.models import User
     return User.objects.filter(patient_profile__isnull=True).order_by('first_name')
 
 
 def get_appointments_all_dates(years_back=3):
-    from datetime import timedelta
     since = timezone.localdate() - timedelta(days=years_back * 365)
     return (
         Appointment.objects
@@ -334,7 +330,6 @@ def get_appointments_all_dates(years_back=3):
 
 
 def get_revenue_all_months(years_back=3):
-    from datetime import timedelta
     since = timezone.localdate().replace(day=1) - timedelta(days=years_back * 365)
     rows = (
         Appointment.objects
