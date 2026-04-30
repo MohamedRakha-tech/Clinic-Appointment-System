@@ -115,3 +115,39 @@ class ReceptionDashboardView(ReceptionistRequiredMixin, TemplateView):
 
 class AdminDashboardView(AdminRequiredMixin, TemplateView):
     template_name = "accounts/admin_dashboard.html"
+
+
+class PrivacyPolicyView(TemplateView):
+    template_name = "accounts/info_page.html"
+    page_title = "Privacy Policy"
+    page_heading = "Privacy Policy"
+    page_intro = "We only use your data to provide care, schedule appointments, and secure the portal."
+    page_points = [
+        "Medical data stays tied to your clinical record and authenticated account.",
+        "We do not expose another patient's appointment or medical history to you.",
+        "Shared demo accounts are only for local development and testing.",
+    ]
+
+
+class TermsOfServiceView(TemplateView):
+    template_name = "accounts/info_page.html"
+    page_title = "Terms of Service"
+    page_heading = "Terms of Service"
+    page_intro = "These demo terms explain how the clinic portal is intended to be used during development."
+    page_points = [
+        "Use the portal only for legitimate clinic workflows and testing.",
+        "Patients can book their own appointments, not someone else's.",
+        "Staff actions are limited by role-based permissions and server-side checks.",
+    ]
+
+
+class SupportView(TemplateView):
+    template_name = "accounts/info_page.html"
+    page_title = "Contact Support"
+    page_heading = "Contact Support"
+    page_intro = "If login, booking, or permissions are not behaving as expected, use the options below."
+    page_points = [
+        "Patient login: /accounts/patient/login/",
+        "Staff login: /accounts/staff/login/",
+        "For local demo issues, ask the team maintaining the seeder and slot fixtures.",
+    ]

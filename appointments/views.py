@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.views import View
 from django.views.generic import DetailView, FormView, ListView, TemplateView
@@ -116,18 +117,12 @@ class AppointmentBookView(PatientProfileRequiredMixin, FormView):
         except ValueError:
             return timezone.localdate()
 
-    def get_available_slots(self):
-        doctor = self.get_selected_doctor()
-        if not doctor:
-            return AppointmentSlot.objects.none()
-        return available_slots_for_doctor(doctor, self.get_selected_date())
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["doctors"] = available_doctors_for_booking()
         context["selected_doctor"] = self.get_selected_doctor()
         context["selected_date"] = self.get_selected_date()
-        context["available_slots"] = self.get_available_slots()
+        context["slot_api_url"] = reverse("scheduling_api:slot-available")
         context["patient"] = self.get_profile()
         return context
 

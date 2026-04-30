@@ -15,7 +15,7 @@ from scheduling.models import AppointmentSlot
 
 
 def _generate_temporary_code():
-    return f"TEMP-{uuid4().hex[:16].upper()}"
+    return f"TEMP-{uuid4().hex[:14].upper()}"
 
 
 def _finalize_appointment_code(appointment):
