@@ -2,15 +2,141 @@ from django.contrib.auth.mixins import UserPassesTestMixin
 from django.urls import reverse_lazy
 from django.views.generic import RedirectView
 import json
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView, View
 from django.shortcuts import redirect, render
 from django.core.paginator import Paginator
 from django.core.serializers.json import DjangoJSONEncoder
+from accounts.views import AdminDashboardView as AccountsAdminDashboardView
 
 from . import services, exporters, selectors
 
-from accounts.views import AdminDashboardView as AccountsAdminDashboardView
+
+import csv
+
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views import View
+
+from accounts.mixins import AdminRequiredMixin, DoctorRequiredMixin, ReceptionistRequiredMixin
+from accounts.models import AdminProfile, PatientProfile, ReceptionistProfile, User
+from accounts.utils import ROLE_NAMES, get_user_role
+from appointments.models import Appointment
+
+from .forms import UserCreateForm, UserUpdateForm
+
+
+class AdminDashboardView(AdminRequiredMixin, View):
+	def get(self, request):
+		summary = {
+			"users": User.objects.count(),
+			"patients": PatientProfile.objects.count(),
+			"receptionists": ReceptionistProfile.objects.count(),
+			"admins": AdminProfile.objects.count(),
+			"appointments": Appointment.objects.count(),
+		}
+		return render(request, "admin_panel/index.html", {"summary": summary})
+
+
+class UserListView(AdminRequiredMixin, View):
+	def get(self, request):
+		role_filter = request.GET.get("role")
+		users = User.objects.all().order_by("username")
+
+		role_map = {user.id: get_user_role(user) or "unassigned" for user in users}
+
+		if role_filter in ROLE_NAMES:
+			users = [user for user in users if role_map.get(user.id) == role_filter]
+
+		user_rows = [{"user": user, "role": role_map.get(user.id, "unassigned")} for user in users]
+
+		return render(
+			request,
+			"dashboard/users_list.html",
+			{
+				"user_rows": user_rows,
+				"role_filter": role_filter,
+				"roles": ROLE_NAMES,
+			},
+		)
+
+
+class UserCreateView(AdminRequiredMixin, View):
+	def get(self, request):
+		form = UserCreateForm()
+		return render(request, "dashboard/user_form.html", {"form": form, "mode": "create"})
+
+	def post(self, request):
+		form = UserCreateForm(request.POST)
+		if form.is_valid():
+			user = form.save()
+			return redirect("dashboard:user_detail", pk=user.id)
+		return render(request, "dashboard/user_form.html", {"form": form, "mode": "create"})
+
+
+class UserDetailView(AdminRequiredMixin, View):
+	def get(self, request, pk):
+		user = get_object_or_404(User, pk=pk)
+		role = get_user_role(user)
+		return render(
+			request,
+			"dashboard/user_detail.html",
+			{"user_item": user, "role": role},
+		)
+
+
+class UserUpdateView(AdminRequiredMixin, View):
+	def get(self, request, pk):
+		user = get_object_or_404(User, pk=pk)
+		role = get_user_role(user)
+		employee_code = None
+
+		if role == "receptionist" and hasattr(user, "receptionist_profile"):
+			employee_code = user.receptionist_profile.employee_code
+		if role == "admin" and hasattr(user, "admin_profile"):
+			employee_code = user.admin_profile.employee_code
+
+		form = UserUpdateForm(
+			instance=user,
+			initial={"role": role, "employee_code": employee_code},
+			original_role=role,
+		)
+		return render(request, "dashboard/user_form.html", {"form": form, "mode": "edit", "user_item": user})
+
+	def post(self, request, pk):
+		user = get_object_or_404(User, pk=pk)
+		role = get_user_role(user)
+		form = UserUpdateForm(request.POST, instance=user, original_role=role)
+		if form.is_valid():
+			form.save()
+			return redirect("dashboard:user_detail", pk=user.id)
+		return render(request, "dashboard/user_form.html", {"form": form, "mode": "edit", "user_item": user})
+
+
+def export_users_csv(request):
+	if not request.user.is_authenticated:
+		return redirect("accounts:staff_login")
+	if get_user_role(request.user) != "admin" and not request.user.is_superuser:
+		return redirect("dashboard:index")
+
+	response = HttpResponse(content_type="text/csv")
+	response["Content-Disposition"] = "attachment; filename=clinic_users.csv"
+
+	writer = csv.writer(response)
+	writer.writerow(["Username", "Email", "Role", "Active", "Created"])
+	for user in User.objects.all().order_by("username"):
+		writer.writerow(
+			[
+				user.username,
+				user.email,
+				get_user_role(user) or "unknown",
+				"Yes" if user.is_active else "No",
+				user.date_joined.strftime("%Y-%m-%d"),
+			]
+		)
+
+	return response
+
 
 
 class AdminDashboardView(AccountsAdminDashboardView):
@@ -29,10 +155,8 @@ class UserManagementRedirectView(UserPassesTestMixin, RedirectView):
 
 
 
-class AdminDashboardView(PermissionRequiredMixin, TemplateView):
+class AdminDashboardView(AdminRequiredMixin, TemplateView):
     template_name       = 'dashboard/admin_dashboard.html'
-    permission_required = 'dashboard.view_analytics'
-    raise_exception     = True
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -95,10 +219,8 @@ class AdminDashboardView(PermissionRequiredMixin, TemplateView):
         return ctx
 
 
-class DoctorDashboardView(PermissionRequiredMixin, TemplateView):
+class DoctorDashboardView(DoctorRequiredMixin, TemplateView):
     template_name       = 'dashboard/doctor_dashboard.html'
-    permission_required = 'dashboard.view_doctor_dashboard'
-    raise_exception     = True
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -106,10 +228,8 @@ class DoctorDashboardView(PermissionRequiredMixin, TemplateView):
         return ctx
 
 
-class ReceptionistDashboardView(PermissionRequiredMixin, TemplateView):
+class ReceptionistDashboardView(ReceptionistRequiredMixin, TemplateView):
     template_name       = 'dashboard/receptionist_dashboard.html'
-    permission_required = 'dashboard.view_receptionist_dashboard'
-    raise_exception     = True
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -121,13 +241,15 @@ class DashboardRedirectView(LoginRequiredMixin, View):
     def get(self, request):
         user = request.user
 
-        if user.has_perm('dashboard.view_analytics'):
+        role = get_user_role(user)
+
+        if role == 'admin':
             return redirect('dashboard:admin')
 
-        if user.has_perm('dashboard.view_doctor_dashboard'):
+        if role == 'doctor':
             return redirect('dashboard:doctor')
 
-        if user.has_perm('dashboard.view_receptionist_dashboard'):
+        if role == 'receptionist':
             return redirect('dashboard:receptionist')
 
         return redirect('appointments:list')
@@ -135,9 +257,7 @@ class DashboardRedirectView(LoginRequiredMixin, View):
 
 
 
-class ReportsView(PermissionRequiredMixin, View):
-    permission_required = 'dashboard.view_analytics'
-    raise_exception     = True
+class ReportsView(AdminRequiredMixin, View):
 
     def get(self, request):
         appt_filters = {
@@ -157,40 +277,20 @@ class ReportsView(PermissionRequiredMixin, View):
         appt_paginator = Paginator(appointments, 20)
         appt_page      = appt_paginator.get_page(request.GET.get('page', 1))
 
-        audit_filters = {
-            'action':    request.GET.get('action', ''),
-            'user_id':   request.GET.get('user_id', ''),
-            'date_from': request.GET.get('audit_date_from', ''),
-            'date_to':   request.GET.get('audit_date_to', ''),
-            'search':    request.GET.get('audit_search', ''),
-        }
-        logs = selectors.get_filtered_audit_logs(
-            action=audit_filters['action'] or None,
-            user_id=int(audit_filters['user_id']) if audit_filters['user_id'] else None,
-            date_from=audit_filters['date_from'] or None,
-            date_to=audit_filters['date_to'] or None,
-            search=audit_filters['search'] or None,
-        )
-        audit_paginator = Paginator(logs, 25)
-        audit_page      = audit_paginator.get_page(request.GET.get('audit_page', 1))
-
         return render(request, 'dashboard/reports.html', {
             'appt_page':     appt_page,
-            'audit_page':    audit_page,
             'doctors':       selectors.get_all_doctors(),
             'staff_users':   selectors.get_all_staff_users(),
             'status_list':   ['REQUESTED', 'CONFIRMED', 'CHECKED_IN', 'COMPLETED', 'CANCELLED', 'NO_SHOW'],
-            'action_list':   ['CREATE', 'UPDATE', 'DELETE', 'LOGIN', 'LOGOUT', 'EXPORT'],
+            'action_list':   [],
             'appt_filters':  appt_filters,
-            'audit_filters': audit_filters,
+            'audit_filters': {},
             'active_tab':    request.GET.get('tab', 'appointments'),
         })
 
 
 
-class ExportAppointmentsView(PermissionRequiredMixin, View):
-    permission_required = 'dashboard.export_data'
-    raise_exception     = True
+class ExportAppointmentsView(AdminRequiredMixin, View):
 
     def get(self, request):
         qs = selectors.get_filtered_appointments(
@@ -203,9 +303,7 @@ class ExportAppointmentsView(PermissionRequiredMixin, View):
         return exporters.export_appointments_csv(qs=qs)
 
 
-class ExportNoshowReportView(PermissionRequiredMixin, View):
-    permission_required = 'dashboard.export_data'
-    raise_exception     = True
+class ExportNoshowReportView(AdminRequiredMixin, View):
 
     def get(self, request):
         try:
@@ -215,9 +313,7 @@ class ExportNoshowReportView(PermissionRequiredMixin, View):
         return exporters.export_noshow_report_csv(days_back=days)
 
 
-class ExportRevenueReportView(PermissionRequiredMixin, View):
-    permission_required = 'dashboard.export_data'
-    raise_exception     = True
+class ExportRevenueReportView(AdminRequiredMixin, View):
 
     def get(self, request):
         try:
@@ -227,20 +323,3 @@ class ExportRevenueReportView(PermissionRequiredMixin, View):
         return exporters.export_revenue_report_csv(months=months)
 
 
-class ExportAuditLogView(PermissionRequiredMixin, View):
-    permission_required = 'dashboard.export_data'
-    raise_exception     = True
-
-    def get(self, request):
-        try:
-            user_id = int(request.GET.get('user_id')) if request.GET.get('user_id') else None
-        except (ValueError, TypeError):
-            user_id = None
-        qs = selectors.get_filtered_audit_logs(
-            action=request.GET.get('action') or None,
-            user_id=user_id,
-            date_from=request.GET.get('date_from') or None,
-            date_to=request.GET.get('date_to') or None,
-            search=request.GET.get('search') or None,
-        )
-        return exporters.export_audit_log_csv(qs=qs)

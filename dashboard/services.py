@@ -1,7 +1,4 @@
-
 from django.utils import timezone
-
-from .models import AuditLog
 
 from . import selectors
 
@@ -42,7 +39,6 @@ def get_admin_dashboard_data():
         'busiest_days':           list(selectors.get_busiest_days()),
         'top_doctors':            list(selectors.get_top_doctors(limit=5)),
         'noshow_per_doctor':      selectors.get_noshow_rate_per_doctor(),
-        'recent_audit_logs':      selectors.get_recent_audit_logs(limit=8),
     }
 
 
@@ -72,43 +68,3 @@ def get_receptionist_dashboard_data():
         'appointments_list':  selectors.get_today_appointments_list(),
     }
 
-
-def log_action(
-    action,
-    instance=None,
-    target_model=None,
-    target_id=None,
-    description='',
-    extra_data=None,
-):
-    from dashboard.middleware import get_current_user, get_current_request
-
-    if instance is not None:
-        model_name = instance.__class__.__name__
-        obj_id     = getattr(instance, 'pk', None)
-    else:
-        model_name = target_model or 'Unknown'
-        obj_id     = target_id
-
-    if model_name == 'AuditLog':
-        return
-
-    user = get_current_user()
-    if user and not user.is_authenticated:
-        user = None
-
-    ip      = None
-    request = get_current_request()
-    if request:
-        x_forwarded = request.META.get('HTTP_X_FORWARDED_FOR')
-        ip = x_forwarded.split(',')[0].strip() if x_forwarded else request.META.get('REMOTE_ADDR')
-
-    AuditLog.log(
-        user=user,
-        action=action,
-        target_model=model_name,
-        target_id=obj_id,
-        description=description,
-        ip_address=ip,
-        extra_data=extra_data or {},
-    )

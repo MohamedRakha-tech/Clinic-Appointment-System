@@ -4,7 +4,6 @@ from django.utils import timezone
 from appointments.models import Appointment
 
 from . import selectors
-from .models import AuditLog
 
 
 def _make_csv_response(filename):
@@ -86,35 +85,6 @@ def export_revenue_report_csv(months=6):
         writer.writerow([
             row['month'].strftime('%Y-%m'),
             row['count'],
-        ])
-
-    return response
-
-
-def export_audit_log_csv(qs=None, user_id=None):
-    if qs is None:
-        qs = AuditLog.objects.select_related('user').order_by('-timestamp')
-        if user_id:
-            qs = qs.filter(user_id=user_id)
-
-    response = _make_csv_response('audit_log')
-    writer   = csv.writer(response)
-
-    writer.writerow([
-        'Timestamp', 'User', 'User Email',
-        'Action', 'Target Model', 'Target ID', 'Description', 'IP Address',
-    ])
-
-    for log in qs:
-        writer.writerow([
-            log.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
-            f"{log.user.first_name} {log.user.last_name}".strip() if log.user else 'System',
-            log.user.email if log.user else '—',
-            log.action,
-            log.target_model,
-            log.target_id or '—',
-            log.description,
-            log.ip_address or '—',
         ])
 
     return response

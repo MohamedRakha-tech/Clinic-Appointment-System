@@ -389,10 +389,6 @@
                         <i class="bi bi-search"></i> Search
                     </button>
                     <div class="vr mx-1" style="opacity:.25;"></div>
-                    <a href="{% url 'dashboard:export-audit-log' %}?action={{ audit_filters.action }}&user_id={{ audit_filters.user_id }}&date_from={{ audit_filters.date_from }}&date_to={{ audit_filters.date_to }}&search={{ audit_filters.search }}"
-                       class="filter-action-btn filter-action-export">
-                        <i class="bi bi-download"></i> Export CSV
-                    </a>
                     <a href="{% url 'dashboard:export-noshow' %}" class="filter-action-btn filter-action-export-sm">
                         <i class="bi bi-person-x"></i> No-Show
                     </a>

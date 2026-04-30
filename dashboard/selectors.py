@@ -5,7 +5,6 @@ from django.utils import timezone
 from appointments.models import Appointment
 from accounts.models import PatientProfile, DoctorProfile, User
 from datetime import timedelta
-from .models import AuditLog
 from django.db.models.functions import Concat
 import re
 
@@ -187,18 +186,6 @@ def get_new_patients_this_month():
     ).count()
 
 
-def get_recent_audit_logs(limit=20):
-    return AuditLog.objects.select_related('user').order_by('-timestamp')[:limit]
-
-
-def get_audit_logs_for_user(user_id, limit=50):
-    return (
-        AuditLog.objects
-        .filter(user_id=user_id)
-        .order_by('-timestamp')[:limit]
-    )
-
-
 def get_peak_hours(days_back=30):
 
     since = timezone.localdate() - timedelta(days=days_back)
@@ -318,29 +305,6 @@ def get_all_doctors():
 
 def get_total_doctors_count():
     return DoctorProfile.objects.filter(user__is_active=True).count()
-def get_filtered_audit_logs(action=None, user_id=None, date_from=None, date_to=None, search=None):
-    qs = AuditLog.objects.select_related('user').order_by('-timestamp')
-    if action:
-        qs = qs.filter(action=action)
-    if user_id:
-        qs = qs.filter(user_id=user_id)
-    if date_from:
-        qs = qs.filter(timestamp__date__gte=date_from)
-    if date_to:
-        qs = qs.filter(timestamp__date__lte=date_to)
-    if search:
-        search = search.strip()
-        search = re.sub(r'\s+', ' ', search)
-        qs = qs.annotate(
-            full_name=Concat('user__first_name', Value(' '), 'user__last_name')
-        ).filter(
-            Q(target_model__icontains=search) |
-            Q(description__icontains=search)  |
-            Q(full_name__icontains=search) |
-            Q(user__first_name__icontains=search) |
-            Q(user__last_name__icontains=search)
-        )
-    return qs
 
 def get_all_staff_users():
     return User.objects.filter(patient_profile__isnull=True).order_by('first_name')

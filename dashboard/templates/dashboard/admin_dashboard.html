@@ -125,6 +125,7 @@
 
 {% block content %}
 
+
 <!-- Page Header -->
 <div class="d-flex justify-content-between align-items-end mb-4">
     <div>
@@ -388,9 +389,6 @@
                     <div class="d-flex gap-2">
                         <a href="{% url 'dashboard:reports' %}?tab=audit" class="export-btn">
                             <i class="bi bi-list-ul"></i> View All
-                        </a>
-                        <a href="{% url 'dashboard:export-audit-log' %}" class="export-btn">
-                            <i class="bi bi-download"></i> Export
                         </a>
                     </div>
                 </div>

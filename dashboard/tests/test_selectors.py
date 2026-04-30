@@ -9,7 +9,6 @@ from django.utils import timezone
 from accounts.models import DoctorProfile, PatientProfile
 from appointments.models import Appointment
 from dashboard import selectors
-from dashboard.models import AuditLog
 from scheduling.models import AppointmentSlot
 
 User = get_user_model()
@@ -109,12 +108,6 @@ class SelectorsTest(TestCase):
     def test_get_total_patients_count(self):
         result = selectors.get_total_patients_count()
         self.assertEqual(result, 1)
-
-    def test_get_recent_audit_logs(self):
-        AuditLog.log(user=self.admin, action='LOGIN', target_model='User')
-        AuditLog.log(user=self.admin, action='EXPORT', target_model='Appointment')
-        result = selectors.get_recent_audit_logs(limit=10)
-        self.assertEqual(result.count(), 2)
 
     def test_get_doctor_today_queue(self):
         result = selectors.get_doctor_today_queue(self.doctor.id)
