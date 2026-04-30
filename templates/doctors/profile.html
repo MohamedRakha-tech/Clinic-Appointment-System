@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Doctor Profile | Ether Clinical{% endblock %}
+
+{% block topbar_subtitle %}Doctor Profiles{% endblock %}
+{% block topbar_role %}Role: Doctor{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+tailwind.config = {
+    darkMode: "class",
+    theme: {
+        extend: {
+            "colors": {
+                "primary": "#003f87", "secondary-fixed-dim": "#62d6ed", "on-background": "#141d23",
+                "tertiary-fixed-dim": "#66df75", "surface-container-low": "#ecf5fe", "on-secondary": "#ffffff",
+                "surface-tint": "#115cb9", "tertiary-container": "#006722", "secondary": "#006877",
+                "on-tertiary-fixed": "#002106", "secondary-fixed": "#a4eeff", "background": "#f6faff",
+                "on-surface": "#141d23", "outline": "#727784", "outline-variant": "#c2c6d4",
+                "surface-container-lowest": "#ffffff", "surface-dim": "#d2dbe4", "primary-fixed-dim": "#acc7ff",
+                "on-tertiary-container": "#6fe87c", "on-primary": "#ffffff", "on-primary-fixed-variant": "#004491",
+                "on-primary-fixed": "#001a40", "tertiary-fixed": "#83fc8e", "tertiary": "#004c17",
+                "on-tertiary": "#ffffff", "on-secondary-fixed-variant": "#004e5a", "inverse-surface": "#293138",
+                "on-error-container": "#93000a", "error": "#ba1a1a", "surface-container": "#e6eff8",
+                "inverse-on-surface": "#e9f2fb", "surface-container-high": "#e0e9f2", "on-secondary-fixed": "#001f25",
+                "on-secondary-container": "#006776", "secondary-container": "#75e7fe", "primary-fixed": "#d7e2ff",
+                "on-error": "#ffffff", "surface-container-highest": "#dbe4ed", "surface": "#f6faff",
+                "on-primary-container": "#bbd0ff", "error-container": "#ffdad6", "surface-variant": "#dbe4ed",
+                "inverse-primary": "#acc7ff", "on-surface-variant": "#424752", "surface-bright": "#f6faff",
+                "primary-container": "#0056b3", "on-tertiary-fixed-variant": "#00531a"
+            },
+            "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" },
+            "fontFamily": { "headline": ["Inter"], "display": ["Inter"], "body": ["Inter"], "label": ["Inter"] }
+        }
+    }
+}
+</script>
+<style>
+.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bg-surface text-on-surface font-body antialiased max-w-5xl mx-auto rounded-xl p-8 mb-12 shadow-sm border border-outline-variant/10">
+<div class="flex justify-between items-end mb-10">
+<div>
+<h2 class="text-4xl font-extrabold tracking-tight text-on-surface mb-2">Doctor Profile</h2>
+<p class="text-on-surface-variant font-medium">Manage your clinical identity and consultation preferences.</p>
+</div>
+<a href="{% url 'accounts:doctor_profile_edit' %}" class="flex items-center justify-center px-6 py-3 bg-gradient-to-b from-primary to-primary-container text-white rounded-xl font-bold shadow-lg hover:shadow-primary/20 transition-all active:scale-95">
+<span class="material-symbols-outlined mr-2">edit</span>
+                Edit Profile
+            </a>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-12 gap-6">
+<!-- Primary Bio Card -->
+<div class="col-span-12 lg:col-span-8 space-y-6">
+<section class="bg-surface-container-lowest p-8 rounded-xl shadow-sm">
+<div class="flex items-start gap-8 mb-8">
+<div class="w-32 h-32 rounded-2xl overflow-hidden shadow-xl">
+<img alt="Doctor profile" class="w-full h-full object-cover" data-alt="A detailed portrait of a senior physician in a professional setting. The lighting is bright and ethereal, highlighting the clean textures of the doctor's white coat." src="https://ui-avatars.com/api/?name={{ user.first_name }}+{{ user.last_name }}&background=003f87&color=fff"/>
+</div>
+<div class="flex-1">
+<div class="flex items-center gap-3 mb-2">
+<h3 class="text-2xl font-bold">Dr. {{ user.last_name }}</h3>
+<span class="bg-primary-fixed text-on-primary-fixed-variant px-3 py-1 rounded-full text-xs font-bold tracking-wider">CONFIRMED</span>
+</div>
+<div class="flex flex-wrap gap-2 mb-4">
+{% if doctor.specialization %}
+<span class="bg-tertiary-fixed text-on-tertiary-fixed-variant px-3 py-1 rounded-lg text-xs font-semibold">{{ doctor.specialization }}</span>
+{% endif %}
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="flex items-center text-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-sm mr-2">badge</span>
+<span class="font-mono">{{ doctor.license_number|default:"—" }}</span>
+</div>
+<div class="flex items-center text-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-sm mr-2">mail</span>
+<span>{{ user.email }}</span>
+</div>
+<div class="flex items-center text-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-sm mr-2">person</span>
+<span class="font-mono">{{ user.username }}</span>
+</div>
+<div class="flex items-center text-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-sm mr-2">call</span>
+<span>{{ user.phone|default:"—" }}</span>
+</div>
+</div>
+</div>
+</div>
+<div class="space-y-4 pt-8 border-t border-outline-variant/15">
+<h4 class="text-sm font-bold uppercase tracking-widest text-outline">Professional Biography</h4>
+<p class="text-on-surface-variant leading-relaxed text-lg">
+    {{ doctor.bio|default:"No biography provided." }}
+</p>
+</div>
+</section>
+<!-- Consultation Dynamics Card -->
+<section class="bg-surface-container-low p-8 rounded-xl">
+<h4 class="text-sm font-bold uppercase tracking-widest text-outline mb-6">Consultation Dynamics</h4>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="bg-surface-container-lowest p-6 rounded-xl flex flex-col items-center text-center">
+<span class="material-symbols-outlined text-primary mb-3 text-3xl">timer</span>
+<span class="text-3xl font-black text-primary mb-1">{{ doctor.consultation_duration_minutes|default:"15" }}</span>
+<span class="text-xs font-bold text-outline uppercase tracking-tighter">Duration (Min)</span>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-xl flex flex-col items-center text-center">
+<span class="material-symbols-outlined text-secondary mb-3 text-3xl">history</span>
+<span class="text-3xl font-black text-secondary mb-1">{{ doctor.buffer_before_minutes|default:"0" }}</span>
+<span class="text-xs font-bold text-outline uppercase tracking-tighter">Pre-Buffer (Min)</span>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-xl flex flex-col items-center text-center">
+<span class="material-symbols-outlined text-tertiary mb-3 text-3xl">more_time</span>
+<span class="text-3xl font-black text-tertiary mb-1">{{ doctor.buffer_after_minutes|default:"0" }}</span>
+<span class="text-xs font-bold text-outline uppercase tracking-tighter">Post-Buffer (Min)</span>
+</div>
+</div>
+</section>
+</div>
+<!-- Side Cards -->
+<div class="col-span-12 lg:col-span-4 space-y-6">
+<!-- Status/Metrics Card -->
+<section class="bg-primary text-white p-8 rounded-xl shadow-lg relative overflow-hidden">
+<div class="relative z-10">
+<h4 class="text-sm font-bold uppercase tracking-widest opacity-60 mb-6">Clinic Authority</h4>
+<div class="space-y-6">
+<div>
+<div class="text-5xl font-black tracking-tighter mb-1">98%</div>
+<div class="text-sm font-medium opacity-80">Patient Trust Score</div>
+</div>
+<div class="h-1 bg-white/20 rounded-full">
+<div class="h-full bg-tertiary-fixed w-[98%] rounded-full"></div>
+</div>
+<div class="grid grid-cols-2 gap-4 pt-4">
+<div>
+<div class="text-2xl font-bold">1.2k</div>
+<div class="text-xs opacity-60">Consultations</div>
+</div>
+<div>
+<div class="text-2xl font-bold">4.9/5</div>
+<div class="text-xs opacity-60">Rating</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Decorative Element -->
+<div class="absolute -bottom-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+</section>
+<!-- Availability Card -->
+<section class="bg-surface-container-highest p-8 rounded-xl">
+<h4 class="text-sm font-bold uppercase tracking-widest text-outline mb-4">Availability Summary</h4>
+<ul class="space-y-4">
+<li class="flex justify-between items-center pb-2 border-b border-outline-variant/10">
+<span class="text-sm font-semibold">Mon - Thu</span>
+<span class="text-sm font-mono text-primary font-bold">08:00 - 17:00</span>
+</li>
+<li class="flex justify-between items-center pb-2 border-b border-outline-variant/10">
+<span class="text-sm font-semibold">Friday</span>
+<span class="text-sm font-mono text-primary font-bold">09:00 - 15:00</span>
+</li>
+<li class="flex justify-between items-center opacity-50">
+<span class="text-sm font-semibold">Weekend</span>
+<span class="text-xs font-bold uppercase">Closed</span>
+</li>
+</ul>
+<div class="mt-8">
+<button class="w-full py-3 bg-surface-container-lowest border border-outline-variant text-on-surface font-bold rounded-lg text-sm hover:bg-white transition-colors">
+                            Manage Calendar
+                        </button>
+</div>
+</section>
+<!-- Quick Actions Card -->
+<section class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10">
+<h4 class="text-xs font-bold uppercase tracking-widest text-outline mb-4 text-center">Platform Credentials</h4>
+<div class="space-y-3">
+<div class="flex items-center gap-3 p-3 bg-surface-container-low rounded-lg">
+<span class="material-symbols-outlined text-primary">verified_user</span>
+<div>
+<div class="text-xs font-bold">Identity Verified</div>
+<div class="text-[10px] text-outline">Verified on Oct 2023</div>
+</div>
+</div>
+<div class="flex items-center gap-3 p-3 bg-surface-container-low rounded-lg">
+<span class="material-symbols-outlined text-secondary">workspace_premium</span>
+<div>
+<div class="text-xs font-bold">Tier 1 Provider</div>
+<div class="text-[10px] text-outline">Top 5% of Specialists</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+</div>
+{% endblock %}

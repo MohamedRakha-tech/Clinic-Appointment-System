@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Profile | Ether Clinical{% endblock %}
+
+{% block topbar_subtitle %}Patient Profiles{% endblock %}
+{% block topbar_role %}Role: Patient{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+tailwind.config = {
+    darkMode: "class",
+    theme: {
+        extend: {
+            "colors": {
+                "primary": "#003f87", "secondary-fixed-dim": "#62d6ed", "on-background": "#141d23",
+                "tertiary-fixed-dim": "#66df75", "surface-container-low": "#ecf5fe", "on-secondary": "#ffffff",
+                "surface-tint": "#115cb9", "tertiary-container": "#006722", "secondary": "#006877",
+                "on-tertiary-fixed": "#002106", "secondary-fixed": "#a4eeff", "background": "#f6faff",
+                "on-surface": "#141d23", "outline": "#727784", "outline-variant": "#c2c6d4",
+                "surface-container-lowest": "#ffffff", "surface-dim": "#d2dbe4", "primary-fixed-dim": "#acc7ff",
+                "on-tertiary-container": "#6fe87c", "on-primary": "#ffffff", "on-primary-fixed-variant": "#004491",
+                "on-primary-fixed": "#001a40", "tertiary-fixed": "#83fc8e", "tertiary": "#004c17",
+                "on-tertiary": "#ffffff", "on-secondary-fixed-variant": "#004e5a", "inverse-surface": "#293138",
+                "on-error-container": "#93000a", "error": "#ba1a1a", "surface-container": "#e6eff8",
+                "inverse-on-surface": "#e9f2fb", "surface-container-high": "#e0e9f2", "on-secondary-fixed": "#001f25",
+                "on-secondary-container": "#006776", "secondary-container": "#75e7fe", "primary-fixed": "#d7e2ff",
+                "on-error": "#ffffff", "surface-container-highest": "#dbe4ed", "surface": "#f6faff",
+                "on-primary-container": "#bbd0ff", "error-container": "#ffdad6", "surface-variant": "#dbe4ed",
+                "inverse-primary": "#acc7ff", "on-surface-variant": "#424752", "surface-bright": "#f6faff",
+                "primary-container": "#0056b3", "on-tertiary-fixed-variant": "#00531a"
+            },
+            "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" },
+            "fontFamily": { "headline": ["Inter"], "display": ["Inter"], "body": ["Inter"], "label": ["Inter"] }
+        }
+    }
+}
+</script>
+<style>
+.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+.glass-panel { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(24px); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bg-surface text-on-surface font-body antialiased max-w-5xl mx-auto rounded-xl p-8 mb-12 shadow-sm border border-outline-variant/10">
+
+<div class="flex justify-between items-end mb-10">
+<div class="flex gap-8 items-center">
+<div class="relative">
+<div class="w-24 h-24 rounded-full overflow-hidden shadow-sm border border-outline-variant/20">
+<img alt="Patient profile photo" class="w-full h-full object-cover" data-alt="A detailed portrait of a female patient with a calm and healthy expression. She is captured in a soft, natural daylight setting that feels warm and reassuring." src="https://ui-avatars.com/api/?name={{ user.first_name }}+{{ user.last_name }}&background=003f87&color=fff"/>
+</div>
+</div>
+<div>
+<h2 class="text-3xl font-bold tracking-tight text-on-surface mb-1">{{ user.first_name }} {{ user.last_name }}</h2>
+<div class="flex gap-4 items-center text-on-surface-variant">
+<span class="flex items-center gap-1 text-sm font-medium"><span class="material-symbols-outlined text-[18px]">fingerprint</span> ID: {{ user.id }}</span>
+<span class="flex items-center gap-1 text-sm font-medium"><span class="material-symbols-outlined text-[18px]">mail</span> {{ user.email }}</span>
+</div>
+</div>
+</div>
+<a href="{% url 'accounts:patient_profile_edit' %}" class="bg-gradient-to-b from-primary to-primary-container text-white px-6 py-2.5 rounded-lg font-semibold flex items-center gap-2 hover:opacity-90 transition-all shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+                Edit Profile
+            </a>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-12 gap-6">
+<!-- Core Identity Card -->
+<div class="col-span-8 bg-surface-container-lowest rounded-xl p-8 shadow-sm">
+<div class="flex items-center justify-between mb-8">
+<h3 class="text-sm font-bold uppercase tracking-[0.1em] text-outline">Identity &amp; Demographics</h3>
+<span class="material-symbols-outlined text-outline/40">badge</span>
+</div>
+<div class="grid grid-cols-2 gap-y-10 gap-x-12">
+<div>
+<label class="block text-[11px] font-bold text-outline uppercase tracking-wider mb-2">First Name</label>
+<p class="text-lg font-semibold text-on-surface">{{ user.first_name }}</p>
+</div>
+<div>
+<label class="block text-[11px] font-bold text-outline uppercase tracking-wider mb-2">Last Name</label>
+<p class="text-lg font-semibold text-on-surface">{{ user.last_name }}</p>
+</div>
+<div>
+<label class="block text-[11px] font-bold text-outline uppercase tracking-wider mb-2">Date of Birth</label>
+<p class="text-lg font-semibold text-on-surface">{{ patient.date_of_birth|default:"—" }}</p>
+</div>
+<div>
+<label class="block text-[11px] font-bold text-outline uppercase tracking-wider mb-2">Gender</label>
+<p class="text-lg font-semibold text-on-surface">{{ patient.gender|default:"—" }}</p>
+</div>
+<div class="col-span-2">
+<label class="block text-[11px] font-bold text-outline uppercase tracking-wider mb-2">Residential Address</label>
+<p class="text-lg font-semibold text-on-surface leading-relaxed">{{ patient.address|default:"—" }}</p>
+</div>
+</div>
+</div>
+<!-- Communication Card -->
+<div class="col-span-4 bg-surface-container-low rounded-xl p-8 border border-outline-variant/10">
+<div class="flex items-center justify-between mb-8">
+<h3 class="text-sm font-bold uppercase tracking-[0.1em] text-on-surface-variant">Direct Channels</h3>
+<span class="material-symbols-outlined text-primary/40">contact_phone</span>
+</div>
+<div class="space-y-8">
+<div class="flex items-start gap-4">
+<div class="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">call</span>
+</div>
+<div>
+<label class="block text-[10px] font-bold text-outline uppercase tracking-widest mb-1">Mobile Phone</label>
+<p class="text-md font-bold text-on-surface">{{ user.phone|default:"—" }}</p>
+</div>
+</div>
+<div class="flex items-start gap-4">
+<div class="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">mail</span>
+</div>
+<div>
+<label class="block text-[10px] font-bold text-outline uppercase tracking-widest mb-1">Personal Email</label>
+<p class="text-md font-bold text-on-surface">{{ user.email|default:"—" }}</p>
+</div>
+</div>
+<div class="pt-6 border-t border-outline-variant/30">
+</div>
+</div>
+</div>
+<!-- Emergency Contact Card -->
+<div class="col-span-4 glass-panel rounded-xl p-8 border border-surface-container-highest shadow-xl shadow-on-surface/5">
+<div class="flex items-center justify-between mb-8">
+<h3 class="text-sm font-bold uppercase tracking-[0.1em] text-error">Emergency Contact</h3>
+<span class="material-symbols-outlined text-error/60" style="font-variation-settings: 'FILL' 1;">emergency</span>
+</div>
+<div class="space-y-6">
+<div>
+<label class="block text-[11px] font-bold text-outline uppercase tracking-wider mb-1">Contact Name</label>
+<p class="text-xl font-extrabold text-on-surface">{{ patient.emergency_contact_name|default:"—" }}</p>
+</div>
+<div class="bg-error-container/20 p-4 rounded-lg">
+<label class="block text-[10px] font-bold text-on-error-container uppercase tracking-wider mb-1">Emergency Phone</label>
+<p class="text-lg font-black text-on-error-container tracking-tight">{{ patient.emergency_contact_phone|default:"—" }}</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Profile | Ether Clinical{% endblock %}
+
+{% block topbar_subtitle %}Patient Profiles{% endblock %}
+{% block topbar_role %}Role: Patient{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+.glass-panel { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(24px); }
+</style>
+<script id="tailwind-config">
+tailwind.config = {
+    darkMode: "class",
+    theme: {
+        extend: {
+            "colors": {
+                "primary": "#003f87", "secondary-fixed-dim": "#62d6ed", "on-background": "#141d23",
+                "tertiary-fixed-dim": "#66df75", "surface-container-low": "#ecf5fe", "on-secondary": "#ffffff",
+                "surface-tint": "#115cb9", "tertiary-container": "#006722", "secondary": "#006877",
+                "on-tertiary-fixed": "#002106", "secondary-fixed": "#a4eeff", "background": "#f6faff",
+                "on-surface": "#141d23", "outline": "#727784", "outline-variant": "#c2c6d4",
+                "surface-container-lowest": "#ffffff", "surface-dim": "#d2dbe4", "primary-fixed-dim": "#acc7ff",
+                "on-tertiary-container": "#6fe87c", "on-primary": "#ffffff", "on-primary-fixed-variant": "#004491",
+                "on-primary-fixed": "#001a40", "tertiary-fixed": "#83fc8e", "tertiary": "#004c17",
+                "on-tertiary": "#ffffff", "on-secondary-fixed-variant": "#004e5a", "inverse-surface": "#293138",
+                "on-error-container": "#93000a", "error": "#ba1a1a", "surface-container": "#e6eff8",
+                "inverse-on-surface": "#e9f2fb", "surface-container-high": "#e0e9f2", "on-secondary-fixed": "#001f25",
+                "on-secondary-container": "#006776", "secondary-container": "#75e7fe", "primary-fixed": "#d7e2ff",
+                "on-error": "#ffffff", "surface-container-highest": "#dbe4ed", "surface": "#f6faff",
+                "on-primary-container": "#bbd0ff", "error-container": "#ffdad6", "surface-variant": "#dbe4ed",
+                "inverse-primary": "#acc7ff", "on-surface-variant": "#424752", "surface-bright": "#f6faff",
+                "primary-container": "#0056b3", "on-tertiary-fixed-variant": "#00531a"
+            },
+            "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" },
+            "fontFamily": { "headline": ["Inter"], "display": ["Inter"], "body": ["Inter"], "label": ["Inter"] }
+        }
+    }
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="bg-surface text-on-surface font-body antialiased max-w-5xl mx-auto p-10">
+<form method="POST" action="{% url 'accounts:patient_profile_edit' %}">
+{% csrf_token %}
+<!-- Page Header -->
+<div class="mb-10 flex justify-between items-end">
+<div>
+<nav class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-outline mb-4">
+<a class="hover:text-primary" href="#">Directory</a>
+<span class="material-symbols-outlined text-[10px]">chevron_right</span>
+<a class="hover:text-primary" href="#">Patient Records</a>
+<span class="material-symbols-outlined text-[10px]">chevron_right</span>
+<span class="text-on-surface">Edit Profile</span>
+</nav>
+<h1 class="text-4xl font-extrabold tracking-tight text-on-surface mb-2">Edit Patient Profile</h1>
+<p class="text-on-surface-variant max-w-lg">Modify the patient's personal and administrative information. Ensure accuracy as these details synchronize across all clinical modules.</p>
+</div>
+<div class="flex gap-3">
+<a href="{% url 'accounts:patient_profile' %}" class="px-6 py-2.5 rounded-lg border border-outline-variant text-on-surface font-semibold text-sm hover:bg-surface-container-low transition-all">Cancel</a>
+<button type="submit" class="px-8 py-2.5 rounded-lg bg-gradient-to-b from-primary to-primary-container text-white font-bold text-sm shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">Save Changes</button>
+</div>
+</div>
+<!-- Bento Grid Form Layout -->
+<div class="grid grid-cols-12 gap-6">
+<!-- Account Core Card (Left Large) -->
+<div class="col-span-12 lg:col-span-8 space-y-6">
+<section class="bg-surface-container-lowest rounded-xl p-8 shadow-sm border-b border-surface-container-low">
+<div class="flex items-center gap-3 mb-8">
+<div class="w-10 h-10 rounded-lg bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">person</span>
+</div>
+<h2 class="text-xl font-bold text-on-surface">Identity &amp; Contact</h2>
+</div>
+<div class="grid grid-cols-2 gap-x-8 gap-y-6">
+{% include "includes/profile_shared_fields.html" %}
+<div class="col-span-2 md:col-span-1">
+<label class="block text-xs font-bold uppercase tracking-widest text-outline mb-2">Date of Birth</label>
+<input class="w-full bg-surface-container-high border-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 px-4 py-3 rounded-t-lg transition-all" type="date" name="date_of_birth" value="{{ form.date_of_birth.value|default:'' }}"/>
+{% if form.date_of_birth.errors %}
+    <p class="text-xs text-error mt-1">{{ form.date_of_birth.errors.0 }}</p>
+{% endif %}
+</div>
+</div>
+</section>
+<section class="bg-surface-container-lowest rounded-xl p-8 shadow-sm border-b border-surface-container-low">
+<div class="flex items-center gap-3 mb-8">
+<div class="w-10 h-10 rounded-lg bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed-variant">
+<span class="material-symbols-outlined">home</span>
+</div>
+<h2 class="text-xl font-bold text-on-surface">Demographics &amp; Address</h2>
+</div>
+<div class="space-y-6">
+<div>
+<label class="block text-xs font-bold uppercase tracking-widest text-outline mb-2">Gender</label>
+<select name="gender" class="w-full bg-surface-container-high border-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 px-4 py-3 rounded-t-lg transition-all">
+    {% for val, label in form.fields.gender.choices %}
+        <option value="{{ val }}" {% if form.gender.value == val %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+</select>
+{% if form.gender.errors %}
+    <p class="text-xs text-error mt-1">{{ form.gender.errors.0 }}</p>
+{% endif %}
+</div>
+<div>
+<label class="block text-xs font-bold uppercase tracking-widest text-outline mb-2">Residential Address</label>
+<textarea name="address" class="w-full bg-surface-container-high border-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 px-4 py-3 rounded-t-lg transition-all resize-none" rows="3">{{ form.address.value|default:'' }}</textarea>
+{% if form.address.errors %}
+    <p class="text-xs text-error mt-1">{{ form.address.errors.0 }}</p>
+{% endif %}
+</div>
+</div>
+</section>
+</div>
+<!-- Emergency Contact Sidebar (Right Small) -->
+<div class="col-span-12 lg:col-span-4 space-y-6">
+<section class="bg-surface-container-highest/40 rounded-xl p-8 border border-outline-variant/10">
+<div class="flex items-center gap-3 mb-6">
+<div class="w-10 h-10 rounded-lg bg-error-container flex items-center justify-center text-on-error-container">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">emergency</span>
+</div>
+<h2 class="text-xl font-bold text-on-surface">Emergency</h2>
+</div>
+<div class="space-y-6">
+<div>
+<label class="block text-xs font-bold uppercase tracking-widest text-outline mb-2">Contact Name</label>
+<input name="emergency_contact_name" class="w-full bg-transparent border-0 border-b-2 border-outline-variant/40 focus:border-error focus:ring-0 px-1 py-2 transition-all" type="text" value="{{ form.emergency_contact_name.value|default:'' }}"/>
+{% if form.emergency_contact_name.errors %}
+    <p class="text-xs text-error mt-1">{{ form.emergency_contact_name.errors.0 }}</p>
+{% endif %}
+</div>
+<div>
+<label class="block text-xs font-bold uppercase tracking-widest text-outline mb-2">Contact Phone</label>
+<input name="emergency_contact_phone" class="w-full bg-transparent border-0 border-b-2 border-outline-variant/40 focus:border-error focus:ring-0 px-1 py-2 transition-all" type="tel" value="{{ form.emergency_contact_phone.value|default:'' }}"/>
+{% if form.emergency_contact_phone.errors %}
+    <p class="text-xs text-error mt-1">{{ form.emergency_contact_phone.errors.0 }}</p>
+{% endif %}
+</div>
+<div class="p-4 bg-error-container/20 rounded-lg border border-error-container/30">
+<div class="flex gap-3">
+<span class="material-symbols-outlined text-error shrink-0">info</span>
+<p class="text-[13px] text-on-error-container leading-snug">Emergency contacts are notified immediately in case of critical diagnostic findings or procedural escalations.</p>
+</div>
+</div>
+</div>
+</section>
+<section class="glass-panel rounded-xl p-8 border border-white relative overflow-hidden">
+<div class="absolute -right-4 -bottom-4 opacity-10">
+<span class="material-symbols-outlined text-9xl">verified_user</span>
+</div>
+<h3 class="text-lg font-bold text-on-surface mb-3">Profile Integrity</h3>
+<p class="text-sm text-on-surface-variant mb-6 leading-relaxed">Changes to primary identity fields will trigger a clinical audit log entry for HIPAA compliance.</p>
+<div class="flex items-center gap-2 py-2 px-3 bg-tertiary-fixed/30 text-on-tertiary-fixed-variant rounded-md w-fit">
+<span class="material-symbols-outlined text-sm">check_circle</span>
+<span class="text-xs font-bold tracking-tight">VERIFIED ACCOUNT</span>
+</div>
+</section>
+<!-- Profile Image Card -->
+<div class="rounded-xl aspect-square overflow-hidden relative group">
+<img alt="Patient portrait" class="w-full h-full object-cover" data-alt="A focused studio portrait of a male patient in his early 40s against a neutral, high-key white background. The patient is looking directly at the camera with a calm, neutral expression. The lighting is bright and airy, typical of high-end medical software imagery, with a cool-toned, clinical sanctuary aesthetic. The composition is tight and professional." src="https://lh3.googleusercontent.com/aida-public/AB6AXuApb64K6pa6HQfzA-ooNGnh3ulxXGylheHgcN-rsB8eFGWlYRrn3oc8_XtKCX-mM-7uupJfXTaBKvMRqd9Gdhs3uDxEDyzh3rl4Qc59T2ypmvUs3oYyTFiQq8AGMl5soI5N_bh6rXSiKLR4iu7DO8PcB-WQBQruRkLM-XOGMs63m-KtvhKpCszuiFluIFGDtsSs95aAECb5cUDbR9izVK0HpT00kvukiiEMjH_gsSwSdYCDLzLYCkkBE7vnhqKWbSQQ33nWrXxadnU"/>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity cursor-pointer">
+<span class="material-symbols-outlined text-white text-4xl mb-2">add_a_photo</span>
+<span class="text-white text-xs font-bold uppercase tracking-widest">Update Photo</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer Meta -->
+<div class="mt-12 flex items-center justify-between py-6 border-t border-outline-variant/20">
+<div class="flex gap-6">
+<div class="flex flex-col">
+<span class="text-[10px] font-bold text-outline uppercase tracking-widest">Created By</span>
+<span class="text-sm font-medium">Dr. J. Thompson</span>
+</div>
+<div class="flex flex-col">
+<span class="text-[10px] font-bold text-outline uppercase tracking-widest">Last Modified</span>
+<span class="text-sm font-medium">Jan 14, 2024 • 09:21 AM</span>
+</div>
+</div>
+<div class="text-right">
+<span class="text-[10px] font-bold text-outline uppercase tracking-widest block mb-1">Patient ID</span>
+<code class="text-sm font-mono bg-surface-container px-2 py-1 rounded">ETH-992-LX-20</code>
+</div>
+</div>
+</div>
+</form>
+</div>
+{% endblock %}
