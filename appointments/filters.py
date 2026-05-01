@@ -46,7 +46,9 @@ def appointments_for_user(user):
             "doctor",
             "doctor__user",
             "slot",
-        ).order_by("-scheduled_start", "-id")
+        )
+        .prefetch_related("reschedule_history")
+        .order_by("-scheduled_start", "-id")
     )
 
     if not user.is_authenticated:
@@ -72,7 +74,9 @@ def patient_appointments_for_user(user):
             "doctor",
             "doctor__user",
             "slot",
-        ).order_by("-scheduled_start", "-id")
+        )
+        .prefetch_related("reschedule_history")
+        .order_by("-scheduled_start", "-id")
     )
 
     if not user.is_authenticated or not hasattr(user, "patient_profile"):

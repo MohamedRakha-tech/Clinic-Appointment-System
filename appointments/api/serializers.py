@@ -1,6 +1,58 @@
 from rest_framework import serializers
 
-from appointments.models import Appointment
+from appointments.models import Appointment, AppointmentRescheduleHistory, AppointmentStatusHistory
+
+
+def _user_display_name(user):
+    if not user:
+        return None
+
+    full_name = f"{user.first_name or ''} {user.last_name or ''}".strip()
+    return full_name or user.username
+
+
+class AppointmentStatusHistorySerializer(serializers.ModelSerializer):
+    changed_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AppointmentStatusHistory
+        fields = [
+            "id",
+            "appointment",
+            "old_status",
+            "new_status",
+            "changed_by",
+            "changed_by_name",
+            "change_reason",
+            "created_at",
+        ]
+        read_only_fields = fields
+
+    def get_changed_by_name(self, obj):
+        return _user_display_name(obj.changed_by)
+
+
+class AppointmentRescheduleHistorySerializer(serializers.ModelSerializer):
+    changed_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AppointmentRescheduleHistory
+        fields = [
+            "id",
+            "appointment",
+            "old_start_datetime",
+            "old_end_datetime",
+            "new_start_datetime",
+            "new_end_datetime",
+            "changed_by",
+            "changed_by_name",
+            "reason",
+            "created_at",
+        ]
+        read_only_fields = fields
+
+    def get_changed_by_name(self, obj):
+        return _user_display_name(obj.changed_by)
 
 
 class AppointmentSerializer(serializers.ModelSerializer):
@@ -8,6 +60,8 @@ class AppointmentSerializer(serializers.ModelSerializer):
     doctor_name = serializers.SerializerMethodField()
     doctor_specialization = serializers.CharField(source="doctor.specialization", read_only=True)
     slot_status = serializers.CharField(source="slot.status", read_only=True)
+    status_display = serializers.CharField(source="display_status", read_only=True)
+    was_rescheduled = serializers.BooleanField(read_only=True)
     consultation_summary = serializers.SerializerMethodField()
     can_view_medical_summary = serializers.SerializerMethodField()
 
@@ -26,6 +80,8 @@ class AppointmentSerializer(serializers.ModelSerializer):
             "scheduled_start",
             "scheduled_end",
             "status",
+            "status_display",
+            "was_rescheduled",
             "booking_source",
             "notes_for_staff",
             "consultation_summary",

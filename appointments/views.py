@@ -200,7 +200,8 @@ class AppointmentRescheduleView(LoginRequiredMixin, AppointmentQuerysetMixin, Fo
     def get_selected_date(self):
         raw_date = self.request.GET.get("date")
         if not raw_date:
-            return timezone.localdate()
+            appointment_date = timezone.localtime(self.get_object().scheduled_start).date()
+            return max(appointment_date, timezone.localdate())
         try:
             parsed_date = date_type.fromisoformat(raw_date)
             # Validate that selected date is not in the past
@@ -223,6 +224,8 @@ class AppointmentRescheduleView(LoginRequiredMixin, AppointmentQuerysetMixin, Fo
         context["appointment"] = appointment
         context["available_slots"] = self.get_available_slots()
         context["selected_date"] = self.get_selected_date()
+        context["slot_api_url"] = reverse("scheduling_api:slot-available")
+        context["min_date"] = timezone.localdate()
         return context
 
     def form_valid(self, form):

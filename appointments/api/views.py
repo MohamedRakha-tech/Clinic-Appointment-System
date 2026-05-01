@@ -10,7 +10,9 @@ from appointments.models import Appointment
 from appointments.api.serializers import (
     AppointmentActionSerializer,
     AppointmentCreateSerializer,
+    AppointmentRescheduleHistorySerializer,
     AppointmentSerializer,
+    AppointmentStatusHistorySerializer,
 )
 from appointments.services import (
     book_appointment,
@@ -222,3 +224,16 @@ class AppointmentViewSet(viewsets.ModelViewSet):
             return Response({"detail": list(exc.messages)}, status=status.HTTP_400_BAD_REQUEST)
         appointment.refresh_from_db()
         return Response(AppointmentSerializer(appointment, context={"request": request}).data)
+
+    @action(detail=True, methods=["get"])
+    def history(self, request, pk=None):
+        appointment = self._get_object()
+        status_history = appointment.status_history.select_related("changed_by").order_by("-created_at", "-id")
+        reschedule_history = appointment.reschedule_history.select_related("changed_by").order_by("-created_at", "-id")
+
+        return Response({
+            "appointment": appointment.id,
+            "appointment_code": appointment.appointment_code,
+            "status_history": AppointmentStatusHistorySerializer(status_history, many=True).data,
+            "reschedule_history": AppointmentRescheduleHistorySerializer(reschedule_history, many=True).data,
+        })

@@ -22,7 +22,7 @@
                     <p class="text-sm text-on-surface-variant">{{ appointment.scheduled_start|date:"M d, Y" }} at {{ appointment.scheduled_start|time:"h:i A" }}</p>
                 </div>
                 <span class="px-3 py-1 rounded-full text-xs font-bold bg-primary-fixed text-on-primary-fixed border border-primary/10">
-                    {{ appointment.get_status_display }}
+                    {{ appointment.display_status }}
                 </span>
             </div>
         </section>
@@ -42,17 +42,36 @@
                     {% endif %}
                 </div>
 
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-[0.15em] mb-2" for="slot_date">Choose New Date</label>
+                        <input
+                            id="slot_date"
+                            type="date"
+                            value="{{ selected_date|date:'Y-m-d' }}"
+                            min="{{ min_date|date:'Y-m-d' }}"
+                            class="w-full bg-surface-container-high border border-outline-variant rounded-xl p-3 text-sm"
+                        >
+                        <p id="date-error" class="hidden text-sm text-error mt-2"></p>
+                    </div>
+                    <div class="flex items-end">
+                        <button type="button" id="reload-slots" class="w-full px-5 py-3 bg-primary text-on-primary rounded-xl font-bold">Load Slots</button>
+                    </div>
+                </div>
+
                 <div class="bg-surface-container-low p-6 rounded-2xl mb-6">
-                    <h4 class="text-xs font-bold text-on-surface-variant uppercase tracking-[0.15em] mb-4">Available Times</h4>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="flex items-center justify-between gap-4 mb-4">
+                        <h4 class="text-xs font-bold text-on-surface-variant uppercase tracking-[0.15em]">Available Times</h4>
+                        <p id="slot-status" class="text-xs text-on-surface-variant">{{ available_slots|length }} slot{{ available_slots|length|pluralize }} loaded</p>
+                    </div>
+                    <div id="slot-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {% for slot in available_slots %}
                             <button type="submit" name="slot_id" value="{{ slot.id }}" class="py-3 px-4 rounded-xl border border-outline-variant/30 text-sm font-bold text-on-surface hover:bg-surface-container-high transition-all text-left">
                                 {{ slot.start_datetime|date:"M d" }} | {{ slot.start_datetime|time:"h:i A" }} - {{ slot.end_datetime|time:"h:i A" }}
                             </button>
-                        {% empty %}
-                            <p class="text-sm text-on-surface-variant">No available slots for this doctor on the selected date.</p>
                         {% endfor %}
                     </div>
+                    <p id="slot-empty" class="text-sm text-on-surface-variant {% if available_slots %}hidden{% endif %}">No available slots for this doctor on the selected date.</p>
                 </div>
 
                 {% if form.non_field_errors %}
@@ -79,7 +98,7 @@
             </div>
             <div class="space-y-2">
                 <p class="text-[10px] font-black text-secondary uppercase tracking-widest">Selected Date</p>
-                <p class="text-sm font-bold text-on-surface">{{ selected_date|date:"M d, Y" }}</p>
+                <p class="text-sm font-bold text-on-surface" id="summary-date">{{ selected_date|date:"M d, Y" }}</p>
             </div>
             <p class="text-xs text-on-surface-variant">
                 Rescheduling moves the appointment back to REQUESTED until the staff reconfirms it.
@@ -87,4 +106,108 @@
         </div>
     </aside>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const apiUrl = "{{ slot_api_url|escapejs }}";
+    const doctorId = "{{ appointment.doctor_id }}";
+    const dateInput = document.getElementById("slot_date");
+    const dateError = document.getElementById("date-error");
+    const reloadButton = document.getElementById("reload-slots");
+    const slotGrid = document.getElementById("slot-grid");
+    const slotEmpty = document.getElementById("slot-empty");
+    const slotStatus = document.getElementById("slot-status");
+    const summaryDate = document.getElementById("summary-date");
+
+    const validateDate = () => {
+        if (!dateInput.value) {
+            return false;
+        }
+        const selectedDate = new Date(`${dateInput.value}T00:00:00`);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (selectedDate < today) {
+            dateInput.classList.add("border-error");
+            dateError.textContent = "Please choose today or a future date.";
+            dateError.classList.remove("hidden");
+            return false;
+        }
+        dateInput.classList.remove("border-error");
+        dateError.classList.add("hidden");
+        return true;
+    };
+
+    const formatDate = (date) => date.toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+    });
+
+    const formatTime = (date) => date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+    });
+
+    const renderSlots = (slots) => {
+        slotGrid.innerHTML = "";
+        slotEmpty.classList.toggle("hidden", slots.length !== 0);
+
+        slots.forEach((slot) => {
+            const button = document.createElement("button");
+            button.type = "submit";
+            button.name = "slot_id";
+            button.value = slot.id;
+            button.className = "py-3 px-4 rounded-xl border border-outline-variant/30 text-sm font-bold text-on-surface hover:bg-surface-container-high transition-all text-left";
+
+            const start = new Date(slot.start_datetime);
+            const end = new Date(slot.end_datetime);
+            button.textContent = `${start.toLocaleDateString(undefined, { month: "short", day: "numeric" })} | ${formatTime(start)} - ${formatTime(end)}`;
+            slotGrid.appendChild(button);
+        });
+    };
+
+    const loadSlots = async () => {
+        if (!validateDate()) {
+            slotGrid.innerHTML = "";
+            slotEmpty.classList.remove("hidden");
+            slotEmpty.textContent = "Please select a valid date to load available slots.";
+            slotStatus.textContent = "Date validation failed";
+            return;
+        }
+
+        const params = new URLSearchParams({
+            doctor: doctorId,
+            slot_date: dateInput.value,
+        });
+        summaryDate.textContent = formatDate(new Date(`${dateInput.value}T00:00:00`));
+        slotStatus.textContent = "Loading from slot API...";
+        slotGrid.innerHTML = "";
+
+        try {
+            const response = await fetch(`${apiUrl}?${params.toString()}`, {
+                headers: {
+                    "Accept": "application/json",
+                    "X-Requested-With": "XMLHttpRequest",
+                },
+                credentials: "same-origin",
+            });
+            const data = await response.json();
+            const slots = Array.isArray(data.results) ? data.results : [];
+            slotStatus.textContent = `${slots.length} slot${slots.length === 1 ? "" : "s"} loaded`;
+            slotEmpty.textContent = "No available slots for this doctor on the selected date.";
+            renderSlots(slots);
+        } catch (error) {
+            slotStatus.textContent = "Could not load slots right now.";
+            slotGrid.innerHTML = "";
+            slotEmpty.classList.remove("hidden");
+            slotEmpty.textContent = "Unable to load slots from the slot API.";
+        }
+    };
+
+    reloadButton.addEventListener("click", loadSlots);
+    dateInput.addEventListener("change", loadSlots);
+});
+</script>
 {% endblock %}

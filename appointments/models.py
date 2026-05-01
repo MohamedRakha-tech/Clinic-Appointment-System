@@ -53,6 +53,19 @@ class Appointment(models.Model):
     def __str__(self):
         return f"{self.appointment_code} | {self.patient} -> {self.doctor} [{self.status}]"
 
+    @property
+    def was_rescheduled(self):
+        prefetched = getattr(self, "_prefetched_objects_cache", {})
+        if "reschedule_history" in prefetched:
+            return bool(prefetched["reschedule_history"])
+        return self.reschedule_history.exists()
+
+    @property
+    def display_status(self):
+        if self.status == self.Status.REQUESTED and self.was_rescheduled:
+            return "Rescheduled"
+        return self.get_status_display()
+
 
 # ─────────────────────────────────────────────
 # AUDIT / HISTORY TABLES

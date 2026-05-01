@@ -184,10 +184,36 @@ class AppointmentViewsTests(TestCase):
         old_slot.refresh_from_db()
         new_slot.refresh_from_db()
         self.assertEqual(appointment.status, Appointment.Status.REQUESTED)
+        self.assertEqual(appointment.display_status, "Rescheduled")
         self.assertEqual(appointment.slot_id, new_slot.id)
         self.assertEqual(old_slot.status, "AVAILABLE")
         self.assertEqual(new_slot.status, "BOOKED")
         self.assertEqual(appointment.reschedule_history.count(), 1)
+
+    def test_reschedule_page_defaults_to_appointment_date_and_loads_slots_api(self):
+        patient = PatientProfileFactory()
+        doctor = DoctorProfileFactory()
+        old_slot = AppointmentSlotFactory(
+            doctor=doctor,
+            slot_date=timezone.localdate() + timedelta(days=10),
+            start_datetime=timezone.now() + timedelta(days=10, hours=1),
+            end_datetime=timezone.now() + timedelta(days=10, hours=1, minutes=30),
+        )
+        AppointmentSlotFactory(
+            doctor=doctor,
+            slot_date=old_slot.slot_date,
+            start_datetime=timezone.now() + timedelta(days=10, hours=2),
+            end_datetime=timezone.now() + timedelta(days=10, hours=2, minutes=30),
+        )
+        appointment = AppointmentFactory(patient=patient, doctor=doctor, slot=old_slot, status=Appointment.Status.CONFIRMED)
+
+        self.client.force_login(patient.user)
+        response = self.client.get(reverse("appointment-reschedule", args=[appointment.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, f'value="{old_slot.slot_date.isoformat()}"')
+        self.assertContains(response, "Load Slots")
+        self.assertContains(response, reverse("scheduling_api:slot-available"))
 
     def test_completion_requires_consultation_record(self):
         receptionist = ReceptionistProfileFactory()
@@ -239,6 +265,85 @@ class AppointmentViewsTests(TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertTrue(Appointment.objects.filter(slot=slot, patient=patient).exists())
+
+    def test_appointment_api_reschedules_and_records_audit_trail(self):
+        patient = PatientProfileFactory()
+        doctor = DoctorProfileFactory()
+        old_slot = AppointmentSlotFactory(
+            doctor=doctor,
+            slot_date=timezone.localdate() + timedelta(days=6),
+            start_datetime=timezone.now() + timedelta(days=6, hours=1),
+            end_datetime=timezone.now() + timedelta(days=6, hours=1, minutes=30),
+        )
+        new_slot = AppointmentSlotFactory(
+            doctor=doctor,
+            slot_date=timezone.localdate() + timedelta(days=7),
+            start_datetime=timezone.now() + timedelta(days=7, hours=2),
+            end_datetime=timezone.now() + timedelta(days=7, hours=2, minutes=30),
+        )
+        appointment = AppointmentFactory(patient=patient, doctor=doctor, slot=old_slot, status=Appointment.Status.CONFIRMED)
+
+        api_client = APIClient()
+        api_client.force_authenticate(user=patient.user)
+        response = api_client.post(
+            reverse("appointments_api:appointment-reschedule", args=[appointment.pk]),
+            {"slot_id": new_slot.id, "reason": "Need a later time"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["status"], Appointment.Status.REQUESTED)
+        self.assertEqual(response.data["status_display"], "Rescheduled")
+        self.assertTrue(response.data["was_rescheduled"])
+        appointment.refresh_from_db()
+        self.assertEqual(appointment.slot_id, new_slot.id)
+
+        history = appointment.reschedule_history.get()
+        self.assertEqual(history.old_start_datetime, old_slot.start_datetime)
+        self.assertEqual(history.new_start_datetime, new_slot.start_datetime)
+        self.assertEqual(history.changed_by, patient.user)
+        self.assertEqual(history.reason, "Need a later time")
+
+    def test_appointment_api_history_returns_reschedule_audit_trail(self):
+        receptionist = ReceptionistProfileFactory()
+        patient = PatientProfileFactory()
+        doctor = DoctorProfileFactory()
+        old_slot = AppointmentSlotFactory(
+            doctor=doctor,
+            slot_date=timezone.localdate() + timedelta(days=8),
+            start_datetime=timezone.now() + timedelta(days=8, hours=1),
+            end_datetime=timezone.now() + timedelta(days=8, hours=1, minutes=30),
+        )
+        new_slot = AppointmentSlotFactory(
+            doctor=doctor,
+            slot_date=timezone.localdate() + timedelta(days=9),
+            start_datetime=timezone.now() + timedelta(days=9, hours=2),
+            end_datetime=timezone.now() + timedelta(days=9, hours=2, minutes=30),
+        )
+        appointment = AppointmentFactory(patient=patient, doctor=doctor, slot=old_slot, status=Appointment.Status.CONFIRMED)
+
+        api_client = APIClient()
+        api_client.force_authenticate(user=receptionist.user)
+        api_client.post(
+            reverse("appointments_api:appointment-reschedule", args=[appointment.pk]),
+            {"slot_id": new_slot.id, "reason": "Doctor schedule changed"},
+            format="json",
+        )
+
+        response = api_client.get(reverse("appointments_api:appointment-history", args=[appointment.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["appointment"], appointment.id)
+        self.assertEqual(response.data["appointment_code"], appointment.appointment_code)
+        self.assertEqual(len(response.data["reschedule_history"]), 1)
+        reschedule_entry = response.data["reschedule_history"][0]
+        self.assertEqual(reschedule_entry["old_start_datetime"], old_slot.start_datetime.isoformat().replace("+00:00", "Z"))
+        self.assertEqual(reschedule_entry["new_start_datetime"], new_slot.start_datetime.isoformat().replace("+00:00", "Z"))
+        self.assertEqual(reschedule_entry["changed_by"], receptionist.user.id)
+        changed_by_name = f"{receptionist.user.first_name} {receptionist.user.last_name}".strip()
+        self.assertEqual(reschedule_entry["changed_by_name"], changed_by_name or receptionist.user.username)
+        self.assertEqual(reschedule_entry["reason"], "Doctor schedule changed")
+        self.assertIn("created_at", reschedule_entry)
 
     def test_staff_history_view_shows_status_and_reschedule_entries(self):
         receptionist = ReceptionistProfileFactory()

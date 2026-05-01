@@ -29,7 +29,7 @@
                 <div class="space-y-3">
                     <p class="text-sm font-bold text-on-surface">{{ appointment.appointment_code }}</p>
                     <p class="text-sm text-on-surface">{{ appointment.scheduled_start|date:"M d, Y" }} at {{ appointment.scheduled_start|time:"h:i A" }}</p>
-                    <p class="text-sm text-on-surface">Status: {{ appointment.get_status_display }}</p>
+                    <p class="text-sm text-on-surface">Status: {{ appointment.display_status }}</p>
                 </div>
             </div>
 

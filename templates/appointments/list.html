@@ -90,7 +90,7 @@
                         <div class="text-muted small">{{ appointment.doctor.specialization }}</div>
                     </td>
                     {% endif %}
-                    <td><span class="badge text-bg-primary">{{ appointment.get_status_display }}</span></td>
+                    <td><span class="badge text-bg-primary">{{ appointment.display_status }}</span></td>
                     <td class="text-end">
                         <a href="{% url 'appointment-detail' pk=appointment.pk %}" class="btn btn-sm btn-outline-secondary">View</a>
                         {% if appointment.status != "CANCELLED" and appointment.status != "COMPLETED" %}

@@ -17,7 +17,7 @@
                     <div class="fw-semibold">Current Appointment</div>
                     <div class="text-muted small">Dr. {{ appointment.doctor.user.first_name|default:appointment.doctor.user.username }}</div>
                     <div class="text-muted small">{{ appointment.scheduled_start|date:"M d, Y" }} at {{ appointment.scheduled_start|time:"h:i A" }}</div>
-                    <div class="text-muted small">Status: {{ appointment.get_status_display }}</div>
+                    <div class="text-muted small">Status: {{ appointment.display_status }}</div>
                 </div>
 
                 <form method="post" action="{% url 'appointment-reschedule' pk=appointment.pk %}">
@@ -30,14 +30,34 @@
                         {% endif %}
                     </div>
 
+                    <div class="row g-3 mb-3">
+                        <div class="col-12 col-md-8">
+                            <label class="form-label" for="slot_date">Choose New Date</label>
+                            <input
+                                id="slot_date"
+                                type="date"
+                                value="{{ selected_date|date:'Y-m-d' }}"
+                                min="{{ min_date|date:'Y-m-d' }}"
+                                class="form-control"
+                            >
+                            <div id="date-error" class="invalid-feedback d-none"></div>
+                        </div>
+                        <div class="col-12 col-md-4 d-flex align-items-end">
+                            <button type="button" id="reload-slots" class="btn btn-primary w-100">Load Slots</button>
+                        </div>
+                    </div>
+
                     {% if form.non_field_errors %}
                         <div class="alert alert-danger">{{ form.non_field_errors|striptags }}</div>
                     {% endif %}
 
                     <div class="card border-0 bg-light">
                         <div class="card-body">
-                            <div class="text-uppercase text-muted small fw-semibold mb-2">Available Times</div>
-                            <div class="row g-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="text-uppercase text-muted small fw-semibold">Available Times</div>
+                                <span class="text-muted small" id="slot-status">{{ available_slots|length }} slot{{ available_slots|length|pluralize }} loaded</span>
+                            </div>
+                            <div class="row g-3" id="slot-grid">
                                 {% for slot in available_slots %}
                                 <div class="col-12 col-md-6">
                                     <button type="submit" name="slot_id" value="{{ slot.id }}" class="btn btn-outline-primary w-100 text-start">
@@ -45,12 +65,22 @@
                                         <div class="small">{{ slot.start_datetime|time:"h:i A" }} - {{ slot.end_datetime|time:"h:i A" }}</div>
                                     </button>
                                 </div>
-                                {% empty %}
-                                <div class="col-12">
-                                    <div class="text-muted">No available slots for this doctor on the selected date.</div>
-                                </div>
                                 {% endfor %}
                             </div>
+                            <div id="slot-empty" class="text-muted {% if available_slots %}d-none{% endif %}">
+                                No available slots for this doctor on the selected date.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <a href="{% url 'appointment-detail' pk=appointment.pk %}" class="btn btn-link px-0">
+                            <i class="bi bi-arrow-left me-1"></i>
+                            Back to Appointment
+                        </a>
+                        <div class="text-muted small">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Click on an available time slot to reschedule
                         </div>
                     </div>
                 </form>
@@ -65,10 +95,122 @@
                 <p class="mb-2 fw-semibold">Doctor</p>
                 <p class="text-muted small">Dr. {{ appointment.doctor.user.first_name|default:appointment.doctor.user.username }}</p>
                 <p class="mb-2 fw-semibold">Selected Date</p>
-                <p class="text-muted small">{{ selected_date|date:"M d, Y" }}</p>
+                <p class="text-muted small" id="summary-date">{{ selected_date|date:"M d, Y" }}</p>
                 <p class="text-muted small mb-0">Rescheduling moves the appointment back to REQUESTED until the staff reconfirms it.</p>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const apiUrl = "{{ slot_api_url|escapejs }}";
+    const doctorId = "{{ appointment.doctor_id }}";
+    const dateInput = document.getElementById("slot_date");
+    const dateError = document.getElementById("date-error");
+    const reloadButton = document.getElementById("reload-slots");
+    const slotGrid = document.getElementById("slot-grid");
+    const slotEmpty = document.getElementById("slot-empty");
+    const slotStatus = document.getElementById("slot-status");
+    const summaryDate = document.getElementById("summary-date");
+
+    const validateDate = () => {
+        if (!dateInput.value) {
+            return false;
+        }
+        const selectedDate = new Date(`${dateInput.value}T00:00:00`);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (selectedDate < today) {
+            dateInput.classList.add("is-invalid");
+            dateError.textContent = "Please choose today or a future date.";
+            dateError.classList.remove("d-none");
+            return false;
+        }
+        dateInput.classList.remove("is-invalid");
+        dateError.classList.add("d-none");
+        return true;
+    };
+
+    const formatDate = (date) => date.toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+    });
+
+    const formatTime = (date) => date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+    });
+
+    const renderSlots = (slots) => {
+        slotGrid.innerHTML = "";
+        slotEmpty.classList.toggle("d-none", slots.length !== 0);
+
+        slots.forEach((slot) => {
+            const col = document.createElement("div");
+            col.className = "col-12 col-md-6";
+
+            const button = document.createElement("button");
+            button.type = "submit";
+            button.name = "slot_id";
+            button.value = slot.id;
+            button.className = "btn btn-outline-primary w-100 text-start";
+
+            const start = new Date(slot.start_datetime);
+            const end = new Date(slot.end_datetime);
+            button.innerHTML = `
+                <div class="fw-semibold">${formatDate(start)}</div>
+                <div class="small">${formatTime(start)} - ${formatTime(end)}</div>
+            `;
+
+            col.appendChild(button);
+            slotGrid.appendChild(col);
+        });
+    };
+
+    const loadSlots = async () => {
+        if (!validateDate()) {
+            slotGrid.innerHTML = "";
+            slotEmpty.classList.remove("d-none");
+            slotEmpty.textContent = "Please select a valid date to load available slots.";
+            slotStatus.textContent = "Date validation failed";
+            return;
+        }
+
+        const params = new URLSearchParams({
+            doctor: doctorId,
+            slot_date: dateInput.value,
+        });
+        summaryDate.textContent = formatDate(new Date(`${dateInput.value}T00:00:00`));
+        slotStatus.textContent = "Loading from slot API...";
+        slotGrid.innerHTML = "";
+
+        try {
+            const response = await fetch(`${apiUrl}?${params.toString()}`, {
+                headers: {
+                    "Accept": "application/json",
+                    "X-Requested-With": "XMLHttpRequest",
+                },
+                credentials: "same-origin",
+            });
+            const data = await response.json();
+            const slots = Array.isArray(data.results) ? data.results : [];
+            slotStatus.textContent = `${slots.length} slot${slots.length === 1 ? "" : "s"} loaded`;
+            slotEmpty.textContent = "No available slots for this doctor on the selected date.";
+            renderSlots(slots);
+        } catch (error) {
+            slotStatus.textContent = "Could not load slots right now.";
+            slotGrid.innerHTML = "";
+            slotEmpty.classList.remove("d-none");
+            slotEmpty.textContent = "Unable to load slots from the slot API.";
+        }
+    };
+
+    reloadButton.addEventListener("click", loadSlots);
+    dateInput.addEventListener("change", loadSlots);
+});
+</script>
 {% endblock %}

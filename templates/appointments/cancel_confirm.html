@@ -23,7 +23,7 @@
                     <div class="text-uppercase text-muted small fw-semibold">Appointment Summary</div>
                     <div class="fw-semibold">{{ appointment.appointment_code }}</div>
                     <div class="text-muted small">{{ appointment.scheduled_start|date:"M d, Y" }} at {{ appointment.scheduled_start|time:"h:i A" }}</div>
-                    <div class="text-muted small">Status: {{ appointment.get_status_display }}</div>
+                    <div class="text-muted small">Status: {{ appointment.display_status }}</div>
                 </div>
 
                 <form method="post" action="{% url 'appointment-cancel' pk=appointment.pk %}">
