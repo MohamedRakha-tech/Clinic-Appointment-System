@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}User Form - Clinic{% endblock %}
+{% block topbar_subtitle %}User Management{% endblock %}
+{% block topbar_role %}Role: Admin{% endblock %}
+
+{% block content %}
+<section class="surface-card p-4 p-lg-5 d-grid gap-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+            <h1 class="h4 fw-bold mb-1">{% if mode == "edit" %}Edit User{% else %}Create User{% endif %}</h1>
+            <p class="text-muted mb-0">Assign roles using groups and create basic profiles.</p>
+        </div>
+        <a class="btn btn-outline-secondary" href="{% url 'dashboard:users' %}">Back to Users</a>
+    </div>
+
+    <form method="post" class="d-grid gap-3">
+        {% csrf_token %}
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label" for="id_username">Username</label>
+                {{ form.username }}
+                {{ form.username.errors }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="id_email">Email</label>
+                {{ form.email }}
+                {{ form.email.errors }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="id_first_name">First name</label>
+                {{ form.first_name }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="id_last_name">Last name</label>
+                {{ form.last_name }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="id_phone">Phone</label>
+                {{ form.phone }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="id_role">Role</label>
+                {{ form.role }}
+                {{ form.role.errors }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="id_employee_code">Employee Code (Reception/Admin)</label>
+                {{ form.employee_code }}
+                {{ form.employee_code.errors }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="id_is_active">Status</label>
+                <div class="form-check">
+                    {{ form.is_active }}
+                    <label class="form-check-label" for="id_is_active">Active</label>
+                </div>
+            </div>
+        </div>
+
+        {% if form.password1 %}
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label" for="id_password1">Password</label>
+                {{ form.password1 }}
+                {{ form.password1.errors }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="id_password2">Confirm Password</label>
+                {{ form.password2 }}
+                {{ form.password2.errors }}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary" type="submit">Save User</button>
+            {% if user_item %}
+            <a class="btn btn-outline-secondary" href="{% url 'dashboard:user_detail' user_item.id %}">Cancel</a>
+            {% endif %}
+        </div>
+    </form>
+</section>
+{% endblock %}

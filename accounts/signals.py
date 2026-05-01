@@ -1,31 +1,22 @@
-from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group, Permission
-from django.db.models.signals import post_migrate, post_save
+from allauth.account.signals import user_signed_up
+from allauth.socialaccount.signals import social_account_added
 from django.dispatch import receiver
 
-from accounts.services import GROUP_TO_ROLE, ROLE_TO_GROUP, assign_group, ensure_profile_for_role, get_user_role
+from accounts.models import PatientProfile
+from accounts.utils import set_user_role
 
-User = get_user_model()
 
-@receiver(post_save, sender=User)
-def assign_role_and_create_profile(sender, instance, created, **kwargs):
-    """
-    Role/profile automation.
-    - Patient register => _target_role='patient'
-    - Admin-created staff => _target_role set in admin form
-    - Fallback for new users => patient
-    """
-    target_role = getattr(instance, "_target_role", None)
+def _ensure_patient_membership(user):
+    set_user_role(user, "patient")
+    PatientProfile.objects.get_or_create(user=user)
 
-    if not target_role:
-        existing = get_user_role(instance)
-        if existing:
-            target_role = existing
-        elif created:
-            target_role = "patient"
 
-    if not target_role or target_role not in ROLE_TO_GROUP:
-        return
+@receiver(user_signed_up)
+def set_patient_role_on_social_signup(request, user, sociallogin=None, **kwargs):
+    if sociallogin:
+        _ensure_patient_membership(user)
 
-    assign_group(instance, target_role)
-    ensure_profile_for_role(instance, target_role)
+
+@receiver(social_account_added)
+def set_patient_role_on_social_account_added(request, sociallogin, **kwargs):
+    _ensure_patient_membership(sociallogin.user)

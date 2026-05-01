@@ -6,7 +6,10 @@ app_name = "accounts"
 
 urlpatterns = [
     path("signup/", views.register_view, name="signup"),
-    path("login/", views.login_view, name="login"),
+    path("patient/signup/", views.register_view, name="patient_signup"),
+    path("login/", views.patient_login_view, name="login"),
+    path("patient/login/", views.patient_login_view, name="patient_login"),
+    path("staff/login/", views.staff_login_view, name="staff_login"),
     path("logout/", views.logout_view, name="logout"),
     path("dashboard/patient/", views.PatientDashboardView.as_view(), name="patient_dashboard"),
     path("dashboard/doctor/", views.DoctorDashboardView.as_view(), name="doctor_dashboard"),
@@ -25,4 +28,7 @@ urlpatterns = [
     
     path("profile/admin/", views.AdminProfileView.as_view(), name="admin_profile"),
     path("profile/admin/edit/", views.AdminProfileEditView.as_view(), name="admin_profile_edit"),
+    path("privacy/", views.PrivacyPolicyView.as_view(), name="privacy_policy"),
+    path("terms/", views.TermsOfServiceView.as_view(), name="terms_of_service"),
+    path("support/", views.SupportView.as_view(), name="support"),
 ]

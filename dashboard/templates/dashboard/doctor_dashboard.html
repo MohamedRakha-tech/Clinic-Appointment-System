@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+
+{% block title %}Doctor Dashboard | Clinical Sanctuary{% endblock %}
+{% block topbar_subtitle %}My Daily Queue{% endblock %}
+{% block topbar_role %}Role: Doctor{% endblock %}
+
+{% block extra_css %}
+<style>
+    .metric-card {
+        background: var(--panel-bg);
+        border: 1px solid #dde8f4;
+        border-radius: 1rem;
+        box-shadow: 0 8px 30px rgba(15, 55, 110, .06);
+        padding: 1.5rem;
+        position: relative;
+        overflow: hidden;
+        transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 35px rgba(15, 55, 110, .1);
+    }
+    .metric-card .glow {
+        position: absolute;
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        top: -20px;
+        right: -20px;
+        filter: blur(20px);
+        opacity: .15;
+    }
+    .metric-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: .6rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+    .metric-label {
+        font-size: .65rem;
+        font-weight: 800;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: var(--muted);
+    }
+    .metric-value {
+        font-size: 2rem;
+        font-weight: 900;
+        color: var(--ink);
+        line-height: 1.1;
+    }
+    .metric-badge {
+        font-size: .7rem;
+        font-weight: 700;
+        padding: .2rem .55rem;
+        border-radius: 2rem;
+    }
+    .chart-card {
+        background: var(--panel-bg);
+        border: 1px solid #dde8f4;
+        border-radius: 1rem;
+        box-shadow: 0 8px 30px rgba(15, 55, 110, .06);
+        padding: 1.75rem;
+    }
+    .chart-title {
+        font-size: 1rem;
+        font-weight: 800;
+        color: var(--ink);
+    }
+    .chart-sub {
+        font-size: .78rem;
+        color: var(--muted);
+    }
+    .queue-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: .9rem 1rem;
+        border-radius: .75rem;
+        border: 1px solid #eef4fa;
+        background: var(--panel-bg);
+        transition: box-shadow .2s, transform .2s;
+    }
+    .queue-row:hover {
+        box-shadow: 0 4px 18px rgba(15,55,110,.08);
+        transform: translateX(2px);
+    }
+    .queue-number {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--soft-bg);
+        color: var(--brand);
+        font-weight: 900;
+        font-size: .85rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .queue-number.current {
+        background: var(--brand);
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(11,78,162,.3);
+    }
+    .patient-avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: #e0eaff;
+        color: var(--brand);
+        font-weight: 800;
+        font-size: .85rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .status-badge {
+        font-size: .68rem;
+        font-weight: 800;
+        padding: .25rem .6rem;
+        border-radius: .4rem;
+        letter-spacing: .04em;
+    }
+    .status-CONFIRMED  { background: #e0eaff; color: #1a3fa0; }
+    .status-CHECKED_IN { background: #e6f4ea; color: #1e7e34; }
+    .status-COMPLETED  { background: #e0f7fa; color: #006877; }
+    .status-NO_SHOW    { background: #fde8e8; color: #b91c1c; }
+    .waiting-time {
+        font-size: .72rem;
+        font-weight: 700;
+        color: var(--muted);
+        white-space: nowrap;
+    }
+    .waiting-time.long { color: #b91c1c; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ============================================================ -->
+<!-- PAGE CONTENT -->
+<!-- ============================================================ -->
+
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-end mb-4">
+    <div>
+        <h3 class="fw-black mb-1" style="font-size:1.6rem;">
+            Good Morning, Dr. {{ request.user.first_name }} 👋
+        </h3>
+        <p class="text-muted mb-0" style="font-size:.85rem;">
+            Here's your queue for today.
+        </p>
+    </div>
+    <div class="text-muted small fw-bold">
+        {{ today_queue|length }} patient{% if today_queue|length != 1 %}s{% endif %} today
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- KPI CARDS -->
+<!-- ============================================================ -->
+<div class="row g-4 mb-4">
+
+    <!-- Today's Queue -->
+    <div class="col-6 col-xl-4">
+        <div class="metric-card">
+            <div class="glow" style="background:#003f87;"></div>
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="metric-icon" style="background:#e0eaff;color:#003f87;">
+                    <i class="bi bi-person-lines-fill"></i>
+                </div>
+                <span class="metric-badge" style="background:#e0eaff;color:#003f87;">Today</span>
+            </div>
+            <div class="metric-label mb-1">Patients in Queue</div>
+            <div class="metric-value">{{ today_queue|length }}</div>
+        </div>
+    </div>
+
+    <!-- My No-Show Rate -->
+    <div class="col-6 col-xl-4">
+        <div class="metric-card">
+            <div class="glow" style="background:#ba1a1a;"></div>
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="metric-icon" style="background:#fde8e8;color:#ba1a1a;">
+                    <i class="bi bi-person-x-fill"></i>
+                </div>
+                <span class="metric-badge" style="background:#fde8e8;color:#ba1a1a;">
+                    Last 30 Days
+                </span>
+            </div>
+            <div class="metric-label mb-1">My No-Show Rate</div>
+            <div class="metric-value">{{ my_noshow_rate }}%</div>
+            <div class="mt-2" style="font-size:.75rem;color:#ba1a1a;font-weight:700;">
+                {{ my_noshow_count }} no-shows / {{ my_total_month }} total
+            </div>
+        </div>
+    </div>
+
+    <!-- Completed Today -->
+    <div class="col-6 col-xl-4">
+        <div class="metric-card">
+            <div class="glow" style="background:#006877;"></div>
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="metric-icon" style="background:#e0f7fa;color:#006877;">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+                <span class="metric-badge" style="background:#e0f7fa;color:#006877;">Today</span>
+            </div>
+            <div class="metric-label mb-1">Completed</div>
+            <div class="metric-value">
+                {% with completed=today_queue|length %}
+                    0
+                {% endwith %}
+            </div>
+            <div class="mt-2" style="font-size:.75rem;color:var(--muted);font-weight:700;">
+                Updated in real-time
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ============================================================ -->
+<!-- TODAY'S QUEUE -->
+<!-- ============================================================ -->
+<div class="chart-card">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="chart-title">Today's Patient Queue</div>
+            <div class="chart-sub">Ordered by appointment time</div>
+        </div>
+    </div>
+
+    <div class="d-flex flex-column gap-3">
+        {% for appt in today_queue %}
+        <div class="queue-row">
+
+            <!-- Queue Number -->
+            <div class="queue-number {% if forloop.first %}current{% endif %}">
+                {{ forloop.counter }}
+            </div>
+
+            <!-- Patient Avatar -->
+            <div class="patient-avatar">
+                {{ appt.patient.user.first_name|first|upper }}{{ appt.patient.user.last_name|first|upper }}
+            </div>
+
+            <!-- Patient Info -->
+            <div class="flex-grow-1">
+                <div style="font-size:.9rem;font-weight:800;">
+                    {{ appt.patient.user.first_name }} {{ appt.patient.user.last_name }}
+                </div>
+                <div style="font-size:.75rem;color:var(--muted);">
+                    <i class="bi bi-clock me-1"></i>{{ appt.scheduled_start|time:"H:i" }}
+                    {% if appt.patient.date_of_birth %}
+                    &nbsp;·&nbsp;
+                    <i class="bi bi-person me-1"></i>
+                    {{ appt.patient.date_of_birth|timesince }} old
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Status -->
+            <span class="status-badge status-{{ appt.status }}">
+                {{ appt.status }}
+            </span>
+
+            <!-- Waiting Time (for CHECKED_IN only) -->
+            {% if appt.status == 'CHECKED_IN' %}
+            <div class="waiting-time {% if appt.checked_in_at %}long{% endif %}">
+                <i class="bi bi-hourglass-split me-1"></i>
+                {{ appt.checked_in_at|timesince }}
+            </div>
+            {% endif %}
+
+            <!-- Actions -->
+            <div class="d-flex gap-2 flex-shrink-0">
+                {% if appt.status == 'CONFIRMED' %}
+                <a href="#" class="btn btn-sm"
+                   style="background:#e0eaff;color:#003f87;font-weight:700;border-radius:.5rem;">
+                    <i class="bi bi-check2"></i> Check In
+                </a>
+                {% endif %}
+                {% if appt.status == 'CHECKED_IN' %}
+                <a href="#" class="btn btn-sm"
+                   style="background:#e6f4ea;color:#1e7e34;font-weight:700;border-radius:.5rem;">
+                    <i class="bi bi-file-medical"></i> Consult
+                </a>
+                {% endif %}
+            </div>
+
+        </div>
+        {% empty %}
+        <div class="text-center py-5">
+            <i class="bi bi-calendar-x" style="font-size:2.5rem;color:#c8ced8;"></i>
+            <p class="text-muted mt-3 fw-bold">No patients scheduled for today.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

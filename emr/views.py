@@ -1,13 +1,16 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.core.exceptions import ValidationError
 
 from appointments.models import Appointment
+from accounts.mixins import DoctorRequiredMixin, PatientRequiredMixin, ReceptionistRequiredMixin
 from accounts.models import DoctorProfile
+from accounts.utils import get_user_role
 from .models import ConsultationRecord, PrescriptionItem, RequestedTest
-from .forms import ConsultationRecordForm, PrescriptionItemForm, RequestedTestForm
+from .forms import ConsultationRecordForm, PrescriptionItemForm, RequestedTestForm, PrescriptionItemFormSet, RequestedTestFormSet
 
 class EMRService:
 
@@ -33,6 +36,9 @@ class EMRService:
             requested_tests=data.get('requested_tests', ''),
             summary_for_patient=data.get('summary_for_patient', ''),
         )
+
+        appointment.status = Appointment.Status.COMPLETED
+        appointment.save(update_fields=['status'])
 
         return consultation
 
@@ -81,14 +87,11 @@ def _get_patient_profile(request):
     except AttributeError:
         return None
 
-class ConsultationListView(LoginRequiredMixin, View):
+class ConsultationListView(DoctorRequiredMixin, View):
 
     login_url = '/accounts/login/'
 
     def get(self, request):
-        if not request.user.is_authenticated:
-            return self.handle_no_permission()
-
         doctor_profile = _get_doctor_profile(request)
         if not doctor_profile:
             return render(request, 'error.html', {
@@ -100,10 +103,38 @@ class ConsultationListView(LoginRequiredMixin, View):
         return render(request, 'emr/consultations_list.html', {
             'consultations': consultations,
             'doctor': doctor_profile,
+            'header_title': 'Consultation Timeline',
+            'header_subtitle': 'Review, continue, and manage your clinical notes quickly.',
+            'records_title': 'My Consultation Records',
+            'viewer_label': f"Dr. {doctor_profile.user.first_name or doctor_profile.user.username}",
+            'show_edit_actions': True,
         })
 
 
-class PatientConsultationListView(LoginRequiredMixin, View):
+class ReceptionConsultationListView(ReceptionistRequiredMixin, View):
+
+    login_url = '/accounts/login/'
+
+    def get(self, request):
+        consultations = ConsultationRecord.objects.select_related(
+            'doctor',
+            'doctor__user',
+            'appointment',
+            'appointment__patient',
+            'appointment__patient__user'
+        ).order_by('-created_at')
+
+        return render(request, 'emr/consultations_list.html', {
+            'consultations': consultations,
+            'header_title': 'EMR Records',
+            'header_subtitle': 'Access completed consultation summaries and orders.',
+            'records_title': 'Consultation Records',
+            'viewer_label': 'Reception',
+            'show_edit_actions': False,
+        })
+
+
+class PatientConsultationListView(PatientRequiredMixin, View):
 
     login_url = '/accounts/login/'
 
@@ -148,14 +179,26 @@ class ConsultationDetailView(LoginRequiredMixin, View):
             pk=pk
         )
 
+        role = get_user_role(request.user)
         patient_profile = _get_patient_profile(request)
-        can_manage = consultation.doctor.user == request.user or request.user.is_staff
-        can_view = can_manage or (patient_profile and consultation.appointment.patient_id == patient_profile.id)
+        is_receptionist = role == "receptionist"
+        can_manage = consultation.doctor.user == request.user or request.user.is_superuser or hasattr(request.user, "admin_profile")
+        can_view = can_manage or is_receptionist or (patient_profile and consultation.appointment.patient_id == patient_profile.id)
 
         if not can_view:
             return render(request, 'error.html', {
                 'error': 'Permission denied'
             }, status=403)
+
+        if is_receptionist:
+            back_url = reverse('emr:reception_list')
+            back_label = 'Back to EMR Records'
+        elif patient_profile and consultation.appointment.patient_id == patient_profile.id:
+            back_url = reverse('emr:patient_list')
+            back_label = 'Back to My Consultations'
+        else:
+            back_url = reverse('emr:list')
+            back_label = 'Back'
 
         return render(request, 'emr/consultation_detail.html', {
             'consultation': consultation,
@@ -163,10 +206,13 @@ class ConsultationDetailView(LoginRequiredMixin, View):
             'tests': consultation.requested_tests_normalized.all(),
             'can_manage': can_manage,
             'is_patient_view': bool(patient_profile and consultation.appointment.patient_id == patient_profile.id),
+            'show_clinical_notes': role == "doctor",
+            'back_url': back_url,
+            'back_label': back_label,
         })
 
 
-class ConsultationCreateView(LoginRequiredMixin, View):
+class ConsultationCreateView(DoctorRequiredMixin, View):
 
     login_url = '/accounts/login/'
 
@@ -198,8 +244,12 @@ class ConsultationCreateView(LoginRequiredMixin, View):
             }, status=403)
 
         form = ConsultationRecordForm()
+        prescription_formset = PrescriptionItemFormSet(prefix='prescriptions')
+        test_formset = RequestedTestFormSet(prefix='tests')
         return render(request, 'emr/consultation_form.html', {
             'form': form,
+            'prescription_formset': prescription_formset,
+            'test_formset': test_formset,
             'appointment': appointment,
             'action': 'Create',
         })
@@ -229,19 +279,28 @@ class ConsultationCreateView(LoginRequiredMixin, View):
             }, status=403)
 
         form = ConsultationRecordForm(request.POST)
+        prescription_formset = PrescriptionItemFormSet(request.POST, prefix='prescriptions')
+        test_formset = RequestedTestFormSet(request.POST, prefix='tests')
 
-        if form.is_valid():
+        if form.is_valid() and prescription_formset.is_valid() and test_formset.is_valid():
             try:
-                consultation = EMRService.create_consultation_record(
-                    appointment_id,
-                    doctor_profile,
-                    form.cleaned_data
-                )
+                with transaction.atomic():
+                    consultation = EMRService.create_consultation_record(
+                        appointment_id,
+                        doctor_profile,
+                        form.cleaned_data
+                    )
+                    prescription_formset.instance = consultation
+                    prescription_formset.save()
+                    test_formset.instance = consultation
+                    test_formset.save()
                 return redirect('emr:detail', pk=consultation.id)
             except ValidationError as e:
                 form.add_error(None, str(e))
                 return render(request, 'emr/consultation_form.html', {
                     'form': form,
+                    'prescription_formset': prescription_formset,
+                    'test_formset': test_formset,
                     'appointment': appointment,
                     'action': 'Create',
                     'error': str(e),
@@ -249,12 +308,14 @@ class ConsultationCreateView(LoginRequiredMixin, View):
 
         return render(request, 'emr/consultation_form.html', {
             'form': form,
+            'prescription_formset': prescription_formset,
+            'test_formset': test_formset,
             'appointment': appointment,
             'action': 'Create',
         })
 
 
-class ConsultationUpdateView(LoginRequiredMixin, View):
+class ConsultationUpdateView(DoctorRequiredMixin, View):
 
     login_url = '/accounts/login/'
 
@@ -276,8 +337,12 @@ class ConsultationUpdateView(LoginRequiredMixin, View):
             }, status=403)
 
         form = ConsultationRecordForm(instance=consultation)
+        prescription_formset = PrescriptionItemFormSet(instance=consultation, prefix='prescriptions')
+        test_formset = RequestedTestFormSet(instance=consultation, prefix='tests')
         return render(request, 'emr/consultation_form.html', {
             'form': form,
+            'prescription_formset': prescription_formset,
+            'test_formset': test_formset,
             'consultation': consultation,
             'appointment': consultation.appointment,
             'action': 'Edit',
@@ -298,19 +363,26 @@ class ConsultationUpdateView(LoginRequiredMixin, View):
             }, status=403)
 
         form = ConsultationRecordForm(request.POST, instance=consultation)
+        prescription_formset = PrescriptionItemFormSet(request.POST, instance=consultation, prefix='prescriptions')
+        test_formset = RequestedTestFormSet(request.POST, instance=consultation, prefix='tests')
 
-        if form.is_valid():
+        if form.is_valid() and prescription_formset.is_valid() and test_formset.is_valid():
             try:
-                consultation = EMRService.update_consultation_record(
-                    pk,
-                    doctor_profile,
-                    form.cleaned_data
-                )
+                with transaction.atomic():
+                    consultation = EMRService.update_consultation_record(
+                        pk,
+                        doctor_profile,
+                        form.cleaned_data
+                    )
+                    prescription_formset.save()
+                    test_formset.save()
                 return redirect('emr:detail', pk=consultation.id)
             except ValidationError as e:
                 form.add_error(None, str(e))
                 return render(request, 'emr/consultation_form.html', {
                     'form': form,
+                    'prescription_formset': prescription_formset,
+                    'test_formset': test_formset,
                     'consultation': consultation,
                     'appointment': consultation.appointment,
                     'action': 'Edit',
@@ -319,14 +391,15 @@ class ConsultationUpdateView(LoginRequiredMixin, View):
 
         return render(request, 'emr/consultation_form.html', {
             'form': form,
+            'prescription_formset': prescription_formset,
+            'test_formset': test_formset,
             'consultation': consultation,
             'appointment': consultation.appointment,
             'action': 'Edit',
         })
 
 
-class ConsultationDeleteView(LoginRequiredMixin, View):
-    login_url = '/accounts/login/'
+class ConsultationDeleteView(DoctorRequiredMixin, View):
 
     def get(self, request, pk):
         consultation = get_object_or_404(ConsultationRecord, pk=pk)

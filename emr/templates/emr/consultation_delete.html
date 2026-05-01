@@ -2,45 +2,202 @@
 
 {% block title %}Delete Consultation - Clinic{% endblock %}
 
+{% block extra_css %}
+<style>
+    .delete-shell {
+        display: grid;
+        place-items: center;
+        min-height: 70vh;
+        padding: 2rem 1rem;
+    }
+
+    .danger-card {
+        background: #ffffff;
+        border: 1px solid #fecdd3;
+        border-radius: 1.5rem;
+        box-shadow: 0 20px 40px rgba(225, 29, 72, 0.08), 0 4px 12px rgba(225, 29, 72, 0.04);
+        max-width: 540px;
+        width: 100%;
+        overflow: hidden;
+        animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .danger-header {
+        background: linear-gradient(135deg, #ef4444 0%, #be123c 100%);
+        padding: 1.5rem;
+        text-align: center;
+        color: white;
+    }
+
+    .danger-icon {
+        font-size: 3rem;
+        margin-bottom: 0.5rem;
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.2);
+        width: 80px;
+        height: 80px;
+        line-height: 80px;
+        border-radius: 50%;
+        backdrop-filter: blur(4px);
+    }
+
+    .danger-title {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+    }
+
+    .danger-body {
+        padding: 2rem;
+    }
+
+    .warning-alert {
+        background: #fff1f2;
+        border: 1px solid #ffe4e6;
+        border-left: 4px solid #f43f5e;
+        padding: 1rem;
+        border-radius: 0.75rem;
+        color: #9f1239;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        font-size: 0.95rem;
+    }
+
+    .danger-text {
+        font-size: 1.05rem;
+        color: #334155;
+        line-height: 1.5;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+    
+    .danger-text strong {
+        color: #0f172a;
+        font-weight: 800;
+    }
+
+    .info-box {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 1rem;
+        padding: 1.25rem;
+        margin-bottom: 2rem;
+    }
+    
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+    }
+    
+    .info-row:last-child {
+        margin-bottom: 0;
+    }
+    
+    .info-label {
+        color: #64748b;
+        font-weight: 600;
+    }
+    
+    .info-value {
+        color: #0f172a;
+        font-weight: 700;
+    }
+
+    .action-grid {
+        display: grid;
+        gap: 0.75rem;
+    }
+
+    .btn-danger-premium {
+        background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+        color: white;
+        border: none;
+        border-radius: 0.85rem;
+        padding: 1rem;
+        font-size: 1.05rem;
+        font-weight: 800;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(225, 29, 72, 0.25);
+        cursor: pointer;
+        width: 100%;
+    }
+    
+    .btn-danger-premium:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(225, 29, 72, 0.35);
+    }
+    
+    .btn-cancel-premium {
+        background: #f1f5f9;
+        color: #475569;
+        border: 1px solid #cbd5e1;
+        border-radius: 0.85rem;
+        padding: 1rem;
+        font-size: 1.05rem;
+        font-weight: 700;
+        transition: all 0.2s ease;
+        text-align: center;
+        text-decoration: none;
+        display: block;
+    }
+    
+    .btn-cancel-premium:hover {
+        background: #e2e8f0;
+        color: #0f172a;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container mt-5">
-    <div class="row">
-        <div class="col-md-6 offset-md-3">
-            <div class="card border-danger">
-                <div class="card-header bg-danger text-white">
-                    <h3 class="mb-0">Delete Consultation Record</h3>
+<div class="delete-shell">
+    <div class="danger-card">
+        <div class="danger-header">
+            <div class="danger-icon">
+                <i class="bi bi-exclamation-triangle"></i>
+            </div>
+            <h3 class="danger-title">Delete Record</h3>
+        </div>
+        
+        <div class="danger-body">
+            <div class="warning-alert">
+                <i class="bi bi-shield-exclamation me-2"></i> Critical Warning: This action cannot be undone.
+            </div>
+
+            <p class="danger-text">
+                Are you absolutely sure you want to delete the clinical record for 
+                <strong>{{ consultation.appointment.patient.user.get_full_name|default:consultation.appointment.patient.user.username }}</strong>?
+            </p>
+
+            <div class="info-box">
+                <div class="info-row">
+                    <span class="info-label">Appointment ID</span>
+                    <span class="info-value">{{ consultation.appointment.appointment_code }}</span>
                 </div>
-                <div class="card-body">
-                    <div class="alert alert-warning" role="alert">
-                        <strong>Warning:</strong> This action cannot be undone.
-                    </div>
-
-                    <p class="mb-3">
-                        Are you sure you want to delete the consultation record for
-                        <strong>{{ consultation.appointment.patient.user.get_full_name }}</strong>?
-                    </p>
-
-                    <div class="card mb-3">
-                        <div class="card-body">
-                            <p><strong>Appointment:</strong> {{ consultation.appointment.appointment_code }}</p>
-                            <p><strong>Created:</strong> {{ consultation.created_at|date:"d M Y H:i" }}</p>
-                        </div>
-                    </div>
-
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-danger btn-lg">
-                                Yes, Delete Consultation
-                            </button>
-                            <a href="{% url 'emr:detail' consultation.id %}"
-                               class="btn btn-outline-secondary">
-                                Cancel
-                            </a>
-                        </div>
-                    </form>
+                <div class="info-row">
+                    <span class="info-label">Date Created</span>
+                    <span class="info-value">{{ consultation.created_at|date:"d M Y H:i" }}</span>
                 </div>
             </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="action-grid">
+                    <button type="submit" class="btn-danger-premium">
+                        Yes, Permanently Delete
+                    </button>
+                    <a href="{% url 'emr:detail' consultation.id %}" class="btn-cancel-premium">
+                        Cancel & Return
+                    </a>
+                </div>
+            </form>
         </div>
     </div>
 </div>

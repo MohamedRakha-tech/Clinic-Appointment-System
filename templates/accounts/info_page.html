@@ -1,0 +1,29 @@
+{% extends "auth/auth_base.html" %}
+
+{% block title %}{{ page_title }} | Sanctuary Health{% endblock %}
+
+{% block auth_content %}
+<section class="w-full lg:w-1/2 flex items-center justify-center p-6 bg-surface">
+  <div class="w-full max-w-2xl">
+    <div class="mb-10 text-center lg:text-left">
+      <h2 class="text-3xl font-bold tracking-tight text-on-surface mb-2">{{ page_heading }}</h2>
+      <p class="text-on-surface-variant font-medium">{{ page_intro }}</p>
+    </div>
+
+    <div class="bg-surface-container-lowest border border-outline-variant/40 rounded-2xl p-6 shadow-sm space-y-4">
+      {% for point in page_points %}
+      <div class="flex items-start gap-3">
+        <span class="material-symbols-outlined text-primary mt-0.5">check_circle</span>
+        <p class="text-on-surface-variant leading-7">{{ point }}</p>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="mt-8 flex flex-wrap gap-3">
+      <a class="inline-flex items-center justify-center px-4 py-3 rounded-xl bg-primary text-white font-semibold" href="{% url 'accounts:patient_login' %}">Patient Login</a>
+      <a class="inline-flex items-center justify-center px-4 py-3 rounded-xl bg-surface-container-high text-on-surface font-semibold" href="{% url 'accounts:staff_login' %}">Staff Login</a>
+      <a class="inline-flex items-center justify-center px-4 py-3 rounded-xl bg-surface-container-low text-primary font-semibold" href="{% url 'accounts:patient_signup' %}">Create Account</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

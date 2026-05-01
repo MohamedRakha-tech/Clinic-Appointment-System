@@ -136,9 +136,9 @@
         <p class="text-[10px] font-medium uppercase tracking-[0.2em] text-[#141d23]/50 dark:text-slate-500 mt-1">© 2024 Sanctuary Health. Precision in Care.</p>
       </div>
       <nav class="flex flex-wrap justify-center gap-8">
-        <a class="text-xs font-medium uppercase tracking-widest text-[#141d23]/50 dark:text-slate-500 hover:text-[#003f87] dark:hover:text-blue-300 underline-offset-4 hover:underline transition-all" href="#">Privacy Policy</a>
-        <a class="text-xs font-medium uppercase tracking-widest text-[#141d23]/50 dark:text-slate-500 hover:text-[#003f87] dark:hover:text-blue-300 underline-offset-4 hover:underline transition-all" href="#">Terms of Service</a>
-        <a class="text-xs font-medium uppercase tracking-widest text-[#141d23]/50 dark:text-slate-500 hover:text-[#003f87] dark:hover:text-blue-300 underline-offset-4 hover:underline transition-all" href="#">Contact Support</a>
+        <a class="text-xs font-medium uppercase tracking-widest text-[#141d23]/50 dark:text-slate-500 hover:text-[#003f87] dark:hover:text-blue-300 underline-offset-4 hover:underline transition-all" href="{% url 'accounts:privacy_policy' %}">Privacy Policy</a>
+        <a class="text-xs font-medium uppercase tracking-widest text-[#141d23]/50 dark:text-slate-500 hover:text-[#003f87] dark:hover:text-blue-300 underline-offset-4 hover:underline transition-all" href="{% url 'accounts:terms_of_service' %}">Terms of Service</a>
+        <a class="text-xs font-medium uppercase tracking-widest text-[#141d23]/50 dark:text-slate-500 hover:text-[#003f87] dark:hover:text-blue-300 underline-offset-4 hover:underline transition-all" href="{% url 'accounts:support' %}">Contact Support</a>
       </nav>
       <div class="mt-8 md:mt-0 flex gap-4">
         <div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-primary cursor-pointer hover:bg-primary hover:text-white transition-colors">

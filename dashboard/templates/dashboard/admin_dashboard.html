@@ -1,0 +1,832 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard | Clinical Sanctuary{% endblock %}
+{% block topbar_subtitle %}System Overview{% endblock %}
+{% block topbar_role %}Role: Administrator{% endblock %}
+
+{% block extra_css %}
+<style>
+    .metric-card {
+        background: var(--panel-bg);
+        border: 1px solid #dde8f4;
+        border-radius: 1rem;
+        box-shadow: 0 8px 30px rgba(15,55,110,.06);
+        padding: 1.5rem;
+        position: relative;
+        overflow: hidden;
+        transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .metric-card:hover { transform: translateY(-2px); box-shadow: 0 12px 35px rgba(15,55,110,.1); }
+    .metric-card .glow {
+        position: absolute; width: 80px; height: 80px; border-radius: 50%;
+        top: -20px; right: -20px; filter: blur(20px); opacity: .15;
+    }
+    .metric-icon {
+        width: 42px; height: 42px; border-radius: .6rem;
+        display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+    }
+    .metric-label { font-size: .65rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+    .metric-value { font-size: 2rem; font-weight: 900; color: var(--ink); line-height: 1.1; }
+    .metric-badge { font-size: .7rem; font-weight: 700; padding: .2rem .55rem; border-radius: 2rem; }
+
+    .chart-card {
+        background: var(--panel-bg);
+        border: 1px solid #dde8f4;
+        border-radius: 1rem;
+        box-shadow: 0 8px 30px rgba(15,55,110,.06);
+        padding: 1.75rem;
+    }
+    .chart-title { font-size: 1rem; font-weight: 800; color: var(--ink); }
+    .chart-sub   { font-size: .78rem; color: var(--muted); }
+    .bar-track { height: 8px; background: var(--soft-bg); border-radius: 99px; overflow: hidden; }
+    .bar-fill  { height: 100%; border-radius: 99px; transition: width .6s ease; }
+
+    .audit-row { padding: .75rem 1rem; border-radius: .6rem; transition: background .15s; }
+    .audit-row:hover { background: var(--soft-bg); }
+    .audit-action { font-size: .68rem; font-weight: 800; padding: .2rem .5rem; border-radius: .3rem; letter-spacing: .05em; }
+    .action-CREATE  { background: #e6f4ea; color: #1e7e34; }
+    .action-UPDATE  { background: #fff3cd; color: #856404; }
+    .action-DELETE  { background: #fde8e8; color: #b91c1c; }
+    .action-LOGIN   { background: #e0eaff; color: #1a3fa0; }
+    .action-LOGOUT  { background: #ede9fe; color: #5b21b6; }
+    .action-EXPORT  { background: #e0f7fa; color: #006877; }
+
+    .top-doctor-row { display: flex; align-items: center; gap: .75rem; padding: .6rem 0; border-bottom: 1px solid #f0f4f9; }
+    .top-doctor-row:last-child { border: none; }
+    .doctor-avatar {
+        width: 36px; height: 36px; border-radius: 50%; background: var(--brand); color: #fff;
+        font-weight: 800; font-size: .85rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .export-btn {
+        font-size: .8rem; font-weight: 700; padding: .5rem 1.1rem; border-radius: .6rem;
+        border: 1.5px solid #dde8f4; background: var(--panel-bg); color: var(--ink);
+        display: flex; align-items: center; gap: .4rem;
+        transition: border-color .2s, color .2s; text-decoration: none;
+    }
+    .export-btn:hover { border-color: var(--brand); color: var(--brand); }
+
+    /* Tab pills */
+    .dash-tab-nav { gap: .5rem; }
+    .dash-tab-nav .nav-link {
+        border-radius: .6rem; font-weight: 700; font-size: .88rem;
+        color: var(--muted); padding: .5rem 1.25rem;
+        border: 1.5px solid transparent; transition: all .2s;
+    }
+    .dash-tab-nav .nav-link:hover { background: var(--soft-bg); color: var(--ink); }
+    .dash-tab-nav .nav-link.active {
+        background: var(--brand); color: #fff;
+        border-color: var(--brand); box-shadow: 0 4px 14px rgba(11,78,162,.25);
+    }
+
+    /* Circular progress for no-show */
+    .noshow-circle {
+        width: 130px; height: 130px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        background: conic-gradient(#b91c1c calc(var(--pct) * 1%), #eef4fa 0);
+        box-shadow: 0 4px 18px rgba(185,28,28,.15);
+    }
+    .noshow-circle-inner {
+        width: 100px; height: 100px; border-radius: 50%;
+        background: var(--panel-bg);
+        display: flex; align-items: center; justify-content: center;
+        flex-direction: column;
+    }
+    /* Analytics KPI chips */
+    .analytics-stat {
+        background: var(--panel-bg); border: 1px solid #dde8f4; border-radius: .85rem;
+        padding: 1rem 1.25rem; display: flex; align-items: center; gap: 1rem;
+        box-shadow: 0 4px 18px rgba(15,55,110,.05);
+    }
+    .analytics-stat-icon {
+        width: 42px; height: 42px; border-radius: .6rem;
+        display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;
+    }
+    .analytics-stat-value { font-size: 1.55rem; font-weight: 900; color: var(--ink); line-height: 1.1; }
+    .analytics-stat-label { font-size: .62rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+    /* Period toggle buttons */
+    .chart-toggle { display: flex; gap: .35rem; flex-shrink: 0; }
+    .chart-toggle button {
+        font-size: .72rem; font-weight: 800; padding: .3rem .75rem; border-radius: .45rem;
+        border: 1.5px solid #dde8f4; background: var(--soft-bg); color: var(--muted);
+        cursor: pointer; transition: all .15s; letter-spacing: .03em;
+    }
+    .chart-toggle button.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+    .chart-toggle button:hover:not(.active) { border-color: var(--brand); color: var(--brand); }
+    /* Dropdown selects inside chart headers */
+    .chart-select {
+        font-size: .75rem; font-weight: 700; padding: .3rem .65rem; border-radius: .45rem;
+        border: 1.5px solid #dde8f4; background: var(--soft-bg); color: var(--ink);
+        cursor: pointer; transition: border-color .2s; min-width: 90px;
+    }
+    .chart-select:focus { outline: none; border-color: var(--brand); }
+    .chart-select:hover { border-color: var(--brand); }
+</style>
+{% endblock %}
+
+{% block content %}
+
+
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-end mb-4">
+    <div>
+        <h3 class="fw-black mb-1" style="font-size:1.6rem;">Admin Dashboard</h3>
+        <p class="text-muted mb-0" style="font-size:.85rem;">Real-time clinical performance and patient flow metrics.</p>
+    </div>
+    <span class="metric-badge" style="background:#e6f4ea;color:#1e7e34;font-size:.8rem;padding:.4rem .9rem;">
+        <i class="bi bi-circle-fill me-1" style="font-size:.5rem;"></i> System Health: Optimal
+    </span>
+</div>
+
+<!-- Tab Nav Pills -->
+<ul class="nav dash-tab-nav mb-4" id="dashTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link {% if active_tab != 'analytics' %}active{% endif %}" id="overview-tab"
+                data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab">
+            <i class="bi bi-grid-1x2 me-1"></i> Overview
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link {% if active_tab == 'analytics' %}active{% endif %}" id="analytics-tab"
+                data-bs-toggle="tab" data-bs-target="#analytics" type="button" role="tab">
+            <i class="bi bi-bar-chart-line me-1"></i> Analytics
+        </button>
+    </li>
+</ul>
+
+<!-- Tab Content -->
+<div class="tab-content" id="dashTabContent">
+
+<!-- ============================================================ -->
+<!-- TAB 1: OVERVIEW -->
+<!-- ============================================================ -->
+<div class="tab-pane fade {% if active_tab != 'analytics' %}show active{% endif %}" id="overview" role="tabpanel">
+
+    <!-- KPI Cards -->
+    <div class="row g-4 mb-4">
+
+        <!-- Total Patients -->
+        <div class="col-6 col-xl-3">
+            <div class="metric-card">
+                <div class="glow" style="background:#003f87;"></div>
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="metric-icon" style="background:#e0eaff;color:#003f87;">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <span class="metric-badge" style="background:#e0eaff;color:#003f87;">+12%</span>
+                </div>
+                <div class="metric-label mb-1">Total Patients</div>
+                <div class="metric-value">{{ total_patients }}</div>
+            </div>
+        </div>
+
+        <!-- Total Doctors -->
+        <div class="col-6 col-xl-3">
+            <div class="metric-card">
+                <div class="glow" style="background:#006877;"></div>
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="metric-icon" style="background:#e0f7fa;color:#006877;">
+                        <i class="bi bi-person-badge-fill"></i>
+                    </div>
+                    <span class="metric-badge" style="background:#e0f7fa;color:#006877;">Active</span>
+                </div>
+                <div class="metric-label mb-1">Total Doctors</div>
+                <div class="metric-value">{{ total_doctors }}</div>
+            </div>
+        </div>
+
+        <!-- Appointments Today -->
+        <div class="col-6 col-xl-3">
+            <div class="metric-card">
+                <div class="glow" style="background:#1e7e34;"></div>
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="metric-icon" style="background:#e6f4ea;color:#1e7e34;">
+                        <i class="bi bi-calendar-check-fill"></i>
+                    </div>
+                    <span class="metric-badge" style="background:#e6f4ea;color:#1e7e34;">Today</span>
+                </div>
+                <div class="metric-label mb-1">Appointments Today</div>
+                <div class="metric-value">{{ today_appointments }}</div>
+            </div>
+        </div>
+
+        <!-- No-Show Rate -->
+        <div class="col-6 col-xl-3">
+            <div class="metric-card">
+                <div class="glow" style="background:#b91c1c;"></div>
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="metric-icon" style="background:#fde8e8;color:#b91c1c;">
+                        <i class="bi bi-person-x-fill"></i>
+                    </div>
+                    <span class="metric-badge" style="background:#fde8e8;color:#b91c1c;">↓ 2.4%</span>
+                </div>
+                <div class="metric-label mb-1">No-Show Rate</div>
+                <div class="metric-value">{{ noshow_rate }}%</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Section 2: Appointments by Status + Revenue + Top Doctors -->
+    <div class="row g-4 mb-4">
+
+        <!-- Appointments by Status -->
+        <div class="col-12 col-xl-5">
+            <div class="chart-card h-100">
+                <div class="chart-title mb-1">Appointments by Status</div>
+                <div class="chart-sub mb-4">Distribution across all appointment states</div>
+                <div class="d-flex flex-column gap-3">
+                    {% for status, count in appointments_by_status.items %}
+                    <div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;">
+                                {{ status|lower|capfirst }}
+                            </span>
+                            <span style="font-size:.8rem;font-weight:800;color:var(--brand);">{{ count }}</span>
+                        </div>
+                        <div class="bar-track">
+                            <div class="bar-fill"
+                                 style="width:{% if today_appointments > 0 %}{% widthratio count today_appointments 100 %}{% else %}0{% endif %}%;
+                                        background:{% if status == 'COMPLETED'  %}#006877
+                                                   {% elif status == 'CONFIRMED'  %}#003f87
+                                                   {% elif status == 'REQUESTED'  %}#f59e0b
+                                                   {% elif status == 'CHECKED_IN' %}#1e7e34
+                                                   {% elif status == 'CANCELLED'  %}#b91c1c
+                                                   {% elif status == 'NO_SHOW'    %}#7c3aed
+                                                   {% else %}#94a3b8{% endif %};">
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted small">No appointment data available.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Revenue Cards -->
+        <div class="col-12 col-xl-3">
+            <div class="d-flex flex-column gap-4 h-100">
+
+                <!-- Monthly Revenue -->
+                <div class="chart-card flex-grow-1">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <div class="metric-icon" style="background:#e6f4ea;color:#1e7e34;width:36px;height:36px;">
+                            <i class="bi bi-calendar-month-fill"></i>
+                        </div>
+                        <div>
+                            <div class="metric-label" style="margin-bottom:0;">Monthly Revenue</div>
+                            <div style="font-size:.68rem;color:var(--muted);">This month</div>
+                        </div>
+                    </div>
+                    <div style="font-size:2rem;font-weight:900;color:#1e7e34;letter-spacing:-.02em;">
+                        {{ monthly_revenue_fmt }}
+                    </div>
+                    <div style="font-size:.72rem;color:var(--muted);margin-top:.25rem;">
+                        From completed appointments
+                    </div>
+                </div>
+
+                <!-- Total Revenue -->
+                <div class="chart-card flex-grow-1">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <div class="metric-icon" style="background:#e0f7fa;color:#006877;width:36px;height:36px;">
+                            <i class="bi bi-graph-up-arrow"></i>
+                        </div>
+                        <div>
+                            <div class="metric-label" style="margin-bottom:0;">Total Revenue</div>
+                            <div style="font-size:.68rem;color:var(--muted);">{{ total_completed }} completed</div>
+                        </div>
+                    </div>
+                    <div style="font-size:2rem;font-weight:900;color:#006877;letter-spacing:-.02em;">
+                        {{ total_revenue_fmt }}
+                    </div>
+                    <div style="font-size:.72rem;color:var(--muted);margin-top:.25rem;">
+                        All-time completed visits
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Top Doctors -->
+        <div class="col-12 col-xl-4">
+            <div class="chart-card h-100">
+                <div class="chart-title mb-1">Top Doctors</div>
+                <div class="chart-sub mb-4">Most appointments — last 30 days</div>
+                {% for doc in top_doctors %}
+                <div class="top-doctor-row">
+                    <div class="doctor-avatar">
+                        {{ doc.doctor__user__first_name|first|upper }}{{ doc.doctor__user__last_name|first|upper }}
+                    </div>
+                    <div class="flex-grow-1">
+                        <div style="font-size:.85rem;font-weight:700;">
+                            Dr. {{ doc.doctor__user__first_name }} {{ doc.doctor__user__last_name }}
+                        </div>
+                        <div style="font-size:.72rem;color:var(--muted);">{{ doc.total }} appointments</div>
+                    </div>
+                    <span class="metric-badge" style="background:#e0eaff;color:#003f87;">#{{ forloop.counter }}</span>
+                </div>
+                {% empty %}
+                <p class="text-muted small">No data available.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Section 3: No-Show per Doctor + Audit Log -->
+    <div class="row g-4">
+
+        <!-- No-Show per Doctor -->
+        <div class="col-12 col-xl-5">
+            <div class="chart-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <div class="chart-title">No-Show Rate by Doctor</div>
+                        <div class="chart-sub">Last 30 days</div>
+                    </div>
+                    <a href="{% url 'dashboard:export-noshow' %}" class="export-btn">
+                        <i class="bi bi-download"></i> CSV
+                    </a>
+                </div>
+                <div class="d-flex flex-column gap-3">
+                    {% for doc in noshow_per_doctor %}
+                    <div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span style="font-size:.8rem;font-weight:700;">Dr. {{ doc.doctor_name }}</span>
+                            <span style="font-size:.8rem;font-weight:800;
+                                         color:{% if doc.rate > 15 %}#b91c1c
+                                               {% elif doc.rate > 8 %}#f59e0b
+                                               {% else %}#1e7e34{% endif %};">
+                                {{ doc.rate }}%
+                            </span>
+                        </div>
+                        <div class="bar-track">
+                            <div class="bar-fill"
+                                 style="width:{{ doc.rate }}%;
+                                        background:{% if doc.rate > 15 %}#b91c1c
+                                                   {% elif doc.rate > 8 %}#f59e0b
+                                                   {% else %}#1e7e34{% endif %};">
+                            </div>
+                        </div>
+                        <div style="font-size:.7rem;color:var(--muted);">{{ doc.noshows }} / {{ doc.total }} appointments</div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted small">No data available.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Audit Log -->
+        <div class="col-12 col-xl-7">
+            <div class="chart-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <div class="chart-title">Recent Activity</div>
+                        <div class="chart-sub">Last 8 system actions</div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'dashboard:reports' %}?tab=audit" class="export-btn">
+                            <i class="bi bi-list-ul"></i> View All
+                        </a>
+                    </div>
+                </div>
+                <div class="d-flex flex-column">
+                    {% for log in recent_audit_logs %}
+                    <div class="audit-row d-flex align-items-center gap-3">
+                        <span class="audit-action action-{{ log.action }}">{{ log.action }}</span>
+                        <div class="flex-grow-1">
+                            <div style="font-size:.82rem;font-weight:700;">
+                                {{ log.target_model }}{% if log.target_id %} #{{ log.target_id }}{% endif %}
+                            </div>
+                            {% if log.description %}
+                            <div style="font-size:.73rem;color:var(--muted);">{{ log.description }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="text-end flex-shrink-0">
+                            <div style="font-size:.72rem;font-weight:700;color:var(--ink);">
+                                {% if log.user %}{{ log.user.first_name }} {{ log.user.last_name }}{% else %}System{% endif %}
+                            </div>
+                            <div style="font-size:.68rem;color:var(--muted);">{{ log.timestamp|timesince }} ago</div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted small">No activity recorded yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div><!-- end #overview -->
+
+
+<!-- ============================================================ -->
+<!-- TAB 2: ANALYTICS -->
+<!-- ============================================================ -->
+<div class="tab-pane fade {% if active_tab == 'analytics' %}show active{% endif %}" id="analytics" role="tabpanel">
+
+    <!-- KPI Strip -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-xl-3">
+            <div class="analytics-stat">
+                <div class="analytics-stat-icon" style="background:#e0eaff;color:#003f87;"><i class="bi bi-calendar2-check-fill"></i></div>
+                <div>
+                    <div class="analytics-stat-label">Total (30 days)</div>
+                    <div class="analytics-stat-value">{{ analytics_total_30d }}</div>
+                    <div style="font-size:.68rem;color:var(--muted);">appointments</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-xl-3">
+            <div class="analytics-stat">
+                <div class="analytics-stat-icon" style="background:#e6f4ea;color:#1e7e34;"><i class="bi bi-graph-up"></i></div>
+                <div>
+                    <div class="analytics-stat-label">Avg Daily</div>
+                    <div class="analytics-stat-value">{{ analytics_avg_daily }}</div>
+                    <div style="font-size:.68rem;color:var(--muted);">per day (30d)</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-xl-3">
+            <div class="analytics-stat">
+                <div class="analytics-stat-icon" style="background:#fff3cd;color:#856404;"><i class="bi bi-currency-dollar"></i></div>
+                <div>
+                    <div class="analytics-stat-label">Total Revenue</div>
+                    <div class="analytics-stat-value" style="color:#856404;">{{ analytics_revenue_30d }}</div>
+                    <div style="font-size:.68rem;color:var(--muted);">last 30 days</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-xl-3">
+            <div class="analytics-stat">
+                <div class="analytics-stat-icon" style="background:#fde8e8;color:#b91c1c;"><i class="bi bi-person-x-fill"></i></div>
+                <div>
+                    <div class="analytics-stat-label">No-Show Rate</div>
+                    <div class="analytics-stat-value">{{ noshow_summary.rate }}%</div>
+                    <div style="font-size:.68rem;color:var(--muted);">{{ noshow_summary.noshows }} of {{ noshow_summary.total }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Row 1: Appointment Volume — full width with year/month dropdowns + quick pills -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="chart-card">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <div>
+                        <div class="chart-title">Appointment Volume</div>
+                        <div class="chart-sub" id="volSubtitle">Daily caseload over the last 30 days</div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <select id="volYear" class="chart-select">
+                            <option value="">All Years</option>
+                            {% for yr in available_years %}
+                            <option value="{{ yr }}">{{ yr }}</option>
+                            {% endfor %}
+                        </select>
+                        <select id="volMonth" class="chart-select">
+                            <option value="">All Months</option>
+                            <option value="1">January</option>
+                            <option value="2">February</option>
+                            <option value="3">March</option>
+                            <option value="4">April</option>
+                            <option value="5">May</option>
+                            <option value="6">June</option>
+                            <option value="7">July</option>
+                            <option value="8">August</option>
+                            <option value="9">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+                        </select>
+                        <div class="chart-toggle">
+                            <button data-vol-period="7d"  data-vol-label="last 7 days">7D</button>
+                            <button data-vol-period="30d" data-vol-label="last 30 days" class="active">30D</button>
+                            <button data-vol-period="90d" data-vol-label="last 90 days">90D</button>
+                        </div>
+                    </div>
+                </div>
+                <canvas id="volumeChart" height="65"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Row 2: Peak Hours + No-Show Overview -->
+    <div class="row g-4 mb-4">
+        <div class="col-12 col-xl-6">
+            <div class="chart-card h-100">
+                <div class="chart-title mb-1">Peak Hours</div>
+                <div class="chart-sub mb-3">Appointments by hour of day (last 30 days)</div>
+                <canvas id="peakChart" height="130"></canvas>
+            </div>
+        </div>
+        <div class="col-12 col-xl-6">
+            <div class="chart-card h-100">
+                <div class="chart-title mb-1">No-Show Overview</div>
+                <div class="chart-sub mb-3">Last 30 days &middot; threshold: &gt;15% critical &middot; &gt;8% warning</div>
+                <div class="d-flex align-items-center justify-content-center gap-5 py-3">
+                    <div class="noshow-circle" style="--pct:{{ noshow_summary.rate }};">
+                        <div class="noshow-circle-inner">
+                            <span style="font-size:1.5rem;font-weight:900;color:{% if noshow_summary.rate > 15 %}#b91c1c{% elif noshow_summary.rate > 8 %}#f59e0b{% else %}#1e7e34{% endif %};">{{ noshow_summary.rate }}%</span>
+                            <span style="font-size:.6rem;color:var(--muted);font-weight:700;">RATE</span>
+                        </div>
+                    </div>
+                    <div class="d-flex flex-column gap-3">
+                        <div>
+                            <div class="analytics-stat-label">Total Seen</div>
+                            <div style="font-size:1.5rem;font-weight:900;color:var(--ink);">{{ noshow_summary.total }}</div>
+                        </div>
+                        <div>
+                            <div class="analytics-stat-label">Completed</div>
+                            <div style="font-size:1.5rem;font-weight:900;color:#1e7e34;">{{ analytics_completed_30d }}</div>
+                        </div>
+                        <div>
+                            <div class="analytics-stat-label">No-Shows</div>
+                            <div style="font-size:1.5rem;font-weight:900;color:#b91c1c;">{{ noshow_summary.noshows }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Row 3: Revenue Trend — full width with year dropdown + quick pills -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="chart-card">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <div>
+                        <div class="chart-title">Financial Revenue</div>
+                        <div class="chart-sub" id="revSubtitle">Revenue over the last 6 months</div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <select id="revYear" class="chart-select">
+                            <option value="">All Years</option>
+                            {% for yr in available_years %}
+                            <option value="{{ yr }}">{{ yr }}</option>
+                            {% endfor %}
+                        </select>
+                        <select id="revMonth" class="chart-select">
+                            <option value="">All Months</option>
+                            <option value="1">January</option>
+                            <option value="2">February</option>
+                            <option value="3">March</option>
+                            <option value="4">April</option>
+                            <option value="5">May</option>
+                            <option value="6">June</option>
+                            <option value="7">July</option>
+                            <option value="8">August</option>
+                            <option value="9">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+                        </select>
+                        <div class="chart-toggle">
+                            <button data-rev-period="7d"  data-rev-label="last 7 days">7D</button>
+                            <button data-rev-period="30d" data-rev-label="last 30 days" class="active">30D</button>
+                            <button data-rev-period="90d" data-rev-label="last 90 days">90D</button>
+                        </div>
+                    </div>
+                </div>
+                <canvas id="revenueChart" height="65"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Row 4: No-Show per Doctor — full width -->
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="chart-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <div class="chart-title">No-Show Rate per Doctor</div>
+                        <div class="chart-sub">Red &gt;15% &middot; Yellow &gt;8% &middot; Green &le;8% (last 30 days)</div>
+                    </div>
+                    <a href="{% url 'dashboard:export-noshow' %}" class="export-btn">
+                        <i class="bi bi-download"></i> CSV
+                    </a>
+                </div>
+                <canvas id="doctorNoshowChart" style="max-height:320px;"></canvas>
+            </div>
+        </div>
+    </div>
+
+</div><!-- end #analytics -->
+
+</div><!-- end tab-content -->
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // ---- Pre-loaded datasets ----
+    const volDatasets    = { '7d': {{ vol_7d_json|safe }}, '30d': {{ appointments_last_30_json|safe }}, '90d': {{ vol_90d_json|safe }} };
+    const revDatasets    = { '7d': {{ rev_7d_json|safe }}, '30d': {{ rev_30d_json|safe }}, '90d': {{ rev_90d_json|safe }} };
+    const allDatesData   = {{ all_dates_json|safe }};
+    const allRevenueData = {{ all_revenue_dates_json|safe }};
+    const peakData       = {{ peak_hours_json|safe }};
+    const noshowDoctorData = {{ noshow_per_doctor_json|safe }};
+    const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+    // ---- Formatters ----
+    function fmtDate(d)  { return new Date(d.date  + 'T00:00:00').toLocaleDateString('en-US', { month:'short', day:'numeric' }); }
+    function fmtMonth(d) { return new Date(d.month + 'T00:00:00').toLocaleDateString('en-US', { month:'short', year:'numeric' }); }
+    function fmtHour(h)  { return h===0?'12 AM':h<12?h+' AM':h===12?'12 PM':(h-12)+' PM'; }
+
+    // ---- Volume chart ----
+    let volChart;
+    function buildVolumeChart(data, subtitle) {
+        if (volChart) volChart.destroy();
+        document.getElementById('volSubtitle').textContent = subtitle;
+        volChart = new Chart(document.getElementById('volumeChart'), {
+            type: 'line',
+            data: {
+                labels: data.map(d => fmtDate(d)),
+                datasets: [{ label: 'Appointments', data: data.map(d => d.count),
+                    borderColor: '#003f87', backgroundColor: 'rgba(0,63,135,0.08)',
+                    fill: true, tension: 0.35,
+                    pointRadius: data.length > 45 ? 0 : 3, pointBackgroundColor: '#003f87' }]
+            },
+            options: { responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
+        });
+    }
+
+    function filterAndBuildVolume() {
+        const year  = document.getElementById('volYear').value;
+        const month = document.getElementById('volMonth').value;
+        document.querySelectorAll('[data-vol-period]').forEach(b => b.classList.remove('active'));
+        if (!year) {
+            buildVolumeChart(volDatasets['30d'], 'Daily caseload over the last 30 days');
+            document.querySelector('[data-vol-period="30d"]').classList.add('active');
+            return;
+        }
+        const filtered = allDatesData.filter(d => {
+            const y = d.date.substring(0, 4);
+            const m = parseInt(d.date.substring(5, 7));
+            if (y !== year) return false;
+            if (month && parseInt(month) !== m) return false;
+            return true;
+        });
+        const label = month ? MONTHS[parseInt(month)-1] + ' ' + year : year;
+        buildVolumeChart(filtered, 'Daily caseload — ' + label);
+    }
+
+    buildVolumeChart(volDatasets['30d'], 'Daily caseload over the last 30 days');
+
+    document.getElementById('volYear').addEventListener('change', filterAndBuildVolume);
+    document.getElementById('volMonth').addEventListener('change', filterAndBuildVolume);
+
+    document.querySelectorAll('[data-vol-period]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.getElementById('volYear').value  = '';
+            document.getElementById('volMonth').value = '';
+            document.querySelectorAll('[data-vol-period]').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            buildVolumeChart(volDatasets[this.dataset.volPeriod], 'Daily caseload over the ' + this.dataset.volLabel);
+        });
+    });
+
+    // ---- Peak Hours ----
+    const peakSorted = [...peakData].sort((a,b) => a.hour - b.hour);
+    new Chart(document.getElementById('peakChart'), {
+        type: 'bar',
+        data: {
+            labels: peakSorted.map(d => fmtHour(d.hour)),
+            datasets: [{ label:'Appointments', data: peakSorted.map(d => d.count),
+                backgroundColor: peakSorted.map((d,i) => i===0?'#003f87':'rgba(0,63,135,0.45)'), borderRadius:5 }]
+        },
+        options: { responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
+    });
+
+    // Custom currency formatter for K/M
+    function formatCurrency(val) {
+        if (val >= 1000000) return '$' + (val / 1000000).toFixed(2) + 'm';
+        if (val >= 1000) return '$' + (val / 1000).toFixed(1) + 'k';
+        return '$' + val;
+    }
+
+    // ---- Revenue chart ----
+    let revChart;
+    function buildRevenueChart(data, subtitle) {
+        if (revChart) revChart.destroy();
+        document.getElementById('revSubtitle').textContent = subtitle;
+        revChart = new Chart(document.getElementById('revenueChart'), {
+            type: 'line',
+            data: {
+                labels: data.map(d => fmtDate(d)),
+                datasets: [{ 
+                    label:'Revenue', 
+                    data: data.map(d => (d.revenue !== undefined ? d.revenue : d.count * 150.00)),
+                    borderColor: '#006877',
+                    backgroundColor: 'rgba(0,104,119,0.08)',
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#006877',
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: { 
+                responsive:true, 
+                plugins: {
+                    legend:{display:false},
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return formatCurrency(context.raw);
+                            }
+                        }
+                    }
+                }, 
+                scales: {
+                    y: {
+                        beginAtZero:true,
+                        ticks: {
+                            callback: function(value) {
+                                return formatCurrency(value);
+                            }
+                        }
+                    }
+                } 
+            }
+        });
+    }
+
+    function filterAndBuildRevenue() {
+        const year = document.getElementById('revYear').value;
+        const month = document.getElementById('revMonth').value;
+        document.querySelectorAll('[data-rev-period]').forEach(b => b.classList.remove('active'));
+        
+        if (!year && !month) {
+            buildRevenueChart(revDatasets['30d'], 'Daily revenue over the last 30 days');
+            document.querySelector('[data-rev-period="30d"]').classList.add('active');
+            return;
+        }
+
+        let filtered = allRevenueData; // using daily data
+        let subtitle = 'Daily revenue';
+        
+        if (year) {
+            filtered = filtered.filter(d => d.date.substring(0, 4) === year);
+            subtitle += ' in ' + year;
+        }
+        if (month) {
+            const mStr = month.padStart(2, '0');
+            filtered = filtered.filter(d => d.date.substring(5, 7) === mStr);
+            subtitle += (year ? ' ' : ' for ') + MONTHS[parseInt(month)-1];
+        }
+
+        buildRevenueChart(filtered, subtitle);
+    }
+
+    buildRevenueChart(revDatasets['30d'], 'Daily revenue over the last 30 days');
+
+    document.getElementById('revYear').addEventListener('change', filterAndBuildRevenue);
+    document.getElementById('revMonth').addEventListener('change', filterAndBuildRevenue);
+
+    document.querySelectorAll('[data-rev-period]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.getElementById('revYear').value = '';
+            document.getElementById('revMonth').value = '';
+            document.querySelectorAll('[data-rev-period]').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            buildRevenueChart(revDatasets[this.dataset.revPeriod], 'Daily revenue over the ' + this.dataset.revLabel);
+        });
+    });
+
+    // ---- No-Show per Doctor ----
+    new Chart(document.getElementById('doctorNoshowChart'), {
+        type: 'bar',
+        data: {
+            labels: noshowDoctorData.map(d => 'Dr. ' + d.doctor_name),
+            datasets: [{ label:'No-Show Rate (%)', data: noshowDoctorData.map(d => d.rate),
+                backgroundColor: noshowDoctorData.map(d => d.rate>15?'#b91c1c':d.rate>8?'#f59e0b':'#1e7e34'),
+                borderRadius:4 }]
+        },
+        options: { indexAxis:'y', responsive:true, maintainAspectRatio:false,
+            plugins:{legend:{display:false}}, scales:{x:{max:100,beginAtZero:true}} }
+    });
+    // ---- Tab persistence via ?tab= query param ----
+    document.querySelectorAll('#dashTabs button[data-bs-toggle="tab"]').forEach(btn => {
+        btn.addEventListener('shown.bs.tab', function(e) {
+            const target = e.target.getAttribute('data-bs-target');
+            const tabName = target === '#analytics' ? 'analytics' : 'overview';
+            const url = new URL(window.location.href);
+            url.searchParams.set('tab', tabName);
+            history.replaceState(null, '', url.toString());
+            // Resize charts when analytics tab becomes visible
+            if (target === '#analytics') {
+                setTimeout(() => {
+                    if (volChart) volChart.resize();
+                    if (revChart) revChart.resize();
+                }, 50);
+            }
+        });
+    });
+</script>
+{% endblock %}

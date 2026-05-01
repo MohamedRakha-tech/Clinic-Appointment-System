@@ -9,98 +9,180 @@
     .monitor-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: .8rem;
+        gap: 1.25rem;
     }
 
+    /* Premium Dashboard Metrics */
     .metric-card {
-        background: #fff;
-        border: 1px solid #dde8f4;
-        border-radius: .9rem;
-        box-shadow: 0 8px 22px rgba(15, 55, 110, 0.06);
-        padding: .9rem;
+        background: #ffffff;
+        border: 1px solid #e2edf8;
+        border-radius: 1.25rem;
+        box-shadow: 0 8px 24px rgba(15, 55, 110, 0.04), 0 2px 6px rgba(15, 55, 110, 0.02);
+        padding: 1.25rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .metric-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(90deg, #0a6f8b 0%, #0d4d99 100%);
+        opacity: 0.8;
+    }
+
+    .metric-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 32px rgba(15, 55, 110, 0.08), 0 4px 10px rgba(15, 55, 110, 0.04);
     }
 
     .metric-label {
-        font-size: .72rem;
+        font-size: .75rem;
         text-transform: uppercase;
         letter-spacing: .08em;
-        color: #677b8f;
-        font-weight: 700;
-        margin-bottom: .25rem;
+        color: #606f80;
+        font-weight: 800;
+        margin-bottom: .35rem;
     }
 
     .metric-value {
-        font-size: 1.45rem;
+        font-size: 1.75rem;
         font-weight: 800;
-        color: #16293a;
+        color: #121c24;
         line-height: 1.1;
+        letter-spacing: -0.02em;
+        margin-bottom: 0.25rem;
+    }
+    
+    .metric-value.live {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .status-dot {
+        width: 10px;
+        height: 10px;
+        background-color: #10b981;
+        border-radius: 50%;
+        display: inline-block;
+        box-shadow: 0 0 0 rgba(16, 185, 129, 0.4);
+        animation: pulse-green 2s infinite;
+    }
+    
+    @keyframes pulse-green {
+        0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
     }
 
     .doctor-columns {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-        gap: 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+        gap: 1.5rem;
     }
 
+    /* Premium Doctor Card */
     .doctor-card {
-        background: #fff;
+        background: #ffffff;
         border: 1px solid #dce9f6;
-        border-radius: 1rem;
-        box-shadow: 0 10px 24px rgba(15, 55, 110, 0.06);
+        border-radius: 1.25rem;
+        box-shadow: 0 10px 30px rgba(15, 55, 110, 0.05);
         overflow: hidden;
+        transition: box-shadow 0.3s ease;
+    }
+    
+    .doctor-card:hover {
+        box-shadow: 0 15px 40px rgba(15, 55, 110, 0.08);
     }
 
     .doctor-head {
-        background: linear-gradient(130deg, #f6fbff 0%, #eef6ff 100%);
+        background: linear-gradient(135deg, rgba(246, 251, 255, 0.9) 0%, rgba(238, 246, 255, 0.9) 100%);
+        backdrop-filter: blur(8px);
         border-bottom: 1px solid #dbe8f4;
-        padding: .95rem 1rem;
+        padding: 1.25rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        gap: .8rem;
+        gap: 1rem;
     }
 
     .doctor-name {
         margin: 0;
-        font-size: 1rem;
+        font-size: 1.15rem;
         font-weight: 800;
-        color: #1a3040;
+        color: #152836;
+        letter-spacing: -0.01em;
     }
 
     .queue-badge {
-        background: #e7f3ff;
-        color: #0b4ea2;
+        background: linear-gradient(135deg, #e7f3ff 0%, #cce3ff 100%);
+        color: #094085;
+        border: 1px solid #b3d4ff;
         border-radius: 999px;
-        padding: .25rem .6rem;
+        padding: .35rem .75rem;
         font-size: .75rem;
-        font-weight: 700;
+        font-weight: 800;
         white-space: nowrap;
+        box-shadow: 0 2px 8px rgba(9, 64, 133, 0.1);
     }
 
     .queue-list {
-        padding: .8rem;
+        padding: 1rem;
         display: grid;
-        gap: .55rem;
+        gap: .75rem;
     }
 
     .queue-item {
-        border: 1px solid #dfebf7;
-        background: #f9fcff;
-        border-radius: .8rem;
-        padding: .65rem .75rem;
+        border: 1px solid #e2edf8;
+        background: #fbfdff;
+        border-radius: 1rem;
+        padding: 1rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        gap: .6rem;
+        gap: .75rem;
+        transition: all 0.2s ease;
+    }
+    
+    .queue-item:hover {
+        transform: translateX(4px);
+        background: #ffffff;
+        box-shadow: 0 4px 12px rgba(15, 55, 110, 0.05);
+        border-color: #cbdced;
     }
 
     .q-order {
-        background: #0b4ea2;
+        background: linear-gradient(135deg, #0d4d99 0%, #0a6f8b 100%);
         color: #fff;
         border-radius: 999px;
+        font-weight: 800;
+        font-size: .85rem;
+        padding: .3rem .75rem;
+        box-shadow: 0 2px 6px rgba(13, 77, 153, 0.2);
+    }
+    
+    .btn-checkin-sm {
+        background: linear-gradient(135deg, #0d4d99 0%, #0a6f8b 100%);
+        color: white;
+        border: none;
+        border-radius: 0.6rem;
+        padding: 0.4rem 0.8rem;
         font-weight: 700;
-        font-size: .75rem;
-        padding: .2rem .5rem;
+        font-size: 0.8rem;
+        transition: all 0.2s;
+        box-shadow: 0 2px 6px rgba(13, 77, 153, 0.2);
+        text-decoration: none;
+    }
+    
+    .btn-checkin-sm:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(13, 77, 153, 0.3);
+        color: white;
     }
 
     @media (max-width: 991px) {
@@ -113,6 +195,21 @@
 
 {% block content %}
 <div class="d-grid gap-3">
+    <section class="surface-card p-3">
+        <form method="get" class="d-flex flex-wrap align-items-center gap-2">
+            <label class="small fw-semibold text-muted" for="queue-date">Queue date</label>
+            <input
+                type="date"
+                id="queue-date"
+                name="date"
+                class="form-control form-control-sm w-auto"
+                value="{{ selected_date|date:'Y-m-d' }}"
+            />
+            <button class="btn btn-sm btn-outline-primary" type="submit">Apply</button>
+            <a class="btn btn-sm btn-outline-secondary" href="{% url 'queueing:reception_queue' %}">Today</a>
+        </form>
+    </section>
+
     <section class="monitor-grid">
         <div class="metric-card">
             <div class="metric-label">Doctor Streams</div>
@@ -121,13 +218,13 @@
         </div>
         <div class="metric-card">
             <div class="metric-label">Monitor Status</div>
-            <div class="metric-value">Live</div>
+            <div class="metric-value live"><span class="status-dot"></span>Live</div>
             <div class="small text-muted">Updates based on checked-in patients</div>
         </div>
         <div class="metric-card">
             <div class="metric-label">Scope</div>
-            <div class="metric-value">Today</div>
-            <div class="small text-muted">Daily reception monitoring board</div>
+            <div class="metric-value">{{ selected_date|date:"d M Y" }}</div>
+            <div class="small text-muted">Queue board for selected day</div>
         </div>
     </section>
 
@@ -135,7 +232,13 @@
         <div class="doctor-head">
             <div>
                 <h4 class="doctor-name">Pending Check-Ins</h4>
-                <small class="text-muted">Confirmed appointments waiting at reception</small>
+                <small class="text-muted">
+                    {% if read_only %}
+                    Read-only view for selected date
+                    {% else %}
+                    Confirmed appointments waiting at reception
+                    {% endif %}
+                </small>
             </div>
             <span class="queue-badge">{{ pending_checkins|length }} waiting</span>
         </div>
@@ -147,10 +250,18 @@
                     <div class="fw-semibold">{{ appointment.patient.user.first_name|default:appointment.patient.user.username }} {{ appointment.patient.user.last_name }}</div>
                     <small class="text-muted">Dr. {{ appointment.doctor.user.first_name|default:appointment.doctor.user.username }} {{ appointment.doctor.user.last_name }} | {{ appointment.scheduled_start|time:"H:i" }}</small>
                 </div>
-                <a href="{% url 'queueing:checkin' appointment.id %}" class="btn btn-sm btn-primary">Check In</a>
+                {% if not read_only %}
+                <a href="{% url 'queueing:checkin' appointment.id %}" class="btn-checkin-sm">Check In</a>
+                {% else %}
+                <span class="text-muted small">Read-only</span>
+                {% endif %}
             </div>
             {% empty %}
+            {% if read_only %}
+            <p class="text-muted mb-0 px-2">No confirmed appointments on this date.</p>
+            {% else %}
             <p class="text-muted mb-0 px-2">No confirmed appointments waiting to be checked in.</p>
+            {% endif %}
             {% endfor %}
         </div>
     </section>
@@ -184,7 +295,7 @@
         {% endfor %}
     </section>
     {% else %}
-    <div class="alert alert-info mb-0">No patients checked in today.</div>
+    <div class="alert alert-info mb-0">No patients checked in on this date.</div>
     {% endif %}
 </div>
 {% endblock %}

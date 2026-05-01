@@ -1,0 +1,111 @@
+{% extends "scheduling/base_scheduling_fixed.html" %}
+
+{% block title %}Generate Slots{% endblock %}
+
+{% block scheduling_content %}
+<div class="mb-4">
+    <div class="page-kicker">Operational Tools</div>
+    <h1 class="page-title">Bulk Slot Generation</h1>
+    <p class="page-subtitle">Automate appointment availability from existing doctor schedules and exceptions.</p>
+</div>
+
+<div class="row g-4">
+    <div class="col-12 col-xl-7">
+        <form method="post" class="schedule-card schedule-form p-4">
+            {% csrf_token %}
+            <div class="metric-label text-primary mb-4">
+                <i class="bi bi-gear-fill"></i>
+                Generator Parameters
+            </div>
+
+            {% if form_error %}
+                <div class="alert alert-danger">{{ form_error }}</div>
+            {% endif %}
+
+            <div class="row g-4">
+                <div class="col-12 col-md-6">
+                    <label class="form-label" for="doctor">Doctor Optional</label>
+                    <select class="form-select" id="doctor" name="doctor">
+                        <option value="">All Medical Staff</option>
+                        {% for doctor in doctors %}
+                            <option value="{{ doctor.pk }}" {% if selected_doctor == doctor.pk|stringformat:"s" %}selected{% endif %}>{{ doctor }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12 col-md-6">
+                    <label class="form-label" for="days">Days Range Optional</label>
+                    <input class="form-control" id="days" name="days" type="number" min="0" placeholder="30">
+                </div>
+                <div class="col-12 col-md-6">
+                    <label class="form-label" for="start_date">Start Date</label>
+                    <input class="form-control" id="start_date" name="start_date" type="date" value="{{ start_date|date:'Y-m-d' }}">
+                </div>
+                <div class="col-12 col-md-6">
+                    <label class="form-label" for="end_date">End Date</label>
+                    <input class="form-control" id="end_date" name="end_date" type="date" value="{{ end_date|date:'Y-m-d' }}">
+                </div>
+            </div>
+
+            <button class="btn btn-primary mt-4" type="submit">
+                <i class="bi bi-arrow-repeat"></i>
+                Generate Slots
+            </button>
+        </form>
+    </div>
+
+    <div class="col-12 col-xl-5">
+        <div class="schedule-card p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="metric-label">Run Summary</div>
+                {% if summary %}
+                    <span class="status-badge status-active">Completed</span>
+                {% endif %}
+            </div>
+            <div class="row g-3">
+                <div class="col-6">
+                    <div class="metric-card metric-soft p-3">
+                        <div class="metric-label">Doctors Processed</div>
+                        <div class="metric-value">{% if summary %}{{ summary.doctors_processed }}{% else %}{{ total_doctors }}{% endif %}</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="metric-card metric-soft p-3">
+                        <div class="metric-label">Slots Created</div>
+                        <div class="metric-value">{% if summary %}{{ summary.created_count }}{% else %}{{ total_slots }}{% endif %}</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="metric-card metric-soft p-3">
+                        <div class="metric-label">Slots Skipped</div>
+                        <div class="metric-value">{% if summary %}{{ summary.skipped_count }}{% else %}{{ available_slots }}{% endif %}</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="metric-card metric-soft p-3">
+                        <div class="metric-label">Errors</div>
+                        <div class="metric-value">{% if summary %}{{ summary.errors|length }}{% else %}{{ blocked_slots }}{% endif %}</div>
+                    </div>
+                </div>
+            </div>
+            {% if summary.errors %}
+                <div class="alert alert-danger mt-3 mb-0">
+                    {% for error in summary.errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="metric-card metric-cyan p-4">
+            <div class="metric-label text-white-50">Capacity Utilization Trend</div>
+            <div class="d-flex gap-2 align-items-end mt-4" style="height: 80px;">
+                <div class="bg-white bg-opacity-75 rounded flex-fill" style="height: 35%;"></div>
+                <div class="bg-white bg-opacity-75 rounded flex-fill" style="height: 52%;"></div>
+                <div class="bg-white bg-opacity-75 rounded flex-fill" style="height: 68%;"></div>
+                <div class="bg-white bg-opacity-75 rounded flex-fill" style="height: 80%;"></div>
+                <div class="bg-white bg-opacity-75 rounded flex-fill" style="height: 58%;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

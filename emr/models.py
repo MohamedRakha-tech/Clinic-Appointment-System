@@ -48,6 +48,7 @@ class PrescriptionItem(models.Model):
     drug_name = models.CharField(max_length=255)
     dose = models.CharField(max_length=120)
     duration = models.CharField(max_length=120)
+    frequency = models.CharField(max_length=50, default='OD')
     instructions = models.CharField(max_length=255, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -64,6 +65,7 @@ class PrescriptionItem(models.Model):
 class RequestedTest(models.Model):
     consultation_record = models.ForeignKey(ConsultationRecord, on_delete=models.CASCADE, related_name="requested_tests_normalized")
     test_name = models.CharField(max_length=255)
+    urgency = models.CharField(max_length=50, default='routine')
     notes = models.CharField(max_length=255, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

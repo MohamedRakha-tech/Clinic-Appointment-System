@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 from accounts.models import User, DoctorProfile
 # ─────────────────────────────────────────────
 # DOCTOR SCHEDULING
@@ -31,7 +32,7 @@ class DoctorWeeklySchedule(models.Model):
                 name="uniq_doctor_weekly_schedule",
             ),
             models.CheckConstraint(
-                condition=models.Q(day_of_week__lte=6),
+                condition=models.Q(day_of_week__gte=0, day_of_week__lte=6),
                 name="chk_day_of_week",
             ),
             models.CheckConstraint(
@@ -39,6 +40,18 @@ class DoctorWeeklySchedule(models.Model):
                 name="chk_schedule_time",
             ),
         ]
+
+    def clean(self):
+        errors = {}
+
+        if self.day_of_week is not None and not 0 <= self.day_of_week <= 6:
+            errors["day_of_week"] = "Day of week must be between 0 and 6."
+
+        if self.start_time and self.end_time and self.start_time >= self.end_time:
+            errors["start_time"] = "Start time must be before end time."
+
+        if errors:
+            raise ValidationError(errors)
 
     def __str__(self):
         return f"{self.doctor} - {self.get_day_of_week_display()} {self.start_time}-{self.end_time}"
@@ -61,6 +74,21 @@ class DoctorScheduleException(models.Model):
 
     class Meta:
         db_table = "doctor_schedule_exceptions"
+
+    def clean(self):
+        errors = {}
+
+        if self.type == self.ExceptionType.SPECIAL_WORKING_DAY:
+            if not self.start_time:
+                errors["start_time"] = "Start time is required for a special working day."
+            if not self.end_time:
+                errors["end_time"] = "End time is required for a special working day."
+
+        if self.start_time and self.end_time and self.start_time >= self.end_time:
+            errors["start_time"] = "Start time must be before end time."
+
+        if errors:
+            raise ValidationError(errors)
 
     def __str__(self):
         return f"{self.doctor} - {self.type} on {self.exception_date}"
@@ -106,6 +134,10 @@ class AppointmentSlot(models.Model):
         indexes = [
             models.Index(fields=["doctor", "slot_date", "status"], name="idx_slots_doctor_date_status"),
         ]
+
+    def clean(self):
+        if self.start_datetime and self.end_datetime and self.start_datetime >= self.end_datetime:
+            raise ValidationError({"start_datetime": "Start datetime must be before end datetime."})
 
     def __str__(self):
         return f"{self.doctor} | {self.start_datetime} [{self.status}]"
