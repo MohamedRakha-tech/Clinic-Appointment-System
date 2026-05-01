@@ -7,5 +7,6 @@
   "[html]": {
     "editor.defaultFormatter": null,
     "editor.formatOnSave": false
-  }
+  },
+  "djlint.showInstallError": false
 }

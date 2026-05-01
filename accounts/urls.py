@@ -31,4 +31,12 @@ urlpatterns = [
     path("privacy/", views.PrivacyPolicyView.as_view(), name="privacy_policy"),
     path("terms/", views.TermsOfServiceView.as_view(), name="terms_of_service"),
     path("support/", views.SupportView.as_view(), name="support"),
+    path("profile/patient/", views.PatientProfileView.as_view(), name="patient_profile"),
+    path("profile/doctor/", views.DoctorProfileView.as_view(), name="doctor_profile"),
+    path("profile/receptionist/", views.ReceptionistProfileView.as_view(), name="reception_profile"),
+    path("profile/admin/", views.AdminProfileView.as_view(), name="admin_profile"),
+    path("profile/patient/edit/", views.PatientProfileEditView.as_view(), name="patient_profile_edit"),
+    path("profile/doctor/edit/", views.DoctorProfileEditView.as_view(), name="doctor_profile_edit"),
+    path("profile/receptionist/edit/", views.ReceptionistProfileEditView.as_view(), name="reception_profile_edit"),
+    path("profile/admin/edit/", views.AdminProfileEditView.as_view(), name="admin_profile_edit"),
 ]
