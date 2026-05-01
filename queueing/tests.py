@@ -1,18 +1,24 @@
 # Create your tests here.
+from datetime import timedelta
+
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from accounts.factories import DoctorProfileFactory, ReceptionistProfileFactory
 from appointments.factories import AppointmentFactory
 from appointments.models import Appointment
 from notifications.models import Notification
+from scheduling.factories import AppointmentSlotFactory
 from .factories import AppointmentCheckinFactory
 
 
 class QueueingViewsTests(TestCase):
 	def test_reception_monitor_exposes_pending_checkin_action(self):
 		receptionist = ReceptionistProfileFactory()
-		appointment = AppointmentFactory(status=Appointment.Status.CONFIRMED)
+		slot_start = timezone.now().replace(second=0, microsecond=0) + timedelta(minutes=15)
+		slot = AppointmentSlotFactory(start_datetime=slot_start, end_datetime=slot_start + timedelta(minutes=30))
+		appointment = AppointmentFactory(status=Appointment.Status.CONFIRMED, slot=slot)
 
 		self.client.force_login(receptionist.user)
 
@@ -23,7 +29,9 @@ class QueueingViewsTests(TestCase):
 
 	def test_receptionist_can_check_in_confirmed_appointment(self):
 		receptionist = ReceptionistProfileFactory()
-		appointment = AppointmentFactory(status=Appointment.Status.CONFIRMED)
+		slot_start = timezone.now().replace(second=0, microsecond=0) + timedelta(minutes=15)
+		slot = AppointmentSlotFactory(start_datetime=slot_start, end_datetime=slot_start + timedelta(minutes=30))
+		appointment = AppointmentFactory(status=Appointment.Status.CONFIRMED, slot=slot)
 
 		self.client.force_login(receptionist.user)
 
@@ -52,7 +60,9 @@ class QueueingViewsTests(TestCase):
 
 	def test_check_in_rejects_non_confirmed_appointments(self):
 		receptionist = ReceptionistProfileFactory()
-		appointment = AppointmentFactory(status=Appointment.Status.REQUESTED)
+		slot_start = timezone.now().replace(second=0, microsecond=0) + timedelta(minutes=15)
+		slot = AppointmentSlotFactory(start_datetime=slot_start, end_datetime=slot_start + timedelta(minutes=30))
+		appointment = AppointmentFactory(status=Appointment.Status.REQUESTED, slot=slot)
 
 		self.client.force_login(receptionist.user)
 

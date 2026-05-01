@@ -10,7 +10,7 @@ def get_doctor_queue(doctor_id: int, target_date: date):
         .filter(
             appointment__doctor_id=doctor_id,
             appointment__scheduled_start__date=target_date,
-            appointment__status='CHECKED_IN',
+            appointment__status=Appointment.Status.CHECKED_IN,
         )
         .select_related(
             'appointment',

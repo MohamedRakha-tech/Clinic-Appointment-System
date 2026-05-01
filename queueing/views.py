@@ -1,52 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
-from django.utils import timezone
-from django.db import transaction
 from django.core.exceptions import ValidationError
 from datetime import date
 
 from appointments.models import Appointment
-from appointments.services import transition_appointment
 from accounts.mixins import DoctorRequiredMixin, ReceptionistRequiredMixin
 from accounts.models import DoctorProfile
 from .models import AppointmentCheckin
 from .forms import CheckInForm
-
-class QueueService:
-
-    @staticmethod
-    @transaction.atomic
-    def check_in_patient(appointment_id: int, checked_in_by) -> AppointmentCheckin:
-        appointment = Appointment.objects.select_for_update().get(id=appointment_id)
-        today = timezone.localdate()
-
-        if appointment.scheduled_start.date() < today:
-            raise ValidationError("Past appointments cannot be checked in.")
-
-        if appointment.status != Appointment.Status.CONFIRMED:
-            raise ValidationError("Only CONFIRMED appointments can be checked in.")
-
-        if hasattr(appointment, 'checkin'):
-            raise ValidationError("Patient already checked in.")
-
-        position = AppointmentCheckin.objects.filter(
-            appointment__doctor=appointment.doctor,
-            appointment__scheduled_start__date=appointment.scheduled_start.date(),
-        ).count() + 1
-
-        transition_appointment(
-            appointment,
-            Appointment.Status.CHECKED_IN,
-            changed_by=checked_in_by,
-            reason="Patient checked in at reception",
-        )
-
-        return AppointmentCheckin.objects.create(
-            appointment=appointment,
-            checked_in_at=timezone.now(),
-            checked_in_by=checked_in_by,
-            queue_number=position,
-        )
+from .services import QueueService
 
 class CheckInView(ReceptionistRequiredMixin, View):
 

@@ -20,6 +20,7 @@ from appointments.services import (
     reschedule_appointment,
     transition_appointment,
 )
+from queueing.services import QueueService
 
 
 def _is_clinic_staff(user):
@@ -178,14 +179,10 @@ class AppointmentViewSet(viewsets.ModelViewSet):
             return _staff_denied_response()
         appointment = self._get_object()
         try:
-            transition_appointment(
-                appointment,
-                Appointment.Status.CHECKED_IN,
-                changed_by=request.user,
-                reason="Checked in",
-            )
+            QueueService.check_in_patient(appointment.id, request.user)
         except DjangoValidationError as exc:
             return Response({"detail": list(exc.messages)}, status=status.HTTP_400_BAD_REQUEST)
+        appointment.refresh_from_db()
         return Response(AppointmentSerializer(appointment, context={"request": request}).data)
 
     @action(detail=True, methods=["post"])

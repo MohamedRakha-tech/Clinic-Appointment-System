@@ -27,6 +27,7 @@ from appointments.filters import (
 from appointments.forms import AppointmentActionForm, AppointmentBookingForm, AppointmentRescheduleForm
 from appointments.models import Appointment
 from appointments.services import book_appointment, cancel_appointment, reschedule_appointment, transition_appointment
+from queueing.services import QueueService
 from scheduling.models import AppointmentSlot
 
 
@@ -310,12 +311,7 @@ class AppointmentCheckInView(ClinicStaffRequiredMixin, View):
     def post(self, request, pk):
         appointment = get_object_or_404(Appointment.objects.select_related("slot"), pk=pk)
         try:
-            transition_appointment(
-                appointment,
-                Appointment.Status.CHECKED_IN,
-                changed_by=request.user,
-                reason="Patient checked in",
-            )
+            QueueService.check_in_patient(appointment.id, request.user)
         except ValidationError as exc:
             messages.error(request, str(exc))
             return redirect("appointment-detail", pk=pk)
