@@ -28,7 +28,7 @@ def _get_error_home_context(request):
         "admin": reverse("dashboard:admin"),
         "receptionist": reverse("dashboard:receptionist"),
         "doctor": reverse("dashboard:doctor"),
-        "patient": reverse("emr:patient_records"),
+        "patient": reverse("emr:patient_list"),
     }
     return {
         "home_url": role_home.get(role, "/"),
