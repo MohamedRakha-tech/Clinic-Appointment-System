@@ -87,7 +87,6 @@ class AppointmentDetailView(LoginRequiredMixin, AppointmentQuerysetMixin, Detail
         # Status transition permissions (staff only)
         context["can_confirm"] = is_staff_user and status == Appointment.Status.REQUESTED
         context["can_check_in"] = is_staff_user and status == Appointment.Status.CONFIRMED
-        context["can_complete"] = is_staff_user and status == Appointment.Status.CHECKED_IN
         context["can_mark_no_show"] = is_staff_user and status == Appointment.Status.REQUESTED
 
         # Patient can only cancel their own requested appointments
@@ -284,22 +283,6 @@ class AppointmentNoShowView(ClinicStaffRequiredMixin, View):
         return redirect("appointment-detail", pk=pk)
 
 
-class AppointmentCompleteView(ClinicStaffRequiredMixin, View):
-    def post(self, request, pk):
-        appointment = get_object_or_404(Appointment.objects.select_related("slot"), pk=pk)
-        try:
-            transition_appointment(
-                appointment,
-                Appointment.Status.COMPLETED,
-                changed_by=request.user,
-                reason="Completed by clinician",
-            )
-        except ValidationError as exc:
-            messages.error(request, str(exc))
-            return redirect("appointment-detail", pk=pk)
-
-        messages.success(request, "Appointment completed.")
-        return redirect("appointment-detail", pk=pk)
 
 
 class AppointmentDeclineView(ClinicStaffRequiredMixin, View):
@@ -338,22 +321,6 @@ class AppointmentCheckInView(ClinicStaffRequiredMixin, View):
         return redirect("appointment-detail", pk=pk)
 
 
-class AppointmentCompleteView(ClinicStaffRequiredMixin, View):
-    def post(self, request, pk):
-        appointment = get_object_or_404(Appointment.objects.select_related("slot"), pk=pk)
-        try:
-            transition_appointment(
-                appointment,
-                Appointment.Status.COMPLETED,
-                changed_by=request.user,
-                reason="Appointment completed",
-            )
-        except ValidationError as exc:
-            messages.error(request, str(exc))
-            return redirect("appointment-detail", pk=pk)
-
-        messages.success(request, "Appointment completed.")
-        return redirect("appointment-detail", pk=pk)
 
 
 class AppointmentHistoryView(LoginRequiredMixin, AppointmentQuerysetMixin, DetailView):

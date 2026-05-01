@@ -61,13 +61,7 @@
                             <button type="submit" class="btn btn-primary">Check In</button>
                         </form>
                     {% endif %}
-                    {% if can_complete %}
-                        <form method="post" action="{% url 'appointment-complete' pk=appointment.pk %}">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-outline-success">Complete</button>
-                        </form>
-                    {% endif %}
-                    {% if can_mark_no_show %}
+                                        {% if can_mark_no_show %}
                         <form method="post" action="{% url 'appointment-no-show' pk=appointment.pk %}">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-outline-secondary">No Show</button>
