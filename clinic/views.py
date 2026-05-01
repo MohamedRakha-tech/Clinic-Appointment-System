@@ -4,6 +4,10 @@ from django.urls import reverse
 from accounts.utils import get_user_role
 
 
+def home_view(request):
+    return render(request, "home.html")
+
+
 def _get_error_home_context(request):
     role = get_user_role(getattr(request, "user", None))
     request_path = getattr(request, "path", "") or ""
