@@ -154,6 +154,10 @@ def available_slots_for_doctor(doctor, target_date=None):
         today = timezone.localdate()
         queryset = queryset.filter(slot_date__gte=today)
 
+    # Additional filter: exclude slots that have already passed today
+    current_time = timezone.now()
+    queryset = queryset.filter(start_datetime__gt=current_time)
+
     return queryset
 
 
@@ -171,5 +175,9 @@ def available_slots_queryset(doctor_id=None, target_date=None):
         queryset = queryset.filter(slot_date=target_date)
     else:
         queryset = queryset.filter(slot_date__gte=timezone.localdate())
+
+    # Additional filter: exclude slots that have already passed today
+    current_time = timezone.now()
+    queryset = queryset.filter(start_datetime__gt=current_time)
 
     return queryset

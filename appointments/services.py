@@ -71,6 +71,11 @@ def _doctor_has_buffer_conflict(doctor, start, end, exclude_appointment_id=None)
 def _validate_booking_window(patient: PatientProfile, doctor, start, end, exclude_appointment_id=None):
     errors = []
 
+    # Validate that appointment is not in the past
+    current_time = timezone.now()
+    if start < current_time:
+        errors.append("Cannot book appointments in the past. Please select a future date and time.")
+
     if _patient_has_overlapping_appointment(patient, start, end, exclude_appointment_id=exclude_appointment_id):
         errors.append("You already have another appointment that overlaps with this time.")
 
@@ -236,6 +241,11 @@ def reschedule_appointment(appointment_or_id, new_slot_id: int, changed_by=None,
 
     if new_slot.status != AppointmentSlot.Status.AVAILABLE:
         raise ValidationError("Selected slot is no longer available.")
+
+    # Validate that rescheduled appointment is not in the past
+    current_time = timezone.now()
+    if new_slot.start_datetime < current_time:
+        raise ValidationError("Cannot reschedule to a past date. Please select a future date and time.")
 
     _validate_booking_window(
         appointment.patient,

@@ -47,6 +47,7 @@
                         <div class="col-12 col-md-4">
                             <label class="form-label">Date</label>
                             <input id="slot_date" type="date" name="date" value="{{ selected_date|date:'Y-m-d' }}" class="form-control">
+                            <div id="date-error" class="invalid-feedback d-none"></div>
                         </div>
                         <div class="col-12 col-md-4 d-flex align-items-end">
                             <button type="button" id="reload-slots" class="btn btn-primary w-100">Load Slots</button>
@@ -101,6 +102,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const doctorSelect = document.getElementById("doctor_id");
     const doctorHidden = document.getElementById("doctor_hidden");
     const dateInput = document.getElementById("slot_date");
+    const dateError = document.getElementById("date-error");
     const reloadButton = document.getElementById("reload-slots");
     const slotGrid = document.getElementById("slot-grid");
     const slotEmpty = document.getElementById("slot-empty");
@@ -108,6 +110,26 @@ document.addEventListener("DOMContentLoaded", () => {
     const selectedSlotText = document.getElementById("selected-slot-text");
     const slotIdInput = document.getElementById("slot_id");
     const bookButton = document.getElementById("book-button");
+
+    // Validate date is not in the past
+    const validateDate = (dateString) => {
+        if (!dateString) return false;
+        
+        const selectedDate = new Date(dateString);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Set to start of day for comparison
+        
+        if (selectedDate < today) {
+            dateInput.classList.add("is-invalid");
+            dateError.textContent = `Cannot select past date ${dateString}. Please choose today or a future date.`;
+            dateError.classList.remove("d-none");
+            return false;
+        }
+        
+        dateInput.classList.remove("is-invalid");
+        dateError.classList.add("d-none");
+        return true;
+    };
 
     const setSelectedSlot = (slot, card) => {
         slotIdInput.value = slot.id;
@@ -155,6 +177,19 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const loadSlots = async () => {
+        // Validate date before making API call
+        if (!validateDate(dateInput.value)) {
+            // Clear slots and show error
+            slotGrid.innerHTML = "";
+            slotEmpty.classList.remove("d-none");
+            slotEmpty.textContent = "Please select a valid date to load available slots.";
+            slotStatus.textContent = "Date validation failed";
+            slotIdInput.value = "";
+            bookButton.disabled = true;
+            selectedSlotText.textContent = "None selected yet.";
+            return;
+        }
+
         const params = new URLSearchParams({
             doctor: doctorSelect.value,
             slot_date: dateInput.value,
@@ -187,7 +222,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     reloadButton.addEventListener("click", loadSlots);
     doctorSelect.addEventListener("change", loadSlots);
-    dateInput.addEventListener("change", loadSlots);
+    dateInput.addEventListener("change", () => {
+        validateDate(dateInput.value);
+        loadSlots();
+    });
+    
+    // Validate initial date on page load
+    validateDate(dateInput.value);
     loadSlots();
 });
 </script>

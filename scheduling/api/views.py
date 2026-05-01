@@ -1,6 +1,7 @@
 from rest_framework import pagination, permissions, viewsets
 from rest_framework.decorators import action
 from django.utils.dateparse import parse_date
+from django.utils import timezone
 
 from scheduling.api.serializers import AppointmentSlotSerializer
 from scheduling.models import AppointmentSlot
@@ -25,6 +26,9 @@ class AppointmentSlotViewSet(viewsets.ReadOnlyModelViewSet):
         queryset = super().get_queryset()
         if self.action == "available":
             queryset = queryset.filter(status=AppointmentSlot.Status.AVAILABLE)
+            # Additional filter: exclude slots that have already passed today
+            current_time = timezone.now()
+            queryset = queryset.filter(start_datetime__gt=current_time)
             return self._apply_filters(queryset, include_status=False)
         return self._apply_filters(queryset)
 

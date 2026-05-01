@@ -126,8 +126,15 @@ class AppointmentBookView(PatientProfileRequiredMixin, FormView):
         if not selected:
             return timezone.localdate()
         try:
-            return date_type.fromisoformat(selected)
+            parsed_date = date_type.fromisoformat(selected)
+            # Validate that selected date is not in the past
+            today = timezone.localdate()
+            if parsed_date < today:
+                messages.error(self.request, f"Cannot select past date {selected}. Please choose today or a future date.")
+                return today
+            return parsed_date
         except ValueError:
+            messages.error(self.request, f"Invalid date format {selected}. Using today's date.")
             return timezone.localdate()
 
     def get_context_data(self, **kwargs):
@@ -196,8 +203,15 @@ class AppointmentRescheduleView(LoginRequiredMixin, AppointmentQuerysetMixin, Fo
         if not raw_date:
             return timezone.localdate()
         try:
-            return date_type.fromisoformat(raw_date)
+            parsed_date = date_type.fromisoformat(raw_date)
+            # Validate that selected date is not in the past
+            today = timezone.localdate()
+            if parsed_date < today:
+                messages.error(self.request, f"Cannot select past date {raw_date}. Please choose today or a future date.")
+                return today
+            return parsed_date
         except ValueError:
+            messages.error(self.request, f"Invalid date format {raw_date}. Using today's date.")
             return timezone.localdate()
 
     def get_available_slots(self):
