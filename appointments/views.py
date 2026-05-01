@@ -1,5 +1,6 @@
 from datetime import date as date_type
 
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.http import Http404
@@ -29,7 +30,7 @@ from appointments.services import book_appointment, cancel_appointment, reschedu
 from scheduling.models import AppointmentSlot
 
 
-class AppointmentListView(AppointmentQuerysetMixin, ListView):
+class AppointmentListView(LoginRequiredMixin, AppointmentQuerysetMixin, ListView):
     template_name = "appointments/list.html"
     context_object_name = "appointments"
 
@@ -52,7 +53,7 @@ class AppointmentListView(AppointmentQuerysetMixin, ListView):
         return context
 
 
-class AppointmentDetailView(AppointmentQuerysetMixin, DetailView):
+class AppointmentDetailView(LoginRequiredMixin, AppointmentQuerysetMixin, DetailView):
     template_name = "appointments/detail.html"
     context_object_name = "appointment"
 
@@ -155,7 +156,7 @@ class AppointmentBookView(PatientProfileRequiredMixin, FormView):
         return redirect("appointment-detail", pk=appointment.pk)
 
 
-class AppointmentCancelView(AppointmentQuerysetMixin, FormView):
+class AppointmentCancelView(LoginRequiredMixin, AppointmentQuerysetMixin, FormView):
     template_name = "appointments/cancel_confirm.html"
     form_class = AppointmentActionForm
 
@@ -183,7 +184,7 @@ class AppointmentCancelView(AppointmentQuerysetMixin, FormView):
         return redirect("appointment-detail", pk=appointment.pk)
 
 
-class AppointmentRescheduleView(AppointmentQuerysetMixin, FormView):
+class AppointmentRescheduleView(LoginRequiredMixin, AppointmentQuerysetMixin, FormView):
     template_name = "appointments/reschedule.html"
     form_class = AppointmentRescheduleForm
 
@@ -341,7 +342,7 @@ class AppointmentCompleteView(ClinicStaffRequiredMixin, View):
         return redirect("appointment-detail", pk=pk)
 
 
-class AppointmentHistoryView(StaffAppointmentRequiredMixin, DetailView):
+class AppointmentHistoryView(LoginRequiredMixin, AppointmentQuerysetMixin, DetailView):
     template_name = "appointments/history.html"
     context_object_name = "appointment"
 
