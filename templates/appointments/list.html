@@ -60,7 +60,12 @@
                 <tr>
                     <th>Code</th>
                     <th>Date &amp; Time</th>
+                    {% if show_staff_actions or user.doctor_profile %}
+                    <th>Patient</th>
+                    {% endif %}
+                    {% if not user.doctor_profile %}
                     <th>Doctor</th>
+                    {% endif %}
                     <th>Status</th>
                     <th class="text-end">Actions</th>
                 </tr>
@@ -73,10 +78,18 @@
                         <div class="fw-semibold">{{ appointment.scheduled_start|date:"M d, Y" }}</div>
                         <div class="text-muted small">{{ appointment.scheduled_start|time:"h:i A" }} - {{ appointment.scheduled_end|time:"h:i A" }}</div>
                     </td>
+                    {% if show_staff_actions or user.doctor_profile %}
+                    <td>
+                        <div class="fw-semibold">{{ appointment.patient.user.get_full_name|default:appointment.patient.user.username }}</div>
+                        <div class="text-muted small">{{ appointment.patient.phone_number|default:"No phone" }}</div>
+                    </td>
+                    {% endif %}
+                    {% if not user.doctor_profile %}
                     <td>
                         <div class="fw-semibold">Dr. {% firstof appointment.doctor.user.first_name appointment.doctor.user.username %}</div>
                         <div class="text-muted small">{{ appointment.doctor.specialization }}</div>
                     </td>
+                    {% endif %}
                     <td><span class="badge text-bg-primary">{{ appointment.get_status_display }}</span></td>
                     <td class="text-end">
                         <a href="{% url 'appointment-detail' pk=appointment.pk %}" class="btn btn-sm btn-outline-secondary">View</a>
@@ -88,7 +101,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" class="text-center text-muted py-5">No appointments match your current filters.</td>
+                    <td colspan="{% if user.doctor_profile %}5{% elif show_staff_actions %}6{% else %}5{% endif %}" class="text-center text-muted py-5">No appointments match your current filters.</td>
                 </tr>
                 {% endfor %}
             </tbody>
