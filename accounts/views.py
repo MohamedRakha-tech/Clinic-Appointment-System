@@ -2,9 +2,12 @@ from django.contrib import messages
 from django.contrib.auth import logout
 from django.db import transaction
 from django.shortcuts import redirect, render
-from django.views.generic import TemplateView
+from django.urls import reverse_lazy
+from django.views.generic import TemplateView, UpdateView
 
-from accounts.forms import LoginForm, PatientRegisterForm
+from accounts.forms import (AdminProfileForm, DoctorProfileForm, LoginForm,
+                            PatientProfileForm, PatientRegisterForm,
+                            ReceptionistProfileForm)
 from accounts.mixins import AdminRequiredMixin, DoctorRequiredMixin, PatientRequiredMixin, ReceptionistRequiredMixin
 from accounts.services import login_user
 from accounts.utils import get_user_role
@@ -117,6 +120,80 @@ class AdminDashboardView(AdminRequiredMixin, TemplateView):
     template_name = "accounts/admin_dashboard.html"
 
 
+# ─────────────────────────────────────────────
+# PROFILES
+# ─────────────────────────────────────────────
+
+class PatientProfileView(PatientRequiredMixin, TemplateView):
+    template_name = "patients/profile.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['patient'] = getattr(self.request.user, 'patient_profile', None)
+        return context
+
+
+class PatientProfileEditView(PatientRequiredMixin, UpdateView):
+    template_name = "patients/profile_edit.html"
+    form_class = PatientProfileForm
+    success_url = reverse_lazy("accounts:patient_profile")
+
+    def get_object(self, queryset=None):
+        return self.request.user
+
+
+class DoctorProfileView(DoctorRequiredMixin, TemplateView):
+    template_name = "doctors/profile.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['doctor'] = getattr(self.request.user, 'doctor_profile', None)
+        return context
+
+
+class DoctorProfileEditView(DoctorRequiredMixin, UpdateView):
+    template_name = "doctors/profile_edit.html"
+    form_class = DoctorProfileForm
+    success_url = reverse_lazy("accounts:doctor_profile")
+
+    def get_object(self, queryset=None):
+        return self.request.user
+
+
+class ReceptionistProfileView(ReceptionistRequiredMixin, TemplateView):
+    template_name = "receptionists/profile.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['receptionist'] = getattr(self.request.user, 'receptionist_profile', None)
+        return context
+
+
+class ReceptionistProfileEditView(ReceptionistRequiredMixin, UpdateView):
+    template_name = "receptionists/profile_edit.html"
+    form_class = ReceptionistProfileForm
+    success_url = reverse_lazy("accounts:reception_profile")
+
+    def get_object(self, queryset=None):
+        return self.request.user
+
+
+class AdminProfileView(AdminRequiredMixin, TemplateView):
+    template_name = "admins/profile.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['admin_user'] = getattr(self.request.user, 'admin_profile', None)
+        return context
+
+
+class AdminProfileEditView(AdminRequiredMixin, UpdateView):
+    template_name = "admins/profile_edit.html"
+    form_class = AdminProfileForm
+    success_url = reverse_lazy("accounts:admin_profile")
+
+    def get_object(self, queryset=None):
+        return self.request.user
 class PrivacyPolicyView(TemplateView):
     template_name = "accounts/info_page.html"
     page_title = "Privacy Policy"
