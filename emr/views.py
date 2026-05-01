@@ -6,6 +6,7 @@ from django.db import transaction
 from django.core.exceptions import ValidationError
 
 from appointments.models import Appointment
+from appointments.services import transition_appointment
 from accounts.mixins import DoctorRequiredMixin, PatientRequiredMixin, ReceptionistRequiredMixin
 from accounts.models import DoctorProfile
 from accounts.utils import get_user_role
@@ -37,8 +38,12 @@ class EMRService:
             summary_for_patient=data.get('summary_for_patient', ''),
         )
 
-        appointment.status = Appointment.Status.COMPLETED
-        appointment.save(update_fields=['status'])
+        transition_appointment(
+            appointment,
+            Appointment.Status.COMPLETED,
+            changed_by=doctor.user,
+            reason="Consultation completed",
+        )
 
         return consultation
 
@@ -207,6 +212,7 @@ class ConsultationDetailView(LoginRequiredMixin, View):
             'can_manage': can_manage,
             'is_patient_view': bool(patient_profile and consultation.appointment.patient_id == patient_profile.id),
             'show_clinical_notes': role == "doctor",
+            'show_diagnosis': role != "patient",
             'back_url': back_url,
             'back_label': back_label,
         })

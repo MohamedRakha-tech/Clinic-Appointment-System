@@ -5,6 +5,7 @@ from django.urls import reverse
 from accounts.factories import DoctorProfileFactory, PatientProfileFactory
 from appointments.factories import AppointmentFactory
 from appointments.models import Appointment
+from notifications.models import Notification
 from .factories import ConsultationRecordFactory
 
 
@@ -27,14 +28,28 @@ class EMRViewsTests(TestCase):
 		post_response = self.client.post(reverse('emr:create', args=[appointment.id]), {
 			'diagnosis': 'Acute viral upper respiratory infection',
 			'notes': 'Patient has cough and fever with no red flags.',
-			'requested_tests': 'CBC',
 			'summary_for_patient': 'Rest, hydration, and follow-up if symptoms worsen.',
+			'prescriptions-TOTAL_FORMS': '0',
+			'prescriptions-INITIAL_FORMS': '0',
+			'prescriptions-MIN_NUM_FORMS': '0',
+			'prescriptions-MAX_NUM_FORMS': '1000',
+			'tests-TOTAL_FORMS': '0',
+			'tests-INITIAL_FORMS': '0',
+			'tests-MIN_NUM_FORMS': '0',
+			'tests-MAX_NUM_FORMS': '1000',
 		})
 
 		self.assertEqual(post_response.status_code, 302)
 		appointment.refresh_from_db()
-		self.assertEqual(appointment.status, Appointment.Status.CHECKED_IN)
+		self.assertEqual(appointment.status, Appointment.Status.COMPLETED)
 		self.assertTrue(hasattr(appointment, 'consultation_record'))
+		self.assertTrue(
+			Notification.objects.filter(
+				recipient=appointment.patient.user,
+				verb='Consultation completed',
+				target_object_id=str(appointment.id),
+			).exists()
+		)
 
 	def test_patient_can_view_own_consultation_list_and_detail(self):
 		consultation = ConsultationRecordFactory()

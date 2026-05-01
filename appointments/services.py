@@ -12,6 +12,7 @@ from appointments.models import (
     AppointmentRescheduleHistory,
     AppointmentStatusHistory,
 )
+from notifications.models import Notification
 from scheduling.models import AppointmentSlot
 
 
@@ -30,6 +31,27 @@ def _booking_source_for_user(user):
     if hasattr(user, "receptionist_profile"):
         return Appointment.BookingSource.RECEPTIONIST
     return Appointment.BookingSource.ADMIN
+
+
+def _display_name(user):
+    if not user:
+        return "Clinic staff"
+
+    full_name = f"{(user.first_name or '').strip()} {(user.last_name or '').strip()}".strip()
+    return full_name or user.username or "Clinic staff"
+
+
+def _appointment_datetime_label(appointment):
+    return timezone.localtime(appointment.scheduled_start).strftime("%Y-%m-%d %H:%M")
+
+
+def _notify_appointment_event(recipient, verb, description, target):
+    Notification.create_for(
+        recipient=recipient,
+        verb=verb,
+        description=description,
+        target=target,
+    )
 
 
 def _active_appointment_queryset(exclude_appointment_id=None):
@@ -122,6 +144,21 @@ def book_appointment(patient: PatientProfile, slot_id: int, booked_by=None, note
     )
 
     _finalize_appointment_code(appointment)
+
+    start_label = _appointment_datetime_label(appointment)
+    _notify_appointment_event(
+        recipient=appointment.patient.user,
+        verb="Appointment booked",
+        description=f"Your appointment {appointment.appointment_code} is booked for {start_label}.",
+        target=appointment,
+    )
+    _notify_appointment_event(
+        recipient=appointment.doctor.user,
+        verb="New appointment request",
+        description=f"{_display_name(appointment.patient.user)} booked {appointment.appointment_code} for {start_label}.",
+        target=appointment,
+    )
+
     return appointment
 
 
@@ -194,6 +231,49 @@ def transition_appointment(appointment_or_id, new_status: str, changed_by=None, 
         changed_by=changed_by,
         change_reason=reason or None,
     )
+
+    if new_status == Appointment.Status.CONFIRMED:
+        _notify_appointment_event(
+            recipient=appointment.patient.user,
+            verb="Appointment confirmed",
+            description=f"Your appointment {appointment.appointment_code} has been confirmed.",
+            target=appointment,
+        )
+    elif new_status == Appointment.Status.CHECKED_IN:
+        _notify_appointment_event(
+            recipient=appointment.patient.user,
+            verb="Check-in completed",
+            description=f"You are checked in for appointment {appointment.appointment_code}.",
+            target=appointment,
+        )
+        _notify_appointment_event(
+            recipient=appointment.doctor.user,
+            verb="Patient checked in",
+            description=f"{_display_name(appointment.patient.user)} is now checked in for {appointment.appointment_code}.",
+            target=appointment,
+        )
+    elif new_status == Appointment.Status.CANCELLED:
+        _notify_appointment_event(
+            recipient=appointment.patient.user,
+            verb="Appointment cancelled",
+            description=f"Appointment {appointment.appointment_code} was cancelled.",
+            target=appointment,
+        )
+    elif new_status == Appointment.Status.NO_SHOW:
+        _notify_appointment_event(
+            recipient=appointment.patient.user,
+            verb="Appointment marked as no-show",
+            description=f"Appointment {appointment.appointment_code} has been marked as no-show.",
+            target=appointment,
+        )
+    elif new_status == Appointment.Status.COMPLETED:
+        _notify_appointment_event(
+            recipient=appointment.patient.user,
+            verb="Consultation completed",
+            description=f"Your appointment {appointment.appointment_code} is completed. You can review your consultation record.",
+            target=appointment,
+        )
+
     return appointment
 
 
@@ -281,4 +361,15 @@ def reschedule_appointment(appointment_or_id, new_slot_id: int, changed_by=None,
         changed_by=changed_by,
         reason=reason,
     )
+
+    _notify_appointment_event(
+        recipient=appointment.patient.user,
+        verb="Appointment rescheduled",
+        description=(
+            f"Appointment {appointment.appointment_code} moved to "
+            f"{_appointment_datetime_label(appointment)}."
+        ),
+        target=appointment,
+    )
+
     return appointment

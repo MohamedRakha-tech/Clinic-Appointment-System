@@ -5,6 +5,7 @@ from django.urls import reverse
 from accounts.factories import DoctorProfileFactory, ReceptionistProfileFactory
 from appointments.factories import AppointmentFactory
 from appointments.models import Appointment
+from notifications.models import Notification
 from .factories import AppointmentCheckinFactory
 
 
@@ -34,6 +35,20 @@ class QueueingViewsTests(TestCase):
 		appointment.refresh_from_db()
 		self.assertEqual(appointment.status, Appointment.Status.CHECKED_IN)
 		self.assertTrue(appointment.checkin)
+		self.assertTrue(
+			Notification.objects.filter(
+				recipient=appointment.patient.user,
+				verb='Check-in completed',
+				target_object_id=str(appointment.id),
+			).exists()
+		)
+		self.assertTrue(
+			Notification.objects.filter(
+				recipient=appointment.doctor.user,
+				verb='Patient checked in',
+				target_object_id=str(appointment.id),
+			).exists()
+		)
 
 	def test_check_in_rejects_non_confirmed_appointments(self):
 		receptionist = ReceptionistProfileFactory()

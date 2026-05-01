@@ -9,6 +9,7 @@ from accounts.factories import DoctorProfileFactory, PatientProfileFactory, Rece
 from appointments.factories import AppointmentFactory
 from appointments.models import Appointment
 from emr.models import ConsultationRecord
+from notifications.models import Notification
 from scheduling.factories import AppointmentSlotFactory
 
 
@@ -155,6 +156,13 @@ class AppointmentViewsTests(TestCase):
         appointment.refresh_from_db()
         self.assertEqual(appointment.status, Appointment.Status.CONFIRMED)
         self.assertTrue(appointment.status_history.filter(new_status=Appointment.Status.CONFIRMED).exists())
+        self.assertTrue(
+            Notification.objects.filter(
+                recipient=appointment.patient.user,
+                verb="Appointment confirmed",
+                target_object_id=str(appointment.id),
+            ).exists()
+        )
 
     def test_patient_can_reschedule_and_release_old_slot(self):
         patient = PatientProfileFactory()

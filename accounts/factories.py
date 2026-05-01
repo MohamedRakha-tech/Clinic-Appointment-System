@@ -69,7 +69,7 @@ class PatientProfileFactory(DjangoModelFactory):
 
     user = factory.SubFactory(PatientUserFactory)
     date_of_birth = factory.Faker("date_of_birth", minimum_age=18, maximum_age=90)
-    gender = factory.Iterator(["Male", "Female"])
+    gender = factory.Faker("random_element", elements=["Male", "Female"])
     address = factory.Faker("address")
     emergency_contact_name = factory.Faker("name")
     emergency_contact_phone = factory.Faker("msisdn")
@@ -93,20 +93,21 @@ class DoctorProfileFactory(DjangoModelFactory):
         model = DoctorProfile
 
     user = factory.SubFactory(DoctorUserFactory)
-    specialization = factory.Iterator(
-        [
+    specialization = factory.Faker(
+        "random_element",
+        elements=[
             "Cardiology",
             "Dermatology",
             "Neurology",
             "Pediatrics",
             "Orthopedics",
             "Internal Medicine",
-        ]
+        ],
     )
     license_number = factory.LazyFunction(lambda: f"LIC-{uuid4().hex[:12].upper()}")
-    consultation_duration_minutes = factory.Iterator([10, 15, 20, 30])
-    buffer_before_minutes = factory.Iterator([0, 5, 10])
-    buffer_after_minutes = factory.Iterator([0, 5, 10])
+    consultation_duration_minutes = factory.Faker("random_element", elements=[10, 15, 20, 30])
+    buffer_before_minutes = factory.Faker("random_element", elements=[0, 5, 10])
+    buffer_after_minutes = factory.Faker("random_element", elements=[0, 5, 10])
     bio = factory.Faker("paragraph", nb_sentences=3)
 
     @classmethod
