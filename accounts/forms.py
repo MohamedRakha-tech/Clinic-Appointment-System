@@ -17,7 +17,7 @@ class PatientRegisterForm(forms.ModelForm):
     password2 = forms.CharField(widget=forms.PasswordInput)
 
     # PatientProfile fields collected on the signup page
-    date_of_birth = forms.DateField(required=True, widget=forms.DateInput(attrs={"type": "date"}))
+    date_of_birth = forms.DateField(required=False, widget=forms.DateInput(attrs={"type": "date"}))
     gender = forms.ChoiceField(
         required=True,
         choices=[
@@ -66,20 +66,20 @@ class PatientRegisterForm(forms.ModelForm):
         profile, created = PatientProfile.objects.get_or_create(
             user=user,
             defaults={
-                "date_of_birth": self.cleaned_data["date_of_birth"],
+                "date_of_birth": self.cleaned_data.get("date_of_birth"),
                 "gender": self.cleaned_data["gender"],
                 "address": self.cleaned_data["address"],
             },
         )
         if not created:
-            profile.date_of_birth = self.cleaned_data["date_of_birth"]
+            profile.date_of_birth = self.cleaned_data.get("date_of_birth")
             profile.gender = self.cleaned_data["gender"]
             profile.address = self.cleaned_data["address"]
             profile.save()
 
 
 class PatientProfileForm(forms.ModelForm):
-    date_of_birth = forms.DateField(required=True, widget=forms.DateInput(attrs={"type": "date"}))
+    date_of_birth = forms.DateField(required=False, widget=forms.DateInput(attrs={"type": "date"}))
     gender = forms.ChoiceField(required=True, choices=[
         ('Male', 'Male'), ('Female', 'Female')
     ])
@@ -106,15 +106,16 @@ class PatientProfileForm(forms.ModelForm):
 
     def save(self, commit=True):
         user = super().save(commit=commit)
-        if hasattr(user, 'patient_profile'):
-            profile = user.patient_profile
-            profile.date_of_birth = self.cleaned_data['date_of_birth']
-            profile.gender = self.cleaned_data['gender']
-            profile.address = self.cleaned_data['address']
-            profile.emergency_contact_name = self.cleaned_data.get('emergency_contact_name')
-            profile.emergency_contact_phone = self.cleaned_data.get('emergency_contact_phone')
-            if commit:
-                profile.save()
+        from accounts.models import PatientProfile
+
+        profile, _ = PatientProfile.objects.get_or_create(user=user)
+        profile.date_of_birth = self.cleaned_data.get('date_of_birth')
+        profile.gender = self.cleaned_data['gender']
+        profile.address = self.cleaned_data['address']
+        profile.emergency_contact_name = self.cleaned_data.get('emergency_contact_name')
+        profile.emergency_contact_phone = self.cleaned_data.get('emergency_contact_phone')
+        if commit:
+            profile.save()
         return user
 
 

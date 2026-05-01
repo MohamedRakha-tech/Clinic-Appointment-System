@@ -189,3 +189,4 @@ REST_FRAMEWORK = {
     ],
 }
 SITE_ID = 2
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
