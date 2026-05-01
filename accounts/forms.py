@@ -58,3 +58,88 @@ class PatientRegisterForm(forms.ModelForm):
         profile.gender = self.cleaned_data.get("gender") or ""
         profile.address = self.cleaned_data.get("address") or ""
         profile.save()
+
+
+class PatientProfileForm(forms.ModelForm):
+    date_of_birth = forms.DateField(required=False, widget=forms.DateInput(attrs={"type": "date"}))
+    gender = forms.ChoiceField(required=False, choices=[
+        ('Male', 'Male'), ('Female', 'Female'), ('Non-binary', 'Non-binary'),
+        ('Other', 'Other'), ('Prefer not to say', 'Prefer not to say')
+    ])
+    address = forms.CharField(required=False, widget=forms.Textarea)
+    emergency_contact_name = forms.CharField(required=False, max_length=120)
+    emergency_contact_phone = forms.CharField(required=False, max_length=20)
+
+    class Meta:
+        model = User
+        fields = ["first_name", "last_name", "username", "email", "phone"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if hasattr(self.instance, 'patient_profile'):
+            profile = self.instance.patient_profile
+            self.initial['date_of_birth'] = profile.date_of_birth
+            self.initial['gender'] = profile.gender
+            self.initial['address'] = profile.address
+            self.initial['emergency_contact_name'] = profile.emergency_contact_name
+            self.initial['emergency_contact_phone'] = profile.emergency_contact_phone
+
+    def save(self, commit=True):
+        user = super().save(commit=commit)
+        if hasattr(user, 'patient_profile'):
+            profile = user.patient_profile
+            profile.date_of_birth = self.cleaned_data.get('date_of_birth')
+            profile.gender = self.cleaned_data.get('gender')
+            profile.address = self.cleaned_data.get('address')
+            profile.emergency_contact_name = self.cleaned_data.get('emergency_contact_name')
+            profile.emergency_contact_phone = self.cleaned_data.get('emergency_contact_phone')
+            if commit:
+                profile.save()
+        return user
+
+
+class DoctorProfileForm(forms.ModelForm):
+    specialization = forms.CharField(required=True, max_length=120)
+    consultation_duration_minutes = forms.IntegerField(min_value=5, max_value=240, required=True)
+    buffer_before_minutes = forms.IntegerField(min_value=0, max_value=60, required=True)
+    buffer_after_minutes = forms.IntegerField(min_value=0, max_value=60, required=True)
+    bio = forms.CharField(required=False, widget=forms.Textarea)
+
+    class Meta:
+        model = User
+        fields = ["first_name", "last_name", "username", "email", "phone"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if hasattr(self.instance, 'doctor_profile'):
+            profile = self.instance.doctor_profile
+            self.initial['specialization'] = profile.specialization
+            self.initial['consultation_duration_minutes'] = profile.consultation_duration_minutes
+            self.initial['buffer_before_minutes'] = profile.buffer_before_minutes
+            self.initial['buffer_after_minutes'] = profile.buffer_after_minutes
+            self.initial['bio'] = profile.bio
+
+    def save(self, commit=True):
+        user = super().save(commit=commit)
+        if hasattr(user, 'doctor_profile'):
+            profile = user.doctor_profile
+            profile.specialization = self.cleaned_data.get('specialization')
+            profile.consultation_duration_minutes = self.cleaned_data.get('consultation_duration_minutes')
+            profile.buffer_before_minutes = self.cleaned_data.get('buffer_before_minutes')
+            profile.buffer_after_minutes = self.cleaned_data.get('buffer_after_minutes')
+            profile.bio = self.cleaned_data.get('bio')
+            if commit:
+                profile.save()
+        return user
+
+
+class ReceptionistProfileForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ["first_name", "last_name", "username", "email", "phone"]
+
+
+class AdminProfileForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ["first_name", "last_name", "username", "email", "phone"]

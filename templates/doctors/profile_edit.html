@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Profile | Ether Clinical{% endblock %}
+
+{% block topbar_subtitle %}Doctor Profiles{% endblock %}
+{% block topbar_role %}Role: Doctor{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+.glass-panel { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(24px); }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+</style>
+<script id="tailwind-config">
+tailwind.config = {
+    darkMode: "class",
+    theme: {
+        extend: {
+            "colors": {
+                "primary": "#003f87", "secondary-fixed-dim": "#62d6ed", "on-background": "#141d23",
+                "tertiary-fixed-dim": "#66df75", "surface-container-low": "#ecf5fe", "on-secondary": "#ffffff",
+                "surface-tint": "#115cb9", "tertiary-container": "#006722", "secondary": "#006877",
+                "on-tertiary-fixed": "#002106", "secondary-fixed": "#a4eeff", "background": "#f6faff",
+                "on-surface": "#141d23", "outline": "#727784", "outline-variant": "#c2c6d4",
+                "surface-container-lowest": "#ffffff", "surface-dim": "#d2dbe4", "primary-fixed-dim": "#acc7ff",
+                "on-tertiary-container": "#6fe87c", "on-primary": "#ffffff", "on-primary-fixed-variant": "#004491",
+                "on-primary-fixed": "#001a40", "tertiary-fixed": "#83fc8e", "tertiary": "#004c17",
+                "on-tertiary": "#ffffff", "on-secondary-fixed-variant": "#004e5a", "inverse-surface": "#293138",
+                "on-error-container": "#93000a", "error": "#ba1a1a", "surface-container": "#e6eff8",
+                "inverse-on-surface": "#e9f2fb", "surface-container-high": "#e0e9f2", "on-secondary-fixed": "#001f25",
+                "on-secondary-container": "#006776", "secondary-container": "#75e7fe", "primary-fixed": "#d7e2ff",
+                "on-error": "#ffffff", "surface-container-highest": "#dbe4ed", "surface": "#f6faff",
+                "on-primary-container": "#bbd0ff", "error-container": "#ffdad6", "surface-variant": "#dbe4ed",
+                "inverse-primary": "#acc7ff", "on-surface-variant": "#424752", "surface-bright": "#f6faff",
+                "primary-container": "#0056b3", "on-tertiary-fixed-variant": "#00531a"
+            },
+            "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" },
+            "fontFamily": { "headline": ["Inter"], "display": ["Inter"], "body": ["Inter"], "label": ["Inter"] }
+        }
+    }
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="bg-surface text-on-surface font-body antialiased max-w-5xl mx-auto p-10">
+<form method="POST" action="{% url 'accounts:doctor_profile_edit' %}">
+{% csrf_token %}
+<!-- Profile Grid -->
+<div class="grid grid-cols-12 gap-8">
+<!-- Left Column: Identity & Bio -->
+<div class="col-span-12 lg:col-span-8 space-y-8">
+<!-- Core Information Card -->
+<div class="bg-surface-container-lowest rounded-xl p-8 shadow-sm border border-outline-variant/15">
+<div class="flex items-center gap-6 mb-8">
+<div class="relative group">
+<div class="w-24 h-24 rounded-full overflow-hidden border-4 border-surface-container">
+<img alt="User profile avatar" class="w-full h-full object-cover" data-alt="Close up of a medical professional portrait, high key lighting with soft shadows." src="https://ui-avatars.com/api/?name={{ user.first_name }}+{{ user.last_name }}&background=003f87&color=fff"/>
+</div>
+<div class="absolute inset-0 flex items-center justify-center bg-on-surface/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+<span class="material-symbols-outlined text-surface" data-icon="photo_camera">photo_camera</span>
+</div>
+</div>
+<div>
+<h3 class="text-xl font-bold text-on-surface mb-1">Dr. {{ user.last_name }}</h3>
+<p class="text-sm text-on-surface-variant font-medium">ID: {{ user.id }}</p>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-6">
+{% include "includes/profile_shared_fields.html" %}
+<div class="col-span-2 md:col-span-1">
+<label class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">license_number</label>
+<div class="bg-surface-container-low px-4 py-3 rounded-lg text-on-surface/60 font-mono text-sm border-b-2 border-outline-variant/30">
+    {{ user.doctor_profile.license_number|default:"No License Registered" }}
+</div>
+</div>
+<div class="col-span-2 md:col-span-1">
+<label class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">specialization</label>
+<input name="specialization" class="w-full bg-surface-container-high border-0 border-b-2 border-outline-variant px-4 py-3 rounded-t-lg focus:ring-0 focus:border-primary transition-colors text-on-surface font-medium" type="text" value="{{ form.specialization.value|default:'' }}"/>
+{% if form.specialization.errors %}
+    <p class="text-xs text-error mt-1">{{ form.specialization.errors.0 }}</p>
+{% endif %}
+</div>
+<div class="col-span-2">
+<label class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">Professional bio</label>
+<textarea name="bio" class="w-full bg-surface-container-high border-0 border-b-2 border-outline-variant px-4 py-3 rounded-t-lg focus:ring-0 focus:border-primary transition-colors text-on-surface font-medium resize-none" rows="6">{{ form.bio.value|default:'' }}</textarea>
+{% if form.bio.errors %}
+    <p class="text-xs text-error mt-1">{{ form.bio.errors.0 }}</p>
+{% endif %}
+</div>
+</div>
+</div>
+<!-- CTA Actions -->
+<div class="flex items-center justify-end gap-4 pb-12">
+<a href="{% url 'accounts:doctor_profile' %}" class="px-8 py-3 rounded-full font-bold text-primary hover:bg-surface-container transition-colors">Cancel</a>
+<button type="submit" class="px-10 py-3 rounded-full font-bold text-white bg-gradient-to-b from-primary to-primary-container shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">Save Changes</button>
+</div>
+</div>
+<!-- Right Column: Settings & Preferences -->
+<div class="col-span-12 lg:col-span-4 space-y-8">
+<!-- Consultation Preferences -->
+<div class="bg-surface-container-low rounded-xl p-8 border border-outline-variant/15">
+<div class="flex items-center gap-3 mb-6">
+<span class="material-symbols-outlined text-primary" data-icon="timer">timer</span>
+<h3 class="text-lg font-bold text-on-surface">Consultation Logic</h3>
+</div>
+<div class="space-y-6">
+<div>
+<label class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">consultation_duration</label>
+<input name="consultation_duration_minutes" type="number" min="5" max="240" class="w-full bg-surface-container-lowest border-0 border-b-2 border-outline-variant px-4 py-3 rounded-t-lg focus:ring-0 focus:border-primary transition-colors text-on-surface font-medium" value="{{ form.consultation_duration_minutes.value|default:'15' }}">
+{% if form.consultation_duration_minutes.errors %}
+    <p class="text-xs text-error mt-1">{{ form.consultation_duration_minutes.errors.0 }}</p>
+{% endif %}
+</div>
+<div>
+<label class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">pre_consult_buffer</label>
+<input name="buffer_before_minutes" type="number" min="0" max="60" class="w-full bg-surface-container-lowest border-0 border-b-2 border-outline-variant px-4 py-3 rounded-t-lg focus:ring-0 focus:border-primary transition-colors text-on-surface font-medium" value="{{ form.buffer_before_minutes.value|default:'0' }}">
+{% if form.buffer_before_minutes.errors %}
+    <p class="text-xs text-error mt-1">{{ form.buffer_before_minutes.errors.0 }}</p>
+{% endif %}
+</div>
+<div>
+<label class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">post_consult_buffer</label>
+<input name="buffer_after_minutes" type="number" min="0" max="60" class="w-full bg-surface-container-lowest border-0 border-b-2 border-outline-variant px-4 py-3 rounded-t-lg focus:ring-0 focus:border-primary transition-colors text-on-surface font-medium" value="{{ form.buffer_after_minutes.value|default:'0' }}">
+{% if form.buffer_after_minutes.errors %}
+    <p class="text-xs text-error mt-1">{{ form.buffer_after_minutes.errors.0 }}</p>
+{% endif %}
+</div>
+</div>
+</div>
+<!-- Glassmorphism Stats/Status Info -->
+<div class="glass-panel p-8 rounded-xl border border-white/50 shadow-xl shadow-on-surface/5 relative overflow-hidden">
+<div class="absolute -top-10 -right-10 w-32 h-32 bg-primary/5 rounded-full blur-3xl"></div>
+<h4 class="text-sm font-bold uppercase tracking-widest text-on-surface-variant mb-4">Account Status</h4>
+<div class="flex items-center gap-3 mb-6">
+<span class="w-3 h-3 rounded-full bg-tertiary-fixed-dim ring-4 ring-tertiary-fixed/20"></span>
+<span class="font-bold text-on-surface">Verified Practitioner</span>
+</div>
+<div class="space-y-4">
+<div class="flex justify-between items-center text-sm">
+<span class="text-on-surface-variant font-medium">Profile Visibility</span>
+<span class="px-2 py-1 rounded bg-secondary-fixed text-on-secondary-fixed-variant text-[10px] font-black uppercase tracking-tighter">Public</span>
+</div>
+<div class="flex justify-between items-center text-sm">
+<span class="text-on-surface-variant font-medium">Last Modified</span>
+<span class="text-on-surface font-semibold">Oct 12, 2023</span>
+</div>
+</div>
+</div>
+<!-- Helpful Tip -->
+<div class="p-6 rounded-xl bg-primary/5 border-l-4 border-primary">
+<p class="text-sm text-primary font-medium italic">"Detailed bios and accurate consultation durations help reduce patient no-shows by 14%."</p>
+</div>
+</div>
+</div>
+</div>
+</form>
+</div>
+{% endblock %}

@@ -3,6 +3,7 @@
   "python.analysis.extraPaths": ["${workspaceFolder}"],
   "python.analysis.diagnosticMode": "workspace",
   "python.terminal.activateEnvironment": true,
+  "djlint.showInstallError": false,
   "[html]": {
     "editor.defaultFormatter": null,
     "editor.formatOnSave": false
