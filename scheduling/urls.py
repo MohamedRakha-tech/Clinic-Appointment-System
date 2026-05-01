@@ -41,6 +41,11 @@ urlpatterns = [
         name="appointment_slot_list",
     ),
     path(
+        "slots/<int:pk>/",
+        views.AppointmentSlotDetailView.as_view(),
+        name="appointment_slot_detail",
+    ),
+    path(
         "generate-slots/",
         views.GenerateSlotsView.as_view(),
         name="generate_slots",

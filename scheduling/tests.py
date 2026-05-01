@@ -411,6 +411,72 @@ class SchedulingAccessTests(TestCase):
         self.assertEqual(my_schedule_response.status_code, 403)
 
 
+class AppointmentSlotViewActionTests(TestCase):
+    def setUp(self):
+        self.admin_user = User.objects.create_user(
+            username="slot_view_admin",
+            email="slot_view_admin@example.com",
+            password="password",
+            is_staff=True,
+        )
+        self.admin_user._target_role = "admin"
+        self.admin_user.save()
+        AdminProfile.objects.get_or_create(
+            user=self.admin_user,
+            defaults={"employee_code": "ADM-SLOT-001"},
+        )
+        set_user_role(self.admin_user, "admin")
+
+        self.doctor_user = User.objects.create_user(
+            username="slot_view_doctor",
+            email="slot_view_doctor@example.com",
+            password="password",
+            first_name="Nora",
+            last_name="Ibrahim",
+        )
+        self.doctor = DoctorProfile.objects.create(
+            user=self.doctor_user,
+            specialization="Neurology",
+            license_number="DOC-SLOT-001",
+            consultation_duration_minutes=30,
+            buffer_before_minutes=0,
+            buffer_after_minutes=0,
+        )
+        self.slot = AppointmentSlot.objects.create(
+            doctor=self.doctor,
+            slot_date=date(2026, 5, 3),
+            start_datetime=timezone.make_aware(timezone.datetime(2026, 5, 3, 14, 0)),
+            end_datetime=timezone.make_aware(timezone.datetime(2026, 5, 3, 14, 30)),
+            status=AppointmentSlot.Status.BLOCKED,
+            generated_from=AppointmentSlot.GeneratedFrom.MANUAL,
+        )
+
+    def test_slot_list_view_button_links_to_slot_detail_page(self):
+        self.client.login(username="slot_view_admin", password="password")
+
+        response = self.client.get(reverse("scheduling:appointment_slot_list"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            f'href="{reverse("scheduling:appointment_slot_detail", args=[self.slot.pk])}"',
+        )
+
+    def test_slot_detail_page_shows_dynamic_slot_data(self):
+        self.client.login(username="slot_view_admin", password="password")
+
+        response = self.client.get(
+            reverse("scheduling:appointment_slot_detail", args=[self.slot.pk])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Nora Ibrahim")
+        self.assertContains(response, "Neurology")
+        self.assertContains(response, "May 03, 2026")
+        self.assertContains(response, "Blocked")
+        self.assertContains(response, "Manual")
+
+
 class AppointmentSlotApiTests(TestCase):
     def setUp(self):
         self.api_user = User.objects.create_user(

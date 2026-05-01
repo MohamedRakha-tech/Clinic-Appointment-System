@@ -5,7 +5,7 @@ from django.urls import reverse_lazy
 from django.utils import timezone
 from django.utils.dateparse import parse_date
 from django.views import View
-from django.views.generic import CreateView, ListView, UpdateView
+from django.views.generic import CreateView, DetailView, ListView, UpdateView
 from datetime import timedelta
 
 from accounts.mixins import DoctorRequiredMixin as AccountsDoctorRequiredMixin
@@ -347,6 +347,20 @@ class AppointmentSlotListView(SchedulingManagerRequiredMixin, ListView):
         context["expired_count"] = filtered_queryset.filter(
             status=AppointmentSlot.Status.EXPIRED
         ).count()
+        return context
+
+
+class AppointmentSlotDetailView(SchedulingManagerRequiredMixin, DetailView):
+    model = AppointmentSlot
+    template_name = "scheduling/appointment_slot_detail.html"
+    context_object_name = "slot"
+
+    def get_queryset(self):
+        return AppointmentSlot.objects.select_related("doctor", "doctor__user")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["can_manage_scheduling"] = is_scheduling_manager(self.request.user)
         return context
 
 

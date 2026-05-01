@@ -138,9 +138,9 @@
                             <td><span class="badge rounded-pill bg-light text-dark border">{{ slot.status }}</span></td>
                             <td><span class="small text-muted">{{ slot.generated_from }}</span></td>
                             <td class="text-end pe-4">
-                                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#slotDetails{{ slot.pk }}">
+                                <a class="btn btn-sm btn-outline-primary" href="{% url 'scheduling:appointment_slot_detail' slot.pk %}">
                                     View
-                                </button>
+                                </a>
                             </td>
                         </tr>
                     {% empty %}

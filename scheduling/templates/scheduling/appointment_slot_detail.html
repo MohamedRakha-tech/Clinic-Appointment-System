@@ -1,0 +1,125 @@
+{% extends "scheduling/base_scheduling_fixed.html" %}
+
+{% block title %}Appointment Slot Details{% endblock %}
+
+{% block scheduling_content %}
+<section class="container-fluid px-0">
+    <!-- Header Section -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-2">
+                    <li class="breadcrumb-item"><a href="{% url 'scheduling:appointment_slot_list' %}" class="text-decoration-none">Slots</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Details</li>
+                </ol>
+            </nav>
+            <h1 class="h3 fw-bold mb-0 text-dark">Appointment Slot Details</h1>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-light border shadow-sm" href="{% url 'scheduling:appointment_slot_list' %}">
+                <i class="bi bi-arrow-left me-2"></i>Back to List
+            </a>
+            <!-- Optional: Add an Edit button here if the logic exists -->
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        <!-- Main Info Card -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="card-title mb-0 fw-bold">General Information</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-4">
+                        <div class="col-sm-6">
+                            <label class="small text-muted text-uppercase fw-bold mb-1 d-block">Doctor</label>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-sm bg-primary-soft text-primary rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background-color: #e7f1ff;">
+                                    <i class="bi bi-person-badge fs-5"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark fs-5">{{ slot.doctor.user.get_full_name|default:slot.doctor.user.username }}</div>
+                                    <div class="text-muted small">{{ slot.doctor.specialization|default:"General Practitioner" }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-sm-6">
+                            <label class="small text-muted text-uppercase fw-bold mb-1 d-block">Current Status</label>
+                            <div>
+                                {% if slot.status == 'available' %}
+                                <span class="badge rounded-pill bg-success-subtle text-success px-3 py-2 border border-success-subtle">
+                                    <i class="bi bi-check-circle-fill me-1"></i> {{ slot.get_status_display }}
+                                </span>
+                                {% else %}
+                                <span class="badge rounded-pill bg-warning-subtle text-warning px-3 py-2 border border-warning-subtle">
+                                    <i class="bi bi-clock-history me-1"></i> {{ slot.get_status_display }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-12"><hr class="opacity-50"></div>
+                        
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-start gap-3">
+                                <i class="bi bi-calendar3 text-primary fs-4"></i>
+                                <div>
+                                    <label class="small text-muted text-uppercase fw-bold d-block">Start Time</label>
+                                    <span class="fw-semibold">{{ slot.start_datetime|date:"F d, Y" }}</span><br>
+                                    <span class="text-primary fw-bold fs-5">{{ slot.start_datetime|date:"h:i A" }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-start gap-3">
+                                <i class="bi bi-calendar-check text-danger fs-4"></i>
+                                <div>
+                                    <label class="small text-muted text-uppercase fw-bold d-block">End Time</label>
+                                    <span class="fw-semibold">{{ slot.end_datetime|date:"F d, Y" }}</span><br>
+                                    <span class="text-danger fw-bold fs-5">{{ slot.end_datetime|date:"h:i A" }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar Metadata -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-light">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-3">System Metadata</h6>
+                    
+                    <div class="mb-3">
+                        <label class="small text-muted d-block">Source</label>
+                        <span class="badge bg-secondary-subtle text-secondary border">{{ slot.get_generated_from_display }}</span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="small text-muted d-block italic">Created On</label>
+                        <small class="fw-medium text-dark">{{ slot.created_at|date:"M d, Y | h:i A" }}</small>
+                    </div>
+                    
+                    <div class="mb-0">
+                        <label class="small text-muted d-block">Last Updated</label>
+                        <small class="fw-medium text-dark">{{ slot.updated_at|date:"M d, Y | h:i A" }}</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-3 p-3 border border-info border-opacity-25 rounded-4 bg-info bg-opacity-10">
+                <div class="d-flex gap-2">
+                    <i class="bi bi-info-circle text-info"></i>
+                    <p class="small mb-0 text-info-emphasis">
+                        This slot is visible to patients according to your availability rules.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
