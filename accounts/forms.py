@@ -17,13 +17,23 @@ class PatientRegisterForm(forms.ModelForm):
     password2 = forms.CharField(widget=forms.PasswordInput)
 
     # PatientProfile fields collected on the signup page
-    date_of_birth = forms.DateField(required=False, widget=forms.DateInput(attrs={"type": "date"}))
-    gender = forms.CharField(required=False, max_length=20)
-    address = forms.CharField(required=False, widget=forms.TextInput)
+    date_of_birth = forms.DateField(required=True, widget=forms.DateInput(attrs={"type": "date"}))
+    gender = forms.ChoiceField(
+        required=True,
+        choices=[
+            ("", "Select Option"),
+            ("Female", "Female"),
+            ("Male", "Male"),
+        ],
+    )
+    address = forms.CharField(required=True, widget=forms.TextInput)
 
     class Meta:
         model = User
-        fields = ["first_name", "last_name", "username", "email", "phone"]
+        fields = ["first_name", "last_name", "username", "email", "phone", "profile_picture"]
+        widgets = {
+            "profile_picture": forms.ClearableFileInput(attrs={"accept": "image/*"}),
+        }
 
     def clean(self):
         cleaned_data = super().clean()
@@ -53,26 +63,36 @@ class PatientRegisterForm(forms.ModelForm):
         """Write the profile-specific fields to the PatientProfile row."""
         from accounts.models import PatientProfile
 
-        profile, _ = PatientProfile.objects.get_or_create(user=user)
-        profile.date_of_birth = self.cleaned_data.get("date_of_birth")
-        profile.gender = self.cleaned_data.get("gender") or ""
-        profile.address = self.cleaned_data.get("address") or ""
-        profile.save()
+        profile, created = PatientProfile.objects.get_or_create(
+            user=user,
+            defaults={
+                "date_of_birth": self.cleaned_data["date_of_birth"],
+                "gender": self.cleaned_data["gender"],
+                "address": self.cleaned_data["address"],
+            },
+        )
+        if not created:
+            profile.date_of_birth = self.cleaned_data["date_of_birth"]
+            profile.gender = self.cleaned_data["gender"]
+            profile.address = self.cleaned_data["address"]
+            profile.save()
 
 
 class PatientProfileForm(forms.ModelForm):
-    date_of_birth = forms.DateField(required=False, widget=forms.DateInput(attrs={"type": "date"}))
-    gender = forms.ChoiceField(required=False, choices=[
-        ('Male', 'Male'), ('Female', 'Female'), ('Non-binary', 'Non-binary'),
-        ('Other', 'Other'), ('Prefer not to say', 'Prefer not to say')
+    date_of_birth = forms.DateField(required=True, widget=forms.DateInput(attrs={"type": "date"}))
+    gender = forms.ChoiceField(required=True, choices=[
+        ('Male', 'Male'), ('Female', 'Female')
     ])
-    address = forms.CharField(required=False, widget=forms.Textarea)
+    address = forms.CharField(required=True, widget=forms.Textarea)
     emergency_contact_name = forms.CharField(required=False, max_length=120)
     emergency_contact_phone = forms.CharField(required=False, max_length=20)
 
     class Meta:
         model = User
-        fields = ["first_name", "last_name", "username", "email", "phone"]
+        fields = ["first_name", "last_name", "username", "email", "phone", "profile_picture"]
+        widgets = {
+            "profile_picture": forms.ClearableFileInput(attrs={"accept": "image/*"}),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -88,9 +108,9 @@ class PatientProfileForm(forms.ModelForm):
         user = super().save(commit=commit)
         if hasattr(user, 'patient_profile'):
             profile = user.patient_profile
-            profile.date_of_birth = self.cleaned_data.get('date_of_birth')
-            profile.gender = self.cleaned_data.get('gender')
-            profile.address = self.cleaned_data.get('address')
+            profile.date_of_birth = self.cleaned_data['date_of_birth']
+            profile.gender = self.cleaned_data['gender']
+            profile.address = self.cleaned_data['address']
             profile.emergency_contact_name = self.cleaned_data.get('emergency_contact_name')
             profile.emergency_contact_phone = self.cleaned_data.get('emergency_contact_phone')
             if commit:
@@ -107,7 +127,10 @@ class DoctorProfileForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ["first_name", "last_name", "username", "email", "phone"]
+        fields = ["first_name", "last_name", "username", "email", "phone", "profile_picture"]
+        widgets = {
+            "profile_picture": forms.ClearableFileInput(attrs={"accept": "image/*"}),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -136,10 +159,16 @@ class DoctorProfileForm(forms.ModelForm):
 class ReceptionistProfileForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ["first_name", "last_name", "username", "email", "phone"]
+        fields = ["first_name", "last_name", "username", "email", "phone", "profile_picture"]
+        widgets = {
+            "profile_picture": forms.ClearableFileInput(attrs={"accept": "image/*"}),
+        }
 
 
 class AdminProfileForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ["first_name", "last_name", "username", "email", "phone"]
+        fields = ["first_name", "last_name", "username", "email", "phone", "profile_picture"]
+        widgets = {
+            "profile_picture": forms.ClearableFileInput(attrs={"accept": "image/*"}),
+        }

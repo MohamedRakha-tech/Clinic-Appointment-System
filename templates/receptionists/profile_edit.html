@@ -57,7 +57,13 @@ tailwind.config = {
 <div class="col-span-12 lg:col-span-4 space-y-8">
 <div class="bg-surface-container-lowest p-8 rounded-xl border border-outline-variant/15 flex flex-col items-center text-center">
 <div class="relative mb-6">
-<img alt="Profile large" class="w-32 h-32 rounded-full border-4 border-surface shadow-md object-cover" data-alt="Detailed close-up portrait of a clinical staff member in a professional healthcare environment. The lighting is bright and airy with a cool blue undertone. The subject is a female receptionist with a pleasant expression, conveying trust and warmth. The background shows soft out-of-focus elements of a modern, clinical office space." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCOC4_FkmSp96qN0N0S7d7HOKdkfZgVAvYoWZmscQ0wFynE7lPnCqEWlrVoyw3YgX6vCFOYJATdNYrAsa5RrAnCwJWuz-cTgWe0Y86Nc7Ae-Pr1Q1dNdnFjvviA-qxStkasIXpt-SkraT7QydcZCix8Y9QDhDDBQRSfcuf4qPc6CYi2fmZ97ObYfvzxJ4EmdAz8V5-1ICTLrQ7FEJlcF2Fbdn4nxYIRgr73HlqZGRavy_T4ySR28hxjHf152xjQ6_Yc1eU9hlsNzCQ"/>
+{% if user.profile_picture %}
+<img alt="Profile large" class="w-32 h-32 rounded-full border-4 border-surface shadow-md object-cover" src="{{ user.profile_picture.url }}"/>
+{% else %}
+<div class="w-32 h-32 rounded-full border-4 border-surface shadow-md bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-white text-5xl font-bold">
+    {{ user.first_name|default:user.username|slice:":1"|upper }}{{ user.last_name|default:""|slice:":1"|upper }}
+</div>
+{% endif %}
 <button class="absolute bottom-1 right-1 bg-primary text-white p-2 rounded-full shadow-lg hover:scale-105 transition-transform">
 <span class="material-symbols-outlined text-sm">photo_camera</span>
 </button>
@@ -82,7 +88,7 @@ tailwind.config = {
 </div>
 <!-- Right Column: The Form -->
 <div class="col-span-12 lg:col-span-8">
-<form method="POST" action="{% url 'accounts:reception_profile_edit' %}" class="space-y-8">
+<form method="POST" action="{% url 'accounts:reception_profile_edit' %}" class="space-y-8" enctype="multipart/form-data">
 {% csrf_token %}
 <!-- Primary Information Section -->
 <div class="bg-surface-container-lowest p-8 rounded-xl border border-outline-variant/15 shadow-sm">

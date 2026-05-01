@@ -46,7 +46,7 @@ tailwind.config = {
 
 {% block content %}
 <div class="bg-surface text-on-surface font-body antialiased max-w-5xl mx-auto p-10">
-<form method="POST" action="{% url 'accounts:patient_profile_edit' %}">
+<form method="POST" action="{% url 'accounts:patient_profile_edit' %}" enctype="multipart/form-data">
 {% csrf_token %}
 <!-- Page Header -->
 <div class="mb-10 flex justify-between items-end">
@@ -81,7 +81,7 @@ tailwind.config = {
 {% include "includes/profile_shared_fields.html" %}
 <div class="col-span-2 md:col-span-1">
 <label class="block text-xs font-bold uppercase tracking-widest text-outline mb-2">Date of Birth</label>
-<input class="w-full bg-surface-container-high border-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 px-4 py-3 rounded-t-lg transition-all" type="date" name="date_of_birth" value="{{ form.date_of_birth.value|default:'' }}"/>
+<input class="w-full bg-surface-container-high border-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 px-4 py-3 rounded-t-lg transition-all" type="date" name="date_of_birth" value="{% if form.is_bound %}{{ form.date_of_birth.value|default:'' }}{% else %}{{ user.patient_profile.date_of_birth|date:'Y-m-d'|default:'' }}{% endif %}"/>
 {% if form.date_of_birth.errors %}
     <p class="text-xs text-error mt-1">{{ form.date_of_birth.errors.0 }}</p>
 {% endif %}
@@ -100,7 +100,7 @@ tailwind.config = {
 <label class="block text-xs font-bold uppercase tracking-widest text-outline mb-2">Gender</label>
 <select name="gender" class="w-full bg-surface-container-high border-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 px-4 py-3 rounded-t-lg transition-all">
     {% for val, label in form.fields.gender.choices %}
-        <option value="{{ val }}" {% if form.gender.value == val %}selected{% endif %}>{{ label }}</option>
+        <option value="{{ val }}" {% if form.is_bound %}{% if form.gender.value == val %}selected{% endif %}{% else %}{% if user.patient_profile.gender == val %}selected{% endif %}{% endif %}>{{ label }}</option>
     {% endfor %}
 </select>
 {% if form.gender.errors %}
@@ -109,7 +109,7 @@ tailwind.config = {
 </div>
 <div>
 <label class="block text-xs font-bold uppercase tracking-widest text-outline mb-2">Residential Address</label>
-<textarea name="address" class="w-full bg-surface-container-high border-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 px-4 py-3 rounded-t-lg transition-all resize-none" rows="3">{{ form.address.value|default:'' }}</textarea>
+<textarea name="address" class="w-full bg-surface-container-high border-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 px-4 py-3 rounded-t-lg transition-all resize-none" rows="3">{% if form.is_bound %}{{ form.address.value|default:'' }}{% else %}{{ user.patient_profile.address|default:'' }}{% endif %}</textarea>
 {% if form.address.errors %}
     <p class="text-xs text-error mt-1">{{ form.address.errors.0 }}</p>
 {% endif %}
@@ -129,14 +129,14 @@ tailwind.config = {
 <div class="space-y-6">
 <div>
 <label class="block text-xs font-bold uppercase tracking-widest text-outline mb-2">Contact Name</label>
-<input name="emergency_contact_name" class="w-full bg-transparent border-0 border-b-2 border-outline-variant/40 focus:border-error focus:ring-0 px-1 py-2 transition-all" type="text" value="{{ form.emergency_contact_name.value|default:'' }}"/>
+<input name="emergency_contact_name" class="w-full bg-transparent border-0 border-b-2 border-outline-variant/40 focus:border-error focus:ring-0 px-1 py-2 transition-all" type="text" value="{% if form.is_bound %}{{ form.emergency_contact_name.value|default:'' }}{% else %}{{ user.patient_profile.emergency_contact_name|default:'' }}{% endif %}"/>
 {% if form.emergency_contact_name.errors %}
     <p class="text-xs text-error mt-1">{{ form.emergency_contact_name.errors.0 }}</p>
 {% endif %}
 </div>
 <div>
 <label class="block text-xs font-bold uppercase tracking-widest text-outline mb-2">Contact Phone</label>
-<input name="emergency_contact_phone" class="w-full bg-transparent border-0 border-b-2 border-outline-variant/40 focus:border-error focus:ring-0 px-1 py-2 transition-all" type="tel" value="{{ form.emergency_contact_phone.value|default:'' }}"/>
+<input name="emergency_contact_phone" class="w-full bg-transparent border-0 border-b-2 border-outline-variant/40 focus:border-error focus:ring-0 px-1 py-2 transition-all" type="tel" value="{% if form.is_bound %}{{ form.emergency_contact_phone.value|default:'' }}{% else %}{{ user.patient_profile.emergency_contact_phone|default:'' }}{% endif %}"/>
 {% if form.emergency_contact_phone.errors %}
     <p class="text-xs text-error mt-1">{{ form.emergency_contact_phone.errors.0 }}</p>
 {% endif %}
@@ -162,7 +162,13 @@ tailwind.config = {
 </section>
 <!-- Profile Image Card -->
 <div class="rounded-xl aspect-square overflow-hidden relative group">
-<img alt="Patient portrait" class="w-full h-full object-cover" data-alt="A focused studio portrait of a male patient in his early 40s against a neutral, high-key white background. The patient is looking directly at the camera with a calm, neutral expression. The lighting is bright and airy, typical of high-end medical software imagery, with a cool-toned, clinical sanctuary aesthetic. The composition is tight and professional." src="https://lh3.googleusercontent.com/aida-public/AB6AXuApb64K6pa6HQfzA-ooNGnh3ulxXGylheHgcN-rsB8eFGWlYRrn3oc8_XtKCX-mM-7uupJfXTaBKvMRqd9Gdhs3uDxEDyzh3rl4Qc59T2ypmvUs3oYyTFiQq8AGMl5soI5N_bh6rXSiKLR4iu7DO8PcB-WQBQruRkLM-XOGMs63m-KtvhKpCszuiFluIFGDtsSs95aAECb5cUDbR9izVK0HpT00kvukiiEMjH_gsSwSdYCDLzLYCkkBE7vnhqKWbSQQ33nWrXxadnU"/>
+{% if user.profile_picture %}
+<img alt="Patient portrait" class="w-full h-full object-cover" src="{{ user.profile_picture.url }}"/>
+{% else %}
+<div class="w-full h-full bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-white text-6xl font-bold">
+    {{ user.first_name|default:user.username|slice:":1"|upper }}{{ user.last_name|default:""|slice:":1"|upper }}
+</div>
+{% endif %}
 <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity cursor-pointer">
 <span class="material-symbols-outlined text-white text-4xl mb-2">add_a_photo</span>
 <span class="text-white text-xs font-bold uppercase tracking-widest">Update Photo</span>

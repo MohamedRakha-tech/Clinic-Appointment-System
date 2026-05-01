@@ -7,6 +7,7 @@ from accounts.models import PatientProfile, DoctorProfile, User
 from datetime import timedelta
 from django.db.models.functions import Concat
 import re
+from queueing.models import AppointmentCheckin
 
 
 def get_today_appointments_count():
@@ -158,10 +159,117 @@ def get_doctor_today_queue(doctor_user_id):
         .filter(
             doctor__user_id=doctor_user_id,
             scheduled_start__date=timezone.localdate(),
+            status=Appointment.Status.CHECKED_IN,
         )
         .select_related('patient__user')
         .order_by('scheduled_start')
     )
+
+
+def get_doctor_today_schedule(doctor_user_id):
+    return (
+        Appointment.objects
+        .filter(
+            doctor__user_id=doctor_user_id,
+            scheduled_start__date=timezone.localdate(),
+            status__in=[
+                Appointment.Status.CONFIRMED,
+                Appointment.Status.CHECKED_IN,
+                Appointment.Status.COMPLETED,
+            ],
+        )
+        .select_related('patient__user')
+        .order_by('scheduled_start')
+    )
+
+
+def get_doctor_today_queue_count(doctor_user_id):
+    return AppointmentCheckin.objects.filter(
+        appointment__doctor__user_id=doctor_user_id,
+        appointment__scheduled_start__date=timezone.localdate(),
+        appointment__status=Appointment.Status.CHECKED_IN,
+    ).count()
+
+
+def get_doctor_completed_today_count(doctor_user_id):
+    return Appointment.objects.filter(
+        doctor__user_id=doctor_user_id,
+        scheduled_start__date=timezone.localdate(),
+        status=Appointment.Status.COMPLETED,
+    ).count()
+
+
+def get_doctor_upcoming_today_count(doctor_user_id):
+    return Appointment.objects.filter(
+        doctor__user_id=doctor_user_id,
+        scheduled_start__date=timezone.localdate(),
+        status__in=[Appointment.Status.CONFIRMED, Appointment.Status.CHECKED_IN],
+    ).count()
+
+
+def get_doctor_requested_today_count(doctor_user_id):
+    return Appointment.objects.filter(
+        doctor__user_id=doctor_user_id,
+        scheduled_start__date=timezone.localdate(),
+        status=Appointment.Status.REQUESTED,
+    ).count()
+
+
+def get_doctor_confirmed_today_count(doctor_user_id):
+    return Appointment.objects.filter(
+        doctor__user_id=doctor_user_id,
+        scheduled_start__date=timezone.localdate(),
+        status=Appointment.Status.CONFIRMED,
+    ).count()
+
+
+def get_doctor_today_status_summary(doctor_user_id):
+    today = timezone.localdate()
+    appointments = Appointment.objects.filter(
+        doctor__user_id=doctor_user_id,
+        scheduled_start__date=today,
+    )
+    requested_count = appointments.filter(status=Appointment.Status.REQUESTED).count()
+    confirmed_count = appointments.filter(status=Appointment.Status.CONFIRMED).count()
+    checked_in_count = appointments.filter(status=Appointment.Status.CHECKED_IN).count()
+    completed_count = appointments.filter(status=Appointment.Status.COMPLETED).count()
+
+    if checked_in_count:
+        tone = "action"
+        title = f"{checked_in_count} patient{'s' if checked_in_count != 1 else ''} waiting"
+        message = "Your queue has checked-in patients ready for consultation."
+    elif confirmed_count:
+        tone = "watch"
+        title = f"{confirmed_count} confirmed appointment{'s' if confirmed_count != 1 else ''} today"
+        if requested_count:
+            message = (
+                f"{requested_count} more request{'s' if requested_count != 1 else ''} "
+                "are still waiting for front-desk confirmation."
+            )
+        else:
+            message = "No one is waiting yet, but your confirmed schedule is active."
+    elif requested_count:
+        tone = "watch"
+        title = f"{requested_count} requested appointment{'s' if requested_count != 1 else ''}"
+        message = "These visits are not confirmed yet, so they should not enter your live queue."
+    elif completed_count:
+        tone = "calm"
+        title = "Today's queue is clear"
+        message = "All checked-in visits have been handled for now."
+    else:
+        tone = "calm"
+        title = "No active queue today"
+        message = "You do not have any active patient flow at the moment."
+
+    return {
+        "requested_count": requested_count,
+        "confirmed_count": confirmed_count,
+        "checked_in_count": checked_in_count,
+        "completed_count": completed_count,
+        "tone": tone,
+        "title": title,
+        "message": message,
+    }
 
 
 def get_today_appointments_list():

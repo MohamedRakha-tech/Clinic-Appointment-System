@@ -29,7 +29,7 @@
         </div>
         {% endif %}
 
-        <form class="space-y-10" data-validate-form="signup" method="POST" novalidate>
+        <form class="space-y-10" data-validate-form="signup" method="POST" enctype="multipart/form-data" novalidate>
           {% csrf_token %}
           <section>
             <div class="flex items-center gap-2 mb-6">
@@ -63,11 +63,9 @@
               <div>
                 <label class="block text-xs font-medium uppercase tracking-wider text-outline mb-1.5 ml-1" for="gender">Gender</label>
                 <select class="w-full bg-surface-container-high border-x-0 border-t-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 focus-visible:outline-none px-4 py-3 text-on-surface transition-all rounded-t-lg" data-error-required="Gender is required" id="gender" name="gender" required>
-                  <option value="">Select Option</option>
+                  <option value="" hidden>Select Option</option>
                   <option value="Female" {% if form.data.gender == 'Female' %}selected{% endif %}>Female</option>
                   <option value="Male" {% if form.data.gender == 'Male' %}selected{% endif %}>Male</option>
-                  <option value="Non-binary" {% if form.data.gender == 'Non-binary' %}selected{% endif %}>Non-binary</option>
-                  <option value="Prefer not to say" {% if form.data.gender == 'Prefer not to say' %}selected{% endif %}>Prefer not to say</option>
                 </select>
                 <p class="text-xs text-error mt-1 ml-1 hidden" data-error-for="gender"></p>
               </div>
@@ -91,6 +89,11 @@
                 <input class="w-full bg-surface-container-high border-x-0 border-t-0 border-b-2 {% if form.phone.errors %}border-error focus:border-error{% else %}border-outline-variant focus:border-primary{% endif %} focus:ring-0 focus-visible:outline-none px-4 py-3 text-on-surface placeholder:text-outline-variant transition-all rounded-t-lg" data-error-required="Phone number is required" id="phone" name="phone" placeholder="+1 (555) 000-0000" required type="tel" value="{{ form.phone.value|default:'' }}"/>
                 {% for error in form.phone.errors %}<p class="text-xs text-error mt-1 ml-1">{{ error }}</p>{% endfor %}
                 <p class="text-xs text-error mt-1 ml-1 hidden" data-error-for="phone"></p>
+              </div>
+              <div>
+                <label class="block text-xs font-medium uppercase tracking-wider text-outline mb-1.5 ml-1" for="profile_picture">Profile Picture</label>
+                <input class="w-full bg-surface-container-high border border-outline-variant focus:border-primary focus:ring-0 focus-visible:outline-none px-4 py-3 text-on-surface transition-all rounded-lg file:mr-4 file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:opacity-90" id="profile_picture" name="profile_picture" accept="image/*" type="file"/>
+                {% for error in form.profile_picture.errors %}<p class="text-xs text-error mt-1 ml-1">{{ error }}</p>{% endfor %}
               </div>
               <div class="col-span-full">
                 <label class="block text-xs font-medium uppercase tracking-wider text-outline mb-1.5 ml-1" for="address">Home Address</label>

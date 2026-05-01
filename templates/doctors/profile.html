@@ -62,7 +62,13 @@ tailwind.config = {
 <section class="bg-surface-container-lowest p-8 rounded-xl shadow-sm">
 <div class="flex items-start gap-8 mb-8">
 <div class="w-32 h-32 rounded-2xl overflow-hidden shadow-xl">
-<img alt="Doctor profile" class="w-full h-full object-cover" data-alt="A detailed portrait of a senior physician in a professional setting. The lighting is bright and ethereal, highlighting the clean textures of the doctor's white coat." src="https://ui-avatars.com/api/?name={{ user.first_name }}+{{ user.last_name }}&background=003f87&color=fff"/>
+{% if user.profile_picture %}
+<img alt="Doctor profile" class="w-full h-full object-cover" src="{{ user.profile_picture.url }}"/>
+{% else %}
+<div class="w-full h-full bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-white text-5xl font-bold">
+    {{ user.first_name|default:user.username|slice:":1"|upper }}{{ user.last_name|default:""|slice:":1"|upper }}
+</div>
+{% endif %}
 </div>
 <div class="flex-1">
 <div class="flex items-center gap-3 mb-2">

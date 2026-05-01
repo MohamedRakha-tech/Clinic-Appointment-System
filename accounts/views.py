@@ -16,13 +16,13 @@ from accounts.utils import get_user_role
 def _redirect_by_role(user):
     role = get_user_role(user)
     if role == "patient":
-        return redirect("accounts:patient_dashboard")
+        return redirect("emr:patient_list")
     if role == "doctor":
-        return redirect("accounts:doctor_dashboard")
+        return redirect("dashboard:doctor")
     if role == "receptionist":
-        return redirect("accounts:reception_dashboard")
+        return redirect("dashboard:receptionist")
     if role == "admin":
-        return redirect("accounts:admin_dashboard")
+        return redirect("dashboard:admin")
     return redirect("accounts:patient_login")
 
 
@@ -40,7 +40,7 @@ def register_view(request):
         return redirect_response
 
     if request.method == "POST":
-        form = PatientRegisterForm(request.POST)
+        form = PatientRegisterForm(request.POST, request.FILES)
         if form.is_valid():
             user = form.save(commit=False)
             # Signal will assign Patient group and create PatientProfile.
@@ -49,7 +49,7 @@ def register_view(request):
             # Persist the profile-specific fields (date_of_birth, gender, address).
             form.save_profile(user)
             login_user(request, user)
-            return redirect("accounts:patient_dashboard")
+            return redirect("emr:patient_list")
     else:
         form = PatientRegisterForm()
 
@@ -109,15 +109,18 @@ class PatientDashboardView(PatientRequiredMixin, TemplateView):
 
 
 class DoctorDashboardView(DoctorRequiredMixin, TemplateView):
-    template_name = "accounts/doctor_dashboard.html"
+    def get(self, request, *args, **kwargs):
+        return redirect("dashboard:doctor")
 
 
 class ReceptionDashboardView(ReceptionistRequiredMixin, TemplateView):
-    template_name = "accounts/receptionist_dashboard.html"
+    def get(self, request, *args, **kwargs):
+        return redirect("dashboard:receptionist")
 
 
 class AdminDashboardView(AdminRequiredMixin, TemplateView):
-    template_name = "accounts/admin_dashboard.html"
+    def get(self, request, *args, **kwargs):
+        return redirect("dashboard:admin")
 
 
 # ─────────────────────────────────────────────

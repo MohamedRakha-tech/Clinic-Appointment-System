@@ -137,6 +137,75 @@
         white-space: nowrap;
     }
     .waiting-time.long { color: #b91c1c; }
+    .status-panel {
+        background:
+            radial-gradient(circle at top right, rgba(0, 63, 135, .12), transparent 35%),
+            linear-gradient(135deg, #fbfdff 0%, #f2f7fc 100%);
+        border: 1px solid #dde8f4;
+        border-radius: 1rem;
+        box-shadow: 0 10px 30px rgba(15, 55, 110, .06);
+        padding: 1.5rem;
+    }
+    .status-panel.action {
+        border-color: #bfd7f3;
+        box-shadow: 0 12px 34px rgba(11, 78, 162, .12);
+    }
+    .status-panel.watch {
+        border-color: #f3dfaa;
+        box-shadow: 0 12px 34px rgba(168, 124, 7, .10);
+    }
+    .status-panel.calm {
+        border-color: #cfe9db;
+        box-shadow: 0 12px 34px rgba(30, 126, 52, .08);
+    }
+    .status-orb {
+        width: 52px;
+        height: 52px;
+        border-radius: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+    .status-panel.action .status-orb {
+        background: #e0eaff;
+        color: #003f87;
+    }
+    .status-panel.watch .status-orb {
+        background: #fff3cd;
+        color: #856404;
+    }
+    .status-panel.calm .status-orb {
+        background: #e6f4ea;
+        color: #1e7e34;
+    }
+    .status-link {
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        text-decoration: none;
+        font-size: .82rem;
+        font-weight: 800;
+        border-radius: .7rem;
+        padding: .7rem 1rem;
+        border: 1px solid #d5e3f1;
+        background: #fff;
+        color: var(--ink);
+        transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+    .status-link:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 22px rgba(15,55,110,.08);
+        border-color: #bfd7f3;
+        color: var(--ink);
+    }
+    .metric-footnote {
+        margin-top: .75rem;
+        font-size: .75rem;
+        font-weight: 700;
+        color: var(--muted);
+    }
 </style>
 {% endblock %}
 
@@ -153,11 +222,36 @@
             Good Morning, Dr. {{ request.user.first_name }} 👋
         </h3>
         <p class="text-muted mb-0" style="font-size:.85rem;">
-            Here's your queue for today.
+            A focused snapshot of today's workload and monthly reliability.
         </p>
     </div>
     <div class="text-muted small fw-bold">
-        {{ today_queue|length }} patient{% if today_queue|length != 1 %}s{% endif %} today
+        {{ confirmed_today_count|add:today_queue_count }} confirmed or checked-in appointment{% if confirmed_today_count|add:today_queue_count != 1 %}s{% endif %} today
+    </div>
+</div>
+
+<div class="status-panel {{ today_status.tone }} mb-4">
+    <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-between gap-3">
+        <div class="d-flex align-items-start gap-3">
+            <div class="status-orb">
+                {% if today_status.tone == "action" %}
+                <i class="bi bi-bell-fill"></i>
+                {% elif today_status.tone == "watch" %}
+                <i class="bi bi-clock-history"></i>
+                {% else %}
+                <i class="bi bi-check2-circle"></i>
+                {% endif %}
+            </div>
+            <div>
+                <div class="metric-label mb-2">Queue Status</div>
+                <div class="fw-black mb-1" style="font-size:1.25rem;color:var(--ink);">{{ today_status.title }}</div>
+                <div class="text-muted" style="font-size:.88rem;">{{ today_status.message }}</div>
+            </div>
+        </div>
+        <a href="{% url 'queueing:doctor_queue' %}" class="status-link">
+            <i class="bi bi-arrow-right-circle"></i>
+            Open Queue Page
+        </a>
     </div>
 </div>
 
@@ -166,7 +260,7 @@
 <!-- ============================================================ -->
 <div class="row g-4 mb-4">
 
-    <!-- Today's Queue -->
+    <!-- Live Queue -->
     <div class="col-6 col-xl-4">
         <div class="metric-card">
             <div class="glow" style="background:#003f87;"></div>
@@ -176,14 +270,74 @@
                 </div>
                 <span class="metric-badge" style="background:#e0eaff;color:#003f87;">Today</span>
             </div>
-            <div class="metric-label mb-1">Patients in Queue</div>
-            <div class="metric-value">{{ today_queue|length }}</div>
+            <div class="metric-label mb-1">Live Queue</div>
+            <div class="metric-value">{{ today_queue_count }}</div>
+            <div class="metric-footnote">
+                {{ today_status.checked_in_count }} checked in and waiting now
+            </div>
         </div>
     </div>
 
-    <!-- My No-Show Rate -->
+    <!-- Confirmed Schedule -->
     <div class="col-6 col-xl-4">
         <div class="metric-card">
+            <div class="glow" style="background:#856404;"></div>
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="metric-icon" style="background:#fff3cd;color:#856404;">
+                    <i class="bi bi-calendar2-check-fill"></i>
+                </div>
+                <span class="metric-badge" style="background:#fff3cd;color:#856404;">
+                    Today
+                </span>
+            </div>
+            <div class="metric-label mb-1">Confirmed Schedule</div>
+            <div class="metric-value">{{ confirmed_today_count }}</div>
+            <div class="metric-footnote" style="color:#856404;">
+                Confirmed by reception and not checked in yet
+            </div>
+        </div>
+    </div>
+
+    <!-- Awaiting Reception -->
+    <div class="col-6 col-xl-4">
+        <div class="metric-card">
+            <div class="glow" style="background:#ba1a1a;"></div>
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="metric-icon" style="background:#fde8e8;color:#ba1a1a;">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+                <span class="metric-badge" style="background:#fde8e8;color:#ba1a1a;">Today</span>
+            </div>
+            <div class="metric-label mb-1">Awaiting Reception</div>
+            <div class="metric-value">{{ requested_today_count }}</div>
+            <div class="metric-footnote" style="color:#ba1a1a;">
+                Requested only and not confirmed yet
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-12 col-xl-4">
+        <div class="metric-card">
+            <div class="glow" style="background:#006877;"></div>
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="metric-icon" style="background:#e0f7fa;color:#006877;">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+                <span class="metric-badge" style="background:#e0f7fa;color:#006877;">Today</span>
+            </div>
+            <div class="metric-label mb-1">Completed Today</div>
+            <div class="metric-value">{{ completed_today_count }}</div>
+            <div class="metric-footnote">
+                Progress against today's active schedule
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-xl-8">
+        <div class="metric-card h-100">
             <div class="glow" style="background:#ba1a1a;"></div>
             <div class="d-flex justify-content-between align-items-start mb-3">
                 <div class="metric-icon" style="background:#fde8e8;color:#ba1a1a;">
@@ -195,34 +349,11 @@
             </div>
             <div class="metric-label mb-1">My No-Show Rate</div>
             <div class="metric-value">{{ my_noshow_rate }}%</div>
-            <div class="mt-2" style="font-size:.75rem;color:#ba1a1a;font-weight:700;">
+            <div class="metric-footnote" style="color:#ba1a1a;">
                 {{ my_noshow_count }} no-shows / {{ my_total_month }} total
             </div>
         </div>
     </div>
-
-    <!-- Completed Today -->
-    <div class="col-6 col-xl-4">
-        <div class="metric-card">
-            <div class="glow" style="background:#006877;"></div>
-            <div class="d-flex justify-content-between align-items-start mb-3">
-                <div class="metric-icon" style="background:#e0f7fa;color:#006877;">
-                    <i class="bi bi-check-circle-fill"></i>
-                </div>
-                <span class="metric-badge" style="background:#e0f7fa;color:#006877;">Today</span>
-            </div>
-            <div class="metric-label mb-1">Completed</div>
-            <div class="metric-value">
-                {% with completed=today_queue|length %}
-                    0
-                {% endwith %}
-            </div>
-            <div class="mt-2" style="font-size:.75rem;color:var(--muted);font-weight:700;">
-                Updated in real-time
-            </div>
-        </div>
-    </div>
-
 </div>
 
 <!-- ============================================================ -->
@@ -232,7 +363,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <div class="chart-title">Today's Patient Queue</div>
-            <div class="chart-sub">Ordered by appointment time</div>
+            <div class="chart-sub">Only checked-in patients belong in the live doctor queue</div>
         </div>
     </div>
 
@@ -278,27 +409,16 @@
             </div>
             {% endif %}
 
-            <!-- Actions -->
-            <div class="d-flex gap-2 flex-shrink-0">
-                {% if appt.status == 'CONFIRMED' %}
-                <a href="#" class="btn btn-sm"
-                   style="background:#e0eaff;color:#003f87;font-weight:700;border-radius:.5rem;">
-                    <i class="bi bi-check2"></i> Check In
-                </a>
-                {% endif %}
-                {% if appt.status == 'CHECKED_IN' %}
-                <a href="#" class="btn btn-sm"
-                   style="background:#e6f4ea;color:#1e7e34;font-weight:700;border-radius:.5rem;">
-                    <i class="bi bi-file-medical"></i> Consult
-                </a>
-                {% endif %}
-            </div>
+            <a href="{% url 'queueing:doctor_queue' %}" class="status-link flex-shrink-0">
+                <i class="bi bi-arrow-right"></i>
+                Review in Queue
+            </a>
 
         </div>
         {% empty %}
         <div class="text-center py-5">
             <i class="bi bi-calendar-x" style="font-size:2.5rem;color:#c8ced8;"></i>
-            <p class="text-muted mt-3 fw-bold">No patients scheduled for today.</p>
+            <p class="text-muted mt-3 fw-bold">No checked-in patients are waiting right now.</p>
         </div>
         {% endfor %}
     </div>

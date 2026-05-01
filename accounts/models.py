@@ -25,9 +25,10 @@ class UserManager(BaseUserManager):
 class User(AbstractBaseUser, PermissionsMixin):
     username    = models.CharField(max_length=150, unique=True)
     email       = models.EmailField(max_length=255, unique=True)
-    first_name  = models.CharField(max_length=150, blank=True, null=True)
-    last_name   = models.CharField(max_length=150, blank=True, null=True)
-    phone       = models.CharField(max_length=20, blank=True, null=True)
+    first_name  = models.CharField(max_length=150)
+    last_name   = models.CharField(max_length=150)
+    phone       = models.CharField(max_length=20)
+    profile_picture = models.ImageField(upload_to="profile_pictures/", blank=True, null=True)
     is_active   = models.BooleanField(default=True)
     is_staff    = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)
@@ -50,9 +51,9 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 class PatientProfile(models.Model):
     user                    = models.OneToOneField(User, on_delete=models.CASCADE, related_name="patient_profile")
-    date_of_birth           = models.DateField(blank=True, null=True)
-    gender                  = models.CharField(max_length=10, blank=True, null=True)
-    address                 = models.TextField(blank=True, null=True)
+    date_of_birth           = models.DateField()
+    gender                  = models.CharField(max_length=10)
+    address                 = models.TextField()
     emergency_contact_name  = models.CharField(max_length=120, blank=True, null=True)
     emergency_contact_phone = models.CharField(max_length=20, blank=True, null=True)
     created_at              = models.DateTimeField(auto_now_add=True)

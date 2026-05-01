@@ -33,3 +33,15 @@
         <p class="text-xs text-error mt-1">{{ form.phone.errors.0 }}</p>
     {% endif %}
 </div>
+<div class="col-span-2">
+    <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2" for="profile_picture">Profile Picture</label>
+    {% if user.profile_picture %}
+        <div class="mb-3">
+            <img src="{{ user.profile_picture.url }}" alt="{{ user.username }} profile picture" class="w-20 h-20 rounded-full object-cover border border-outline-variant/40" />
+        </div>
+    {% endif %}
+    <input class="w-full bg-surface-container-high border border-outline-variant focus:border-primary focus:ring-0 px-4 py-3 rounded-lg text-on-surface font-medium transition-colors file:mr-4 file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:opacity-90" id="profile_picture" type="file" name="profile_picture" accept="image/*" />
+    {% if form.profile_picture.errors %}
+        <p class="text-xs text-error mt-1">{{ form.profile_picture.errors.0 }}</p>
+    {% endif %}
+</div>

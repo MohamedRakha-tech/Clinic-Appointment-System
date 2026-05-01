@@ -64,7 +64,13 @@ tailwind.config = {
 <div class="flex items-start gap-8 mb-10">
 <div class="relative">
 <div class="w-32 h-32 rounded-2xl overflow-hidden ring-4 ring-surface-container shadow-xl">
-<img alt="Admin user image" class="w-full h-full object-cover" data-alt="A high-definition professional portrait of a senior clinical administrator. The lighting is crisp and cool, typical of a medical sanctuary aesthetic. The subject is wearing a navy blue medical uniform and is centered against a minimalist, bright grey architectural background with soft natural light streaming in from the side." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAlVtCGdABQzYB1wlrz--aHuh8uZXo5sizCuhamw2nSfgzRE2KlfQH_gxmnNR74FrFnZf4R1oA32auo-9EUcx5qPeajaN2i_1s7XGUkoKyhz3rcF_wKQQTWd9qirRIoqkCZPdsyC2K_8nAfTSxpYseZCWnQkdGUQzFTgqJIkCOxsud9ZgEgwBSNHgRVFA055DZbV-ex_H09IhBJwE3dbZGj6f6f0E8lL9dEaFcFS1Xu_lBvb8oGeMvVnXuGUUVYr7HwJYooy81Rbqw"/>
+{% if user.profile_picture %}
+<img alt="Admin user image" class="w-full h-full object-cover" src="{{ user.profile_picture.url }}"/>
+{% else %}
+<div class="w-full h-full bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-white text-5xl font-bold">
+    {{ user.first_name|default:user.username|slice:":1"|upper }}{{ user.last_name|default:""|slice:":1"|upper }}
+</div>
+{% endif %}
 </div>
 <div class="absolute -bottom-2 -right-2 bg-tertiary text-white p-1.5 rounded-lg shadow-lg">
 <span class="material-symbols-outlined text-[18px]" data-icon="verified_user" style="font-variation-settings: 'FILL' 1;">verified_user</span>

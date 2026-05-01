@@ -34,15 +34,19 @@
                 <i class="bi bi-bar-chart-line-fill"></i>
                 <span>Reports</span>
             </a>
+            <a class="nav-link sidebar-link {% if '/accounts/profile/admin/' in request.path %}active{% endif %}" href="{% url 'accounts:admin_profile' %}">
+                <i class="bi bi-person-circle"></i>
+                <span>Profile</span>
+            </a>
             {% elif request.user.receptionist_profile %}
-            <a class="nav-link sidebar-link {% if '/accounts/dashboard/reception/' in request.path %}active{% endif %}" href="{% url 'accounts:reception_dashboard' %}">
+            <a class="nav-link sidebar-link {% if '/accounts/dashboard/reception/' in request.path or '/dashboard/receptionist/' in request.path %}active{% endif %}" href="{% url 'dashboard:receptionist' %}">
                 <i class="bi bi-speedometer2"></i>
                 <span>Reception Dashboard</span>
             </a>
-                <a class="nav-link sidebar-link {% if '/emr/consultations/reception/' in request.path %}active{% endif %}" href="{% url 'emr:reception_list' %}">
-                    <i class="bi bi-journal-medical"></i>
-                    <span>EMR Records</span>
-                </a>
+            <a class="nav-link sidebar-link {% if '/emr/consultations/reception/' in request.path %}active{% endif %}" href="{% url 'emr:reception_list' %}">
+                <i class="bi bi-journal-medical"></i>
+                <span>EMR Records</span>
+            </a>
             <a class="nav-link sidebar-link {% if '/queueing/reception/' in request.path %}active{% endif %}" href="{% url 'queueing:reception_queue' %}">
                 <i class="bi bi-clipboard2-pulse-fill"></i>
                 <span>Reception Monitor</span>
@@ -55,8 +59,12 @@
                 <i class="bi bi-calendar2-event-fill"></i>
                 <span>Appointments</span>
             </a>
+            <a class="nav-link sidebar-link {% if '/accounts/profile/reception/' in request.path %}active{% endif %}" href="{% url 'accounts:reception_profile' %}">
+                <i class="bi bi-person-circle"></i>
+                <span>Profile</span>
+            </a>
             {% elif request.user.doctor_profile %}
-            <a class="nav-link sidebar-link {% if '/accounts/dashboard/doctor/' in request.path %}active{% endif %}" href="{% url 'accounts:doctor_dashboard' %}">
+            <a class="nav-link sidebar-link {% if '/accounts/dashboard/doctor/' in request.path or '/dashboard/doctor/' in request.path %}active{% endif %}" href="{% url 'dashboard:doctor' %}">
                 <i class="bi bi-speedometer2"></i>
                 <span>Doctor Dashboard</span>
             </a>
@@ -76,11 +84,11 @@
                 <i class="bi bi-calendar2-event-fill"></i>
                 <span>Appointments</span>
             </a>
-            {% elif current_user_role == "patient" %}
-            <a class="nav-link sidebar-link {% if '/accounts/dashboard/patient/' in request.path %}active{% endif %}" href="{% url 'accounts:patient_dashboard' %}">
-                <i class="bi bi-person-badge-fill"></i>
-                <span>Patient Portal</span>
+            <a class="nav-link sidebar-link {% if '/accounts/profile/doctor/' in request.path %}active{% endif %}" href="{% url 'accounts:doctor_profile' %}">
+                <i class="bi bi-person-circle"></i>
+                <span>Profile</span>
             </a>
+            {% elif current_user_role == "patient" %}
             <a class="nav-link sidebar-link {% if '/emr/patient/' in request.path %}active{% endif %}" href="{% url 'emr:patient_list' %}">
                 <i class="bi bi-file-medical-fill"></i>
                 <span>My EMR</span>
@@ -88,6 +96,10 @@
             <a class="nav-link sidebar-link {% if '/appointments/' in request.path %}active{% endif %}" href="{% url 'appointment-list' %}">
                 <i class="bi bi-calendar2-event-fill"></i>
                 <span>Appointments</span>
+            </a>
+            <a class="nav-link sidebar-link {% if '/accounts/profile/patient/' in request.path %}active{% endif %}" href="{% url 'accounts:patient_profile' %}">
+                <i class="bi bi-person-circle"></i>
+                <span>Profile</span>
             </a>
             {% endif %}
         {% endif %}

@@ -25,10 +25,10 @@ def _get_error_home_context(request):
             }
 
     role_home = {
-        "admin": reverse("accounts:admin_dashboard"),
-        "receptionist": reverse("accounts:reception_dashboard"),
-        "doctor": reverse("accounts:doctor_dashboard"),
-        "patient": reverse("accounts:patient_dashboard"),
+        "admin": reverse("dashboard:admin"),
+        "receptionist": reverse("dashboard:receptionist"),
+        "doctor": reverse("dashboard:doctor"),
+        "patient": reverse("emr:patient_records"),
     }
     return {
         "home_url": role_home.get(role, "/"),
@@ -41,7 +41,7 @@ def error_403(request, exception=None):
 
 
 def error_404(request, exception=None):
-    return render(request, "404.html", status=404)
+    return render(request, "404.html", _get_error_home_context(request), status=404)
 
 
 def error_500(request):

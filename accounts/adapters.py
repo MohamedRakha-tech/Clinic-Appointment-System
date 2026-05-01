@@ -11,6 +11,10 @@ from accounts.utils import get_user_role, set_user_role
 
 
 class SocialAccountAdapter(DefaultSocialAccountAdapter):
+    def _mark_google_login(self, request, sociallogin):
+        if sociallogin.account and sociallogin.account.provider == "google":
+            request.session["social_login_provider"] = "google"
+
     def populate_user(self, request, sociallogin, data):
         user = super().populate_user(request, sociallogin, data)
 
@@ -23,6 +27,7 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
         return user
 
     def pre_social_login(self, request, sociallogin):
+        self._mark_google_login(request, sociallogin)
         email = (getattr(sociallogin.user, "email", "") or "").strip().lower()
         if not email:
             return
@@ -43,6 +48,7 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
             sociallogin.connect(request, existing_user)
 
     def save_user(self, request, sociallogin, form=None):
+        self._mark_google_login(request, sociallogin)
         user = super().save_user(request, sociallogin, form=form)
         set_user_role(user, "patient")
         PatientProfile.objects.get_or_create(user=user)

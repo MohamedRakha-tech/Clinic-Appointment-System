@@ -49,22 +49,54 @@ def get_doctor_dashboard_data(doctor_user):
         (d for d in noshow if d['doctor_id'] == doctor_user.id),
         {'rate': 0.0, 'noshows': 0, 'total': 0}
     )
+    today_status = selectors.get_doctor_today_status_summary(doctor_user.id)
 
     return {
         'today_queue': selectors.get_doctor_today_queue(doctor_user.id),
+        'today_schedule': selectors.get_doctor_today_schedule(doctor_user.id),
+        'today_queue_count': selectors.get_doctor_today_queue_count(doctor_user.id),
+        'requested_today_count': selectors.get_doctor_requested_today_count(doctor_user.id),
+        'confirmed_today_count': selectors.get_doctor_confirmed_today_count(doctor_user.id),
+        'completed_today_count': selectors.get_doctor_completed_today_count(doctor_user.id),
+        'upcoming_today_count': selectors.get_doctor_upcoming_today_count(doctor_user.id),
         'my_noshow_rate':  my_noshow['rate'],
         'my_noshow_count': my_noshow['noshows'],
         'my_total_month':  my_noshow['total'],
+        'today_status': today_status,
     }
 
 
 
 def get_receptionist_dashboard_data():
+    appointments_today = selectors.get_appointments_by_status(date=timezone.localdate())
+    pending_count = selectors.get_pending_appointments_count()
+    checked_in_count = appointments_today.get('CHECKED_IN', 0)
+    completed_count = appointments_today.get('COMPLETED', 0)
 
     return {
         'today_appointments': selectors.get_today_appointments_count(),
-        'pending_count':      selectors.get_pending_appointments_count(),
-        'appointments_today': selectors.get_appointments_by_status(date=timezone.localdate()),
+        'pending_count':      pending_count,
+        'checked_in_count':   checked_in_count,
+        'completed_count':    completed_count,
+        'appointments_today': appointments_today,
         'appointments_list':  selectors.get_today_appointments_list(),
+        'reception_focus': (
+            {
+                'tone': 'action',
+                'title': f'{pending_count} appointment{"s" if pending_count != 1 else ""} awaiting confirmation',
+                'message': 'Start with the appointments list to confirm or decline pending requests.',
+            }
+            if pending_count
+            else {
+                'tone': 'live' if checked_in_count else 'calm',
+                'title': (
+                    f'{checked_in_count} patient{"s" if checked_in_count != 1 else ""} checked in'
+                    if checked_in_count else 'Front desk is under control'
+                ),
+                'message': (
+                    'Use the queue monitor to coordinate live patient flow across doctors.'
+                    if checked_in_count else 'No pending confirmations right now. You can monitor queue flow or book new visits.'
+                ),
+            }
+        ),
     }
-

@@ -53,7 +53,7 @@ tailwind.config = {
 <p class="text-on-surface-variant/80 mt-2 text-lg">Manage your personal credentials and system identification details.</p>
 </div>
 <!-- Bento Form Grid -->
-<form method="POST" action="{% url 'accounts:admin_profile_edit' %}" class="grid grid-cols-12 gap-8">
+<form method="POST" action="{% url 'accounts:admin_profile_edit' %}" class="grid grid-cols-12 gap-8" enctype="multipart/form-data">
 {% csrf_token %}
 <!-- Profile Identity Card -->
 <div class="col-span-12 lg:col-span-4 flex flex-col gap-8">
@@ -61,7 +61,13 @@ tailwind.config = {
 <div class="flex flex-col items-center text-center">
 <div class="relative group cursor-pointer mb-6">
 <div class="w-32 h-32 rounded-full overflow-hidden border-4 border-surface-container shadow-inner">
-<img alt="Profile Picture" data-alt="A close-up professional medical portrait of a clinician in a pristine laboratory environment. The lighting is diffused and professional, casting soft shadows. The overall aesthetic is clean, medical, and high-end, utilizing a clinical blue and white color palette with sharp focus and cinematic depth." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCye85ILdzV3Hk_TSDOSUPCFaVC_pv0ixd-3AvD_1zVrjEy_7vAysV0A7hr6x1Dlhm1QnI0Cn89cFtXoJ35GDkM_9Zyf3sSYltEnskCnXdbjXUDmXYJx-rgeu6Cq3ejNtkOtYtOB3Vdw571kLFFTqiWmTGKksfy1aJBq5MsjYb2vRj-Xxf7SV7zO3sUcnzW4-YsMMn3Jlli0M_JtmovoindRRKOTUl6TS7qPMXikWqVVlpT5Q9B8V2M-EsAwJaz-EWYvZkCRySPkSI"/>
+{% if user.profile_picture %}
+<img alt="Profile Picture" class="w-full h-full object-cover" src="{{ user.profile_picture.url }}"/>
+{% else %}
+<div class="w-full h-full bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-white text-5xl font-bold">
+    {{ user.first_name|default:user.username|slice:":1"|upper }}{{ user.last_name|default:""|slice:":1"|upper }}
+</div>
+{% endif %}
 </div>
 <div class="absolute inset-0 flex items-center justify-center bg-on-surface/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
 <span class="material-symbols-outlined text-white text-3xl">photo_camera</span>

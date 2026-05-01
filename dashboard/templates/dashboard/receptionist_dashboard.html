@@ -141,6 +141,72 @@
     .btn-checkin  { background: #e6f4ea; color: #1e7e34; }
     .btn-confirm  { background: #e0eaff; color: #1a3fa0; }
     .btn-noshow   { background: #fde8e8; color: #b91c1c; }
+    .focus-panel {
+        background:
+            radial-gradient(circle at top right, rgba(0, 104, 119, .12), transparent 35%),
+            linear-gradient(135deg, #fbfdff 0%, #f2f7fc 100%);
+        border: 1px solid #dde8f4;
+        border-radius: 1rem;
+        box-shadow: 0 10px 30px rgba(15, 55, 110, .06);
+        padding: 1.5rem;
+    }
+    .focus-panel.action { border-color: #f3dfaa; }
+    .focus-panel.live { border-color: #bde4d5; }
+    .focus-panel.calm { border-color: #d8e7f5; }
+    .focus-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+    .focus-panel.action .focus-icon { background:#fff3cd; color:#856404; }
+    .focus-panel.live .focus-icon { background:#e6f4ea; color:#1e7e34; }
+    .focus-panel.calm .focus-icon { background:#e0eaff; color:#003f87; }
+    .nav-card {
+        display: block;
+        text-decoration: none;
+        background: var(--panel-bg);
+        border: 1px solid #dde8f4;
+        border-radius: 1rem;
+        box-shadow: 0 8px 30px rgba(15, 55, 110, .06);
+        padding: 1.35rem;
+        color: var(--ink);
+        transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+    }
+    .nav-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 35px rgba(15, 55, 110, .1);
+        border-color: #bfd7f3;
+        color: var(--ink);
+    }
+    .nav-card-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: .8rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.15rem;
+        margin-bottom: 1rem;
+    }
+    .table-link {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        font-size: .75rem;
+        font-weight: 800;
+        padding: .45rem .8rem;
+        border-radius: .55rem;
+        border: 1px solid #d5e3f1;
+        background: #fff;
+        color: var(--ink);
+        text-decoration: none;
+    }
+    .table-link:hover { color: var(--ink); border-color: #bfd7f3; }
 </style>
 {% endblock %}
 
@@ -161,6 +227,35 @@
     <div class="text-muted small fw-bold">
         <i class="bi bi-calendar3 me-1"></i>
         {% now "l, F j, Y" %}
+    </div>
+</div>
+
+<div class="focus-panel {{ reception_focus.tone }} mb-4">
+    <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-between gap-3">
+        <div class="d-flex align-items-start gap-3">
+            <div class="focus-icon">
+                {% if reception_focus.tone == 'action' %}
+                <i class="bi bi-exclamation-circle"></i>
+                {% elif reception_focus.tone == 'live' %}
+                <i class="bi bi-broadcast-pin"></i>
+                {% else %}
+                <i class="bi bi-check2-circle"></i>
+                {% endif %}
+            </div>
+            <div>
+                <div class="metric-label mb-2">Front Desk Focus</div>
+                <div class="fw-black mb-1" style="font-size:1.2rem;color:var(--ink);">{{ reception_focus.title }}</div>
+                <div class="text-muted" style="font-size:.88rem;">{{ reception_focus.message }}</div>
+            </div>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{% url 'appointment-list' %}" class="action-btn btn-confirm">
+                <i class="bi bi-calendar2-week me-1"></i> Appointments List
+            </a>
+            <a href="{% url 'queueing:reception_queue' %}" class="action-btn btn-checkin">
+                <i class="bi bi-clipboard2-pulse me-1"></i> Queue Monitor
+            </a>
+        </div>
     </div>
 </div>
 
@@ -199,7 +294,7 @@
             <div class="metric-label mb-1">Pending Confirmation</div>
             <div class="metric-value">{{ pending_count }}</div>
             <div class="mt-2" style="font-size:.75rem;color:#856404;font-weight:700;">
-                Awaiting your review
+                Review in the appointments list
             </div>
         </div>
     </div>
@@ -215,11 +310,9 @@
                 <span class="metric-badge" style="background:#e0f7fa;color:#006877;">Live</span>
             </div>
             <div class="metric-label mb-1">Checked In</div>
-            <div class="metric-value">
-                {{ appointments_today.CHECKED_IN|default:0 }}
-            </div>
+            <div class="metric-value">{{ checked_in_count }}</div>
             <div class="mt-2" style="font-size:.75rem;color:var(--muted);font-weight:700;">
-                Currently with doctor
+                Track live flow in queue monitor
             </div>
         </div>
     </div>
@@ -235,12 +328,43 @@
                 <span class="metric-badge" style="background:#e6f4ea;color:#004c17;">Done</span>
             </div>
             <div class="metric-label mb-1">Completed</div>
-            <div class="metric-value">
-                {{ appointments_today.COMPLETED|default:0 }}
+            <div class="metric-value">{{ completed_count }}</div>
+            <div class="mt-2" style="font-size:.75rem;color:var(--muted);font-weight:700;">
+                Completed visits for today
             </div>
         </div>
     </div>
 
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-12 col-xl-4">
+        <a href="{% url 'appointment-list' %}" class="nav-card h-100">
+            <div class="nav-card-icon" style="background:#e0eaff;color:#003f87;">
+                <i class="bi bi-calendar2-week-fill"></i>
+            </div>
+            <div class="chart-title mb-1">Review Appointments</div>
+            <div class="chart-sub">Open the full appointment list to confirm, decline, reschedule, or inspect visit details.</div>
+        </a>
+    </div>
+    <div class="col-12 col-xl-4">
+        <a href="{% url 'queueing:reception_queue' %}" class="nav-card h-100">
+            <div class="nav-card-icon" style="background:#e6f4ea;color:#1e7e34;">
+                <i class="bi bi-clipboard2-pulse-fill"></i>
+            </div>
+            <div class="chart-title mb-1">Monitor Queue</div>
+            <div class="chart-sub">Watch real-time check-ins by doctor and coordinate the current patient flow from one screen.</div>
+        </a>
+    </div>
+    <div class="col-12 col-xl-4">
+        <a href="{% url 'appointment-book' %}" class="nav-card h-100">
+            <div class="nav-card-icon" style="background:#e0f7fa;color:#006877;">
+                <i class="bi bi-plus-circle-fill"></i>
+            </div>
+            <div class="chart-title mb-1">Book New Visit</div>
+            <div class="chart-sub">Create a new appointment quickly when a patient calls or arrives at the reception desk.</div>
+        </a>
+    </div>
 </div>
 
 <!-- ============================================================ -->
@@ -330,15 +454,9 @@
                         {{ appt.status }}
                     </span>
 
-                    <!-- Actions -->
-                    <div class="d-flex gap-2">
-                        <a href="#" class="action-btn btn-confirm">
-                            <i class="bi bi-check2 me-1"></i>Confirm
-                        </a>
-                        <a href="#" class="action-btn btn-noshow">
-                            <i class="bi bi-x me-1"></i>Cancel
-                        </a>
-                    </div>
+                    <a href="{% url 'appointment-detail' appt.pk %}" class="table-link">
+                        <i class="bi bi-arrow-right"></i> Open Appointment
+                    </a>
 
                 </div>
                 {% endif %}
@@ -361,11 +479,11 @@
 <div class="chart-card">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <div class="chart-title">Full Queue — Today</div>
-            <div class="chart-sub">All appointments ordered by time</div>
+            <div class="chart-title">Today's Appointment Flow</div>
+            <div class="chart-sub">All appointments ordered by time with quick navigation to the right workspace</div>
         </div>
-        <a href="#" class="action-btn btn-confirm">
-            <i class="bi bi-plus me-1"></i> New Appointment
+        <a href="{% url 'appointment-book' %}" class="action-btn btn-confirm">
+            <i class="bi bi-plus me-1"></i> Book Appointment
         </a>
     </div>
 
@@ -411,19 +529,21 @@
                     </td>
                     <td>
                         <div class="d-flex gap-2">
-                            {% if appt.status == 'CONFIRMED' %}
-                            <a href="#" class="action-btn btn-checkin">
-                                <i class="bi bi-box-arrow-in-right me-1"></i>Check In
-                            </a>
-                            {% endif %}
                             {% if appt.status == 'REQUESTED' %}
-                            <a href="#" class="action-btn btn-confirm">
-                                <i class="bi bi-check2 me-1"></i>Confirm
+                            <a href="{% url 'appointment-detail' appt.pk %}" class="table-link">
+                                <i class="bi bi-arrow-right"></i> Review Request
                             </a>
-                            {% endif %}
-                            {% if appt.status == 'CHECKED_IN' %}
-                            <a href="#" class="action-btn btn-noshow">
-                                <i class="bi bi-person-x me-1"></i>No Show
+                            {% elif appt.status == 'CONFIRMED' %}
+                            <a href="{% url 'appointment-detail' appt.pk %}" class="table-link">
+                                <i class="bi bi-arrow-right"></i> Open for Check-In
+                            </a>
+                            {% elif appt.status == 'CHECKED_IN' %}
+                            <a href="{% url 'queueing:reception_queue' %}" class="table-link">
+                                <i class="bi bi-arrow-right"></i> Open Queue Monitor
+                            </a>
+                            {% else %}
+                            <a href="{% url 'appointment-detail' appt.pk %}" class="table-link">
+                                <i class="bi bi-arrow-right"></i> View Details
                             </a>
                             {% endif %}
                         </div>

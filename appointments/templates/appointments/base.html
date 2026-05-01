@@ -91,7 +91,7 @@
         <nav class="flex-1 space-y-1">
             {% if request.user.is_authenticated %}
                 {% if request.user.is_superuser or request.user.admin_profile %}
-                <a class="flex items-center space-x-3 px-4 py-3 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all rounded-lg" href="{% url 'accounts:admin_dashboard' %}">
+                <a class="flex items-center space-x-3 px-4 py-3 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all rounded-lg" href="{% url 'dashboard:admin' %}">
                     <span class="material-symbols-outlined">dashboard</span>
                     <span class="font-medium">Admin Dashboard</span>
                 </a>
@@ -108,7 +108,7 @@
                     <span class="font-medium">Reports</span>
                 </a>
                 {% elif request.user.receptionist_profile %}
-                <a class="flex items-center space-x-3 px-4 py-3 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all rounded-lg" href="{% url 'accounts:reception_dashboard' %}">
+                <a class="flex items-center space-x-3 px-4 py-3 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all rounded-lg" href="{% url 'dashboard:receptionist' %}">
                     <span class="material-symbols-outlined">dashboard</span>
                     <span class="font-medium">Reception Dashboard</span>
                 </a>
@@ -125,7 +125,7 @@
                     <span class="font-medium">Scheduling Management</span>
                 </a>
                 {% elif request.user.doctor_profile %}
-                <a class="flex items-center space-x-3 px-4 py-3 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all rounded-lg" href="{% url 'accounts:doctor_dashboard' %}">
+                <a class="flex items-center space-x-3 px-4 py-3 text-[#141d23] dark:text-slate-400 hover:text-[#0056b3] hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all rounded-lg" href="{% url 'dashboard:doctor' %}">
                     <span class="material-symbols-outlined">dashboard</span>
                     <span class="font-medium">Doctor Dashboard</span>
                 </a>

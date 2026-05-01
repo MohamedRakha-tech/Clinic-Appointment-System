@@ -52,7 +52,13 @@ tailwind.config = {
 <div class="flex items-center gap-8">
 <div class="relative">
 <div class="w-40 h-40 rounded-full overflow-hidden ambient-shadow ring-4 ring-surface-container-lowest">
-<img alt="Receptionist Profile" class="w-full h-full object-cover" data-alt="Detailed professional portrait of a medical office administrator in a bright, minimalist hospital reception area. She is wearing a dark navy scrub top. The lighting is soft and diffused, highlighting natural skin textures and a confident expression. The color palette is composed of serene blues and clean whites, embodying the Sanctuary Health brand identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwhACtbuUz4prPds2wMu749DRUooWh-C9dGSa2YtzphJsYSRJtxclX5tUVMSP_bOik0BFRe21u_KwVxM-zAM_8VZwsKp_E93Q76W-aUDIxCzXdMqrIu-_0Tn88i0AS9jXVbghp1SYaE2_lyyP0pLfGSLoIxxQ9ekB9IjQjdyIOmp4E-QjP2YA6NOwrevjTFpZq6fdrKkpcpZnxbDVY60ieg3xzm3OdvK52Sou15b1Odd5x4KfxbWgRuR3BpQ5z4zQsvlfwTXVppbk"/>
+{% if user.profile_picture %}
+<img alt="Receptionist Profile" class="w-full h-full object-cover" src="{{ user.profile_picture.url }}"/>
+{% else %}
+<div class="w-full h-full bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-white text-6xl font-bold">
+    {{ user.first_name|default:user.username|slice:":1"|upper }}{{ user.last_name|default:""|slice:":1"|upper }}
+</div>
+{% endif %}
 </div>
 <div class="absolute bottom-2 right-2 w-8 h-8 bg-tertiary-fixed border-4 border-surface rounded-full"></div>
 </div>
