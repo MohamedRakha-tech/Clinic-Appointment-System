@@ -239,12 +239,8 @@ class ReportsView(AdminRequiredMixin, View):
         return render(request, 'dashboard/reports.html', {
             'appt_page':     appt_page,
             'doctors':       selectors.get_all_doctors(),
-            'staff_users':   selectors.get_all_staff_users(),
             'status_list':   ['REQUESTED', 'CONFIRMED', 'CHECKED_IN', 'COMPLETED', 'CANCELLED', 'NO_SHOW'],
-            'action_list':   [],
             'appt_filters':  appt_filters,
-            'audit_filters': {},
-            'active_tab':    request.GET.get('tab', 'appointments'),
         })
 
 

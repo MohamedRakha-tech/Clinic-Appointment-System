@@ -41,16 +41,6 @@
     .bar-track { height: 8px; background: var(--soft-bg); border-radius: 99px; overflow: hidden; }
     .bar-fill  { height: 100%; border-radius: 99px; transition: width .6s ease; }
 
-    .audit-row { padding: .75rem 1rem; border-radius: .6rem; transition: background .15s; }
-    .audit-row:hover { background: var(--soft-bg); }
-    .audit-action { font-size: .68rem; font-weight: 800; padding: .2rem .5rem; border-radius: .3rem; letter-spacing: .05em; }
-    .action-CREATE  { background: #e6f4ea; color: #1e7e34; }
-    .action-UPDATE  { background: #fff3cd; color: #856404; }
-    .action-DELETE  { background: #fde8e8; color: #b91c1c; }
-    .action-LOGIN   { background: #e0eaff; color: #1a3fa0; }
-    .action-LOGOUT  { background: #ede9fe; color: #5b21b6; }
-    .action-EXPORT  { background: #e0f7fa; color: #006877; }
-
     .top-doctor-row { display: flex; align-items: center; gap: .75rem; padding: .6rem 0; border-bottom: 1px solid #f0f4f9; }
     .top-doctor-row:last-child { border: none; }
     .doctor-avatar {
@@ -120,6 +110,45 @@
     }
     .chart-select:focus { outline: none; border-color: var(--brand); }
     .chart-select:hover { border-color: var(--brand); }
+    .operations-card {
+        background:
+            radial-gradient(circle at top right, rgba(0, 104, 119, .12), transparent 40%),
+            linear-gradient(135deg, #fbfdff 0%, #f1f8fb 100%);
+    }
+    .ops-link {
+        display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+        padding: .95rem 1rem; border-radius: .85rem; text-decoration: none;
+        border: 1px solid #dde8f4; color: var(--ink); background: rgba(255,255,255,.75);
+        transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+    .ops-link:hover {
+        transform: translateY(-2px);
+        border-color: #bfd7f3;
+        box-shadow: 0 10px 24px rgba(15,55,110,.08);
+        color: var(--ink);
+    }
+    .ops-link-icon {
+        width: 42px; height: 42px; border-radius: .75rem;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.05rem; flex-shrink: 0;
+    }
+    .ops-stat-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .9rem;
+    }
+    .ops-stat {
+        padding: 1rem;
+        border-radius: .85rem;
+        border: 1px solid #dde8f4;
+        background: rgba(255,255,255,.72);
+    }
+    .ops-stat-label {
+        font-size: .62rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+    }
+    .ops-stat-value {
+        font-size: 1.4rem; font-weight: 900; color: var(--ink); line-height: 1.15;
+    }
 </style>
 {% endblock %}
 
@@ -334,11 +363,11 @@
 
     </div>
 
-    <!-- Section 3: No-Show per Doctor + Audit Log -->
+    <!-- Section 3: No-Show per Doctor + Operations -->
     <div class="row g-4">
 
         <!-- No-Show per Doctor -->
-        <div class="col-12 col-xl-5">
+        <div class="col-12 col-xl-6">
             <div class="chart-card h-100">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
@@ -378,42 +407,79 @@
             </div>
         </div>
 
-        <!-- Recent Audit Log -->
-        <div class="col-12 col-xl-7">
-            <div class="chart-card h-100">
+        <!-- Operations Panel -->
+        <div class="col-12 col-xl-6">
+            <div class="chart-card operations-card h-100">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
-                        <div class="chart-title">Recent Activity</div>
-                        <div class="chart-sub">Last 8 system actions</div>
+                        <div class="chart-title">Admin Operations</div>
+                        <div class="chart-sub">Faster access to the actions and snapshots used most often</div>
                     </div>
-                    <div class="d-flex gap-2">
-                        <a href="{% url 'dashboard:reports' %}?tab=audit" class="export-btn">
-                            <i class="bi bi-list-ul"></i> View All
-                        </a>
+                    <a href="{% url 'dashboard:reports' %}" class="export-btn">
+                        <i class="bi bi-calendar2-week"></i> Open Reports
+                    </a>
+                </div>
+
+                <div class="ops-stat-grid mb-4">
+                    <div class="ops-stat">
+                        <div class="ops-stat-label mb-1">Pending Requests</div>
+                        <div class="ops-stat-value" style="color:#b45309;">{{ pending_count }}</div>
+                        <div style="font-size:.72rem;color:var(--muted);">appointments waiting for follow-up</div>
+                    </div>
+                    <div class="ops-stat">
+                        <div class="ops-stat-label mb-1">New Patients</div>
+                        <div class="ops-stat-value" style="color:#003f87;">{{ new_patients_month }}</div>
+                        <div style="font-size:.72rem;color:var(--muted);">registered this month</div>
+                    </div>
+                    <div class="ops-stat">
+                        <div class="ops-stat-label mb-1">Completed Visits</div>
+                        <div class="ops-stat-value" style="color:#006877;">{{ total_completed }}</div>
+                        <div style="font-size:.72rem;color:var(--muted);">all-time finished appointments</div>
+                    </div>
+                    <div class="ops-stat">
+                        <div class="ops-stat-label mb-1">No-Show Cases</div>
+                        <div class="ops-stat-value" style="color:#b91c1c;">{{ noshow_count }}</div>
+                        <div style="font-size:.72rem;color:var(--muted);">recorded in the last 30 days</div>
                     </div>
                 </div>
-                <div class="d-flex flex-column">
-                    {% for log in recent_audit_logs %}
-                    <div class="audit-row d-flex align-items-center gap-3">
-                        <span class="audit-action action-{{ log.action }}">{{ log.action }}</span>
-                        <div class="flex-grow-1">
-                            <div style="font-size:.82rem;font-weight:700;">
-                                {{ log.target_model }}{% if log.target_id %} #{{ log.target_id }}{% endif %}
+
+                <div class="d-flex flex-column gap-3">
+                    <a href="{% url 'dashboard:users' %}" class="ops-link">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="ops-link-icon" style="background:#e0eaff;color:#003f87;">
+                                <i class="bi bi-people"></i>
                             </div>
-                            {% if log.description %}
-                            <div style="font-size:.73rem;color:var(--muted);">{{ log.description }}</div>
-                            {% endif %}
-                        </div>
-                        <div class="text-end flex-shrink-0">
-                            <div style="font-size:.72rem;font-weight:700;color:var(--ink);">
-                                {% if log.user %}{{ log.user.first_name }} {{ log.user.last_name }}{% else %}System{% endif %}
+                            <div>
+                                <div style="font-size:.85rem;font-weight:800;">Manage Users</div>
+                                <div style="font-size:.74rem;color:var(--muted);">Review roles, update staff access, and keep the team directory current.</div>
                             </div>
-                            <div style="font-size:.68rem;color:var(--muted);">{{ log.timestamp|timesince }} ago</div>
                         </div>
-                    </div>
-                    {% empty %}
-                    <p class="text-muted small">No activity recorded yet.</p>
-                    {% endfor %}
+                        <i class="bi bi-arrow-right"></i>
+                    </a>
+                    <a href="{% url 'dashboard:export-appointments' %}" class="ops-link">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="ops-link-icon" style="background:#e6f4ea;color:#1e7e34;">
+                                <i class="bi bi-download"></i>
+                            </div>
+                            <div>
+                                <div style="font-size:.85rem;font-weight:800;">Export Appointments</div>
+                                <div style="font-size:.74rem;color:var(--muted);">Download the appointment register directly from the dashboard.</div>
+                            </div>
+                        </div>
+                        <i class="bi bi-arrow-right"></i>
+                    </a>
+                    <a href="{% url 'dashboard:export-revenue' %}" class="ops-link">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="ops-link-icon" style="background:#fff3cd;color:#856404;">
+                                <i class="bi bi-graph-up-arrow"></i>
+                            </div>
+                            <div>
+                                <div style="font-size:.85rem;font-weight:800;">Export Revenue</div>
+                                <div style="font-size:.74rem;color:var(--muted);">Send a finance-ready summary of completed visits and earnings.</div>
+                            </div>
+                        </div>
+                        <i class="bi bi-arrow-right"></i>
+                    </a>
                 </div>
             </div>
         </div>

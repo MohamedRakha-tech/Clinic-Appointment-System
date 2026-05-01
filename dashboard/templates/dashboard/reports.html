@@ -77,64 +77,68 @@
     .status-CANCELLED  { background: #fde8e8; color: #b91c1c; }
     .status-NO_SHOW    { background: #ede9fe; color: #5b21b6; }
 
-    .audit-action { font-size: .68rem; font-weight: 800; padding: .2rem .5rem; border-radius: .3rem; letter-spacing: .05em; }
-    .action-CREATE  { background: #e6f4ea; color: #1e7e34; }
-    .action-UPDATE  { background: #fff3cd; color: #856404; }
-    .action-DELETE  { background: #fde8e8; color: #b91c1c; }
-    .action-LOGIN   { background: #e0eaff; color: #1a3fa0; }
-    .action-LOGOUT  { background: #ede9fe; color: #5b21b6; }
-    .action-EXPORT  { background: #e0f7fa; color: #006877; }
-
-    /* Tab pills — same as dashboard */
-    .dash-tab-nav { gap: .5rem; }
-    .dash-tab-nav .nav-link {
-        border-radius: .6rem; font-weight: 700; font-size: .88rem;
-        color: var(--muted); padding: .5rem 1.25rem;
-        border: 1.5px solid transparent; transition: all .2s;
+    .report-shell {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 1.5rem;
     }
-    .dash-tab-nav .nav-link:hover { background: var(--soft-bg); color: var(--ink); }
-    .dash-tab-nav .nav-link.active {
-        background: var(--brand); color: #fff;
-        border-color: var(--brand); box-shadow: 0 4px 14px rgba(11,78,162,.25);
+    .report-hero {
+        background:
+            radial-gradient(circle at top right, rgba(0, 63, 135, .14), transparent 42%),
+            linear-gradient(135deg, #f8fbff 0%, #eef6ff 100%);
+        border: 1px solid #d9e7f5;
+        border-radius: 1.15rem;
+        padding: 1.4rem 1.5rem;
+        box-shadow: 0 10px 30px rgba(15,55,110,.06);
+    }
+    .report-hero-badge {
+        display: inline-flex; align-items: center; gap: .45rem;
+        font-size: .68rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+        color: #0d4d99; background: rgba(224, 234, 255, .9);
+        border: 1px solid #cfe0ff; border-radius: 999px; padding: .35rem .7rem;
+    }
+    .report-hero-stat {
+        min-width: 150px;
+        background: rgba(255,255,255,.72);
+        border: 1px solid rgba(217, 231, 245, .95);
+        border-radius: .9rem;
+        padding: .9rem 1rem;
+    }
+    .report-hero-stat-label {
+        font-size: .62rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+    }
+    .report-hero-stat-value {
+        font-size: 1.25rem; font-weight: 900; color: var(--ink); line-height: 1.15;
     }
 </style>
 {% endblock %}
 
 {% block content %}
+<div class="report-shell">
 
-<!-- Page Header -->
-<div class="d-flex justify-content-between align-items-end mb-4">
-    <div>
-        <h3 class="fw-black mb-1" style="font-size:1.6rem;">Reports</h3>
-        <p class="text-muted mb-0" style="font-size:.85rem;">Search, filter, and export clinic data.</p>
+    <div class="report-hero">
+        <div class="d-flex flex-column flex-xl-row justify-content-between align-items-xl-end gap-4">
+            <div>
+                <span class="report-hero-badge mb-3">
+                    <i class="bi bi-shield-check"></i> Reports Workspace
+                </span>
+                <h3 class="fw-black mb-1" style="font-size:1.7rem;">Appointment Reports</h3>
+                <p class="text-muted mb-0" style="font-size:.88rem;max-width:620px;">
+                    Focus the reports area on appointment insights and exports, with a cleaner surface and faster access to the datasets admins use most.
+                </p>
+            </div>
+            <div class="d-flex flex-wrap gap-3">
+                <div class="report-hero-stat">
+                    <div class="report-hero-stat-label mb-1">Visible Records</div>
+                    <div class="report-hero-stat-value">{{ appt_page.paginator.count }}</div>
+                </div>
+                <div class="report-hero-stat">
+                    <div class="report-hero-stat-label mb-1">Current Page</div>
+                    <div class="report-hero-stat-value">{{ appt_page.number }} / {{ appt_page.paginator.num_pages }}</div>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
-
-<!-- Tab Nav Pills -->
-<ul class="nav dash-tab-nav mb-4" id="reportTabs" role="tablist">
-    <li class="nav-item" role="presentation">
-        <button class="nav-link {% if active_tab != 'audit' %}active{% endif %}"
-                id="appt-tab" data-bs-toggle="tab" data-bs-target="#appt-panel"
-                type="button" role="tab">
-            <i class="bi bi-calendar2-week me-1"></i> Appointments
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link {% if active_tab == 'audit' %}active{% endif %}"
-                id="audit-tab" data-bs-toggle="tab" data-bs-target="#audit-panel"
-                type="button" role="tab">
-            <i class="bi bi-card-list me-1"></i> Audit Log
-        </button>
-    </li>
-</ul>
-
-<!-- Tab Content -->
-<div class="tab-content" id="reportTabContent">
-
-<!-- ============================================================ -->
-<!-- TAB 1: APPOINTMENTS -->
-<!-- ============================================================ -->
-<div class="tab-pane fade {% if active_tab != 'audit' %}show active{% endif %}" id="appt-panel" role="tabpanel">
 
     <!-- Filter Bar -->
     <div class="chart-card mb-4">
@@ -145,7 +149,6 @@
             </span>
         </div>
         <form method="get">
-            <input type="hidden" name="tab" value="appointments">
             <div class="row g-3 align-items-end">
 
                 <!-- Search -->
@@ -201,7 +204,7 @@
 
                 <!-- Action + Export buttons -->
                 <div class="col-12 d-flex flex-wrap justify-content-end align-items-center gap-2 mt-3 pt-3" style="border-top:1.5px solid #eef4fa;">
-                    <a href="{% url 'dashboard:reports' %}?tab=appointments" class="filter-action-btn filter-action-reset">
+                    <a href="{% url 'dashboard:reports' %}" class="filter-action-btn filter-action-reset">
                         <i class="bi bi-x-lg"></i> Reset
                     </a>
                     <button type="submit" class="filter-action-btn filter-action-search">
@@ -288,19 +291,19 @@
             </span>
             <div class="d-flex gap-2">
                 {% if appt_page.has_previous %}
-                <a href="?page={{ appt_page.previous_page_number }}&search={{ appt_filters.search }}&status={{ appt_filters.status }}&date_from={{ appt_filters.date_from }}&date_to={{ appt_filters.date_to }}&doctor_id={{ appt_filters.doctor_id }}&tab=appointments"
+                <a href="?page={{ appt_page.previous_page_number }}&search={{ appt_filters.search }}&status={{ appt_filters.status }}&date_from={{ appt_filters.date_from }}&date_to={{ appt_filters.date_to }}&doctor_id={{ appt_filters.doctor_id }}"
                    class="page-btn"><i class="bi bi-chevron-left"></i></a>
                 {% endif %}
                 {% for num in appt_page.paginator.page_range %}
                     {% if num == appt_page.number %}
                     <span class="page-btn active">{{ num }}</span>
                     {% elif num >= appt_page.number|add:"-2" and num <= appt_page.number|add:"2" %}
-                    <a href="?page={{ num }}&search={{ appt_filters.search }}&status={{ appt_filters.status }}&date_from={{ appt_filters.date_from }}&date_to={{ appt_filters.date_to }}&doctor_id={{ appt_filters.doctor_id }}&tab=appointments"
+                    <a href="?page={{ num }}&search={{ appt_filters.search }}&status={{ appt_filters.status }}&date_from={{ appt_filters.date_from }}&date_to={{ appt_filters.date_to }}&doctor_id={{ appt_filters.doctor_id }}"
                        class="page-btn">{{ num }}</a>
                     {% endif %}
                 {% endfor %}
                 {% if appt_page.has_next %}
-                <a href="?page={{ appt_page.next_page_number }}&search={{ appt_filters.search }}&status={{ appt_filters.status }}&date_from={{ appt_filters.date_from }}&date_to={{ appt_filters.date_to }}&doctor_id={{ appt_filters.doctor_id }}&tab=appointments"
+                <a href="?page={{ appt_page.next_page_number }}&search={{ appt_filters.search }}&status={{ appt_filters.status }}&date_from={{ appt_filters.date_from }}&date_to={{ appt_filters.date_to }}&doctor_id={{ appt_filters.doctor_id }}"
                    class="page-btn"><i class="bi bi-chevron-right"></i></a>
                 {% endif %}
             </div>
@@ -309,202 +312,5 @@
 
     </div>
 
-</div><!-- end #appt-panel -->
-
-
-<!-- ============================================================ -->
-<!-- TAB 2: AUDIT LOG -->
-<!-- ============================================================ -->
-<div class="tab-pane fade {% if active_tab == 'audit' %}show active{% endif %}" id="audit-panel" role="tabpanel">
-
-    <!-- Filter Bar -->
-    <div class="chart-card mb-4">
-        <div class="d-flex align-items-center gap-2 mb-4">
-            <i class="bi bi-sliders" style="color:var(--brand);font-size:1rem;"></i>
-            <span style="font-size:.7rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);">
-                Filter Audit Log
-            </span>
-        </div>
-        <form method="get">
-            <input type="hidden" name="tab" value="audit">
-            <div class="row g-3 align-items-end">
-
-                <!-- Search -->
-                <div class="col-12 col-md-3">
-                    <label class="filter-label">Search</label>
-                    <div class="position-relative">
-                        <i class="bi bi-search position-absolute"
-                           style="left:.75rem;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.85rem;"></i>
-                        <input type="text" name="audit_search" value="{{ audit_filters.search }}"
-                               placeholder="User or model..."
-                               class="filter-input" style="padding-left:2.2rem;">
-                    </div>
-                </div>
-
-                <!-- Action -->
-                <div class="col-6 col-md-2">
-                    <label class="filter-label">Action</label>
-                    <select name="action" class="filter-input">
-                        <option value="">All Actions</option>
-                        {% for act in action_list %}
-                        <option value="{{ act }}" {% if audit_filters.action == act %}selected{% endif %}>
-                            {{ act }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <!-- User -->
-                <div class="col-6 col-md-2">
-                    <label class="filter-label">User</label>
-                    <select name="user_id" class="filter-input">
-                        <option value="">All Users</option>
-                        {% for u in staff_users %}
-                        <option value="{{ u.id }}"
-                            {% if audit_filters.user_id == u.id|stringformat:"s" %}selected{% endif %}>
-                            {{ u.first_name }} {{ u.last_name }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <!-- Date From -->
-                <div class="col-6 col-md-2">
-                    <label class="filter-label">Date From</label>
-                    <input type="date" name="audit_date_from" value="{{ audit_filters.date_from }}" class="filter-input">
-                </div>
-
-                <!-- Date To -->
-                <div class="col-6 col-md-2">
-                    <label class="filter-label">Date To</label>
-                    <input type="date" name="audit_date_to" value="{{ audit_filters.date_to }}" class="filter-input">
-                </div>
-
-                <!-- Action + Export buttons -->
-                <div class="col-12 d-flex flex-wrap justify-content-end align-items-center gap-2 mt-3 pt-3" style="border-top:1.5px solid #eef4fa;">
-                    <a href="{% url 'dashboard:reports' %}?tab=audit" class="filter-action-btn filter-action-reset">
-                        <i class="bi bi-x-lg"></i> Reset
-                    </a>
-                    <button type="submit" class="filter-action-btn filter-action-search">
-                        <i class="bi bi-search"></i> Search
-                    </button>
-                    <div class="vr mx-1" style="opacity:.25;"></div>
-                    <a href="{% url 'dashboard:export-noshow' %}" class="filter-action-btn filter-action-export-sm">
-                        <i class="bi bi-person-x"></i> No-Show
-                    </a>
-                    <a href="{% url 'dashboard:export-revenue' %}" class="filter-action-btn filter-action-export-sm">
-                        <i class="bi bi-graph-up"></i> Revenue
-                    </a>
-                </div>
-
-            </div>
-        </form>
-    </div>
-
-    <!-- Results Table -->
-    <div class="chart-card">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <div style="font-size:1rem;font-weight:800;color:var(--ink);">Audit Trail</div>
-                <div style="font-size:.78rem;color:var(--muted);">
-                    Showing {{ audit_page.start_index|default:0 }}–{{ audit_page.end_index|default:0 }}
-                    of {{ audit_page.paginator.count }} records
-                </div>
-            </div>
-        </div>
-
-        <div class="table-responsive">
-            <table class="table align-middle" style="font-size:.85rem;">
-                <thead>
-                    <tr style="font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);">
-                        <th class="border-0 pb-3">Timestamp</th>
-                        <th class="border-0 pb-3">User</th>
-                        <th class="border-0 pb-3">Action</th>
-                        <th class="border-0 pb-3">Target</th>
-                        <th class="border-0 pb-3">Description</th>
-                        <th class="border-0 pb-3">IP</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for log in audit_page %}
-                    <tr style="border-color:#eef4fa;">
-                        <td style="color:var(--muted);white-space:nowrap;">
-                            {{ log.timestamp|date:"M j, Y H:i" }}
-                        </td>
-                        <td style="font-weight:700;">
-                            {% if log.user %}{{ log.user.first_name }} {{ log.user.last_name }}{% else %}System{% endif %}
-                        </td>
-                        <td>
-                            <span class="audit-action action-{{ log.action }}">{{ log.action }}</span>
-                        </td>
-                        <td style="font-weight:700;color:var(--brand);font-family:monospace;">
-                            {{ log.target_model }}{% if log.target_id %} #{{ log.target_id }}{% endif %}
-                        </td>
-                        <td style="color:var(--muted);">{{ log.description }}</td>
-                        <td style="color:var(--muted);font-family:monospace;font-size:.75rem;">
-                            {{ log.ip_address|default:"—" }}
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="6" class="text-center py-5 text-muted">
-                            <i class="bi bi-search" style="font-size:2rem;"></i>
-                            <p class="mt-2 fw-bold">No audit logs found.</p>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Audit Pagination -->
-        {% if audit_page.paginator.num_pages > 1 %}
-        <div class="d-flex justify-content-between align-items-center pt-4 border-top" style="border-color:#eef4fa!important;">
-            <span style="font-size:.75rem;color:var(--muted);font-weight:600;">
-                Page {{ audit_page.number }} of {{ audit_page.paginator.num_pages }}
-            </span>
-            <div class="d-flex gap-2">
-                {% if audit_page.has_previous %}
-                <a href="?audit_page={{ audit_page.previous_page_number }}&audit_search={{ audit_filters.search }}&action={{ audit_filters.action }}&user_id={{ audit_filters.user_id }}&audit_date_from={{ audit_filters.date_from }}&audit_date_to={{ audit_filters.date_to }}&tab=audit"
-                   class="page-btn"><i class="bi bi-chevron-left"></i></a>
-                {% endif %}
-                {% for num in audit_page.paginator.page_range %}
-                    {% if num == audit_page.number %}
-                    <span class="page-btn active">{{ num }}</span>
-                    {% elif num >= audit_page.number|add:"-2" and num <= audit_page.number|add:"2" %}
-                    <a href="?audit_page={{ num }}&audit_search={{ audit_filters.search }}&action={{ audit_filters.action }}&user_id={{ audit_filters.user_id }}&audit_date_from={{ audit_filters.date_from }}&audit_date_to={{ audit_filters.date_to }}&tab=audit"
-                       class="page-btn">{{ num }}</a>
-                    {% endif %}
-                {% endfor %}
-                {% if audit_page.has_next %}
-                <a href="?audit_page={{ audit_page.next_page_number }}&audit_search={{ audit_filters.search }}&action={{ audit_filters.action }}&user_id={{ audit_filters.user_id }}&audit_date_from={{ audit_filters.date_from }}&audit_date_to={{ audit_filters.date_to }}&tab=audit"
-                   class="page-btn"><i class="bi bi-chevron-right"></i></a>
-                {% endif %}
-            </div>
-        </div>
-        {% endif %}
-
-    </div>
-
-</div><!-- end #audit-panel -->
-
-</div><!-- end tab-content -->
-
-{% block extra_js %}
-<script>
-    // ---- Tab persistence via ?tab= query param ----
-    // The server already activates the correct tab via active_tab context.
-    // This JS keeps the URL in sync when the user clicks tabs client-side.
-    document.querySelectorAll('#reportTabs button[data-bs-toggle="tab"]').forEach(btn => {
-        btn.addEventListener('shown.bs.tab', function(e) {
-            const target = e.target.getAttribute('data-bs-target');
-            const tabName = target === '#audit-panel' ? 'audit' : 'appointments';
-            const url = new URL(window.location.href);
-            url.searchParams.set('tab', tabName);
-            history.replaceState(null, '', url.toString());
-        });
-    });
-</script>
-{% endblock %}
-
+</div>
 {% endblock %}{# closes block content #}

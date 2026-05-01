@@ -99,3 +99,18 @@ class DashboardViewsTest(TestCase):
         response = self.client.get(reverse('dashboard:export-revenue'))
         self.assertEqual(response.status_code, 200)
         self.assertIn('text/csv', response['Content-Type'])
+
+    def test_reports_page_hides_audit_log(self):
+        self.client.login(username='admin1', password='clinic1234')
+        response = self.client.get(reverse('dashboard:reports'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Appointment Reports')
+        self.assertNotContains(response, 'Audit Log')
+        self.assertNotContains(response, 'Audit Trail')
+
+    def test_admin_dashboard_hides_recent_activity_panel(self):
+        self.client.login(username='admin1', password='clinic1234')
+        response = self.client.get(reverse('dashboard:admin'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Admin Operations')
+        self.assertNotContains(response, 'Recent Activity')
