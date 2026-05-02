@@ -93,7 +93,7 @@
                                 <a href="{% url 'appointment-detail' pk=appointment.pk %}" class="p-2 text-outline hover:text-primary transition-colors" title="View">
                                     <span class="material-symbols-outlined text-xl">visibility</span>
                                 </a>
-                                {% if appointment.status != "CANCELLED" and appointment.status != "COMPLETED" %}
+                                {% if appointment.status != "CANCELLED" and appointment.status != "CHECKED_IN" and appointment.status != "COMPLETED" %}
                                     <a href="{% url 'appointment-reschedule' pk=appointment.pk %}" class="p-2 text-outline hover:text-primary transition-colors" title="Reschedule">
                                         <span class="material-symbols-outlined text-xl">event_repeat</span>
                                     </a>

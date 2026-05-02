@@ -164,6 +164,64 @@ class AppointmentViewsTests(TestCase):
             ).exists()
         )
 
+    def test_cancelled_slot_can_be_booked_again(self):
+        patient = PatientProfileFactory()
+        new_patient = PatientProfileFactory()
+        doctor = DoctorProfileFactory()
+        slot = AppointmentSlotFactory(
+            doctor=doctor,
+            slot_date=timezone.localdate() + timedelta(days=30),
+            start_datetime=timezone.now() + timedelta(days=30, hours=1),
+            end_datetime=timezone.now() + timedelta(days=30, hours=1, minutes=30),
+        )
+        appointment = AppointmentFactory(
+            patient=patient,
+            doctor=doctor,
+            slot=slot,
+            status=Appointment.Status.CONFIRMED,
+        )
+
+        self.client.force_login(patient.user)
+        cancel_response = self.client.post(reverse("appointment-cancel", args=[appointment.pk]), {
+            "reason": "Need another date",
+        })
+
+        self.assertEqual(cancel_response.status_code, 302)
+        slot.refresh_from_db()
+        self.assertEqual(slot.status, "AVAILABLE")
+
+        self.client.force_login(new_patient.user)
+        book_response = self.client.post(reverse("appointment-book"), {
+            "doctor_id": doctor.id,
+            "slot_id": slot.id,
+        })
+
+        self.assertEqual(book_response.status_code, 302)
+        self.assertEqual(Appointment.objects.filter(slot=slot).count(), 2)
+        self.assertTrue(
+            Appointment.objects.filter(
+                slot=slot,
+                patient=new_patient,
+                status=Appointment.Status.REQUESTED,
+            ).exists()
+        )
+
+    def test_detail_hides_decline_and_checked_in_cancel_actions(self):
+        receptionist = ReceptionistProfileFactory()
+        requested_appointment = AppointmentFactory(status=Appointment.Status.REQUESTED)
+        checked_in_appointment = AppointmentFactory(status=Appointment.Status.CHECKED_IN)
+
+        self.client.force_login(receptionist.user)
+
+        requested_response = self.client.get(reverse("appointment-detail", args=[requested_appointment.pk]))
+        self.assertEqual(requested_response.status_code, 200)
+        self.assertNotContains(requested_response, "Decline")
+        self.assertNotContains(requested_response, reverse("appointment-decline", args=[requested_appointment.pk]))
+
+        checked_in_response = self.client.get(reverse("appointment-detail", args=[checked_in_appointment.pk]))
+        self.assertEqual(checked_in_response.status_code, 200)
+        self.assertNotContains(checked_in_response, reverse("appointment-cancel", args=[checked_in_appointment.pk]))
+
     def test_patient_can_reschedule_and_release_old_slot(self):
         patient = PatientProfileFactory()
         doctor = DoctorProfileFactory()

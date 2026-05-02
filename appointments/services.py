@@ -115,7 +115,7 @@ def book_appointment(patient: PatientProfile, slot_id: int, booked_by=None, note
     if slot.status != AppointmentSlot.Status.AVAILABLE:
         raise ValidationError("This slot is no longer available.")
 
-    if hasattr(slot, "appointment"):
+    if _active_appointment_queryset().filter(slot=slot).exists():
         raise ValidationError("This slot has already been booked.")
 
     _validate_booking_window(patient, slot.doctor, slot.start_datetime, slot.end_datetime)

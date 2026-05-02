@@ -120,7 +120,7 @@
                         <a href="{% url 'appointment-detail' pk=appointment.pk %}" class="btn btn-sm btn-outline-secondary">
                             <i class="bi bi-eye me-1"></i>View
                         </a>
-                        {% if appointment.status != "CANCELLED" and appointment.status != "COMPLETED" %}
+                        {% if appointment.status != "CANCELLED" and appointment.status != "CHECKED_IN" and appointment.status != "COMPLETED" %}
                             <a href="{% url 'appointment-reschedule' pk=appointment.pk %}" class="btn btn-sm btn-outline-primary">
                                 <i class="bi bi-arrow-repeat me-1"></i>Reschedule
                             </a>

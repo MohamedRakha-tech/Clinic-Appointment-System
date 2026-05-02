@@ -23,7 +23,7 @@ class Appointment(models.Model):
     appointment_code    = models.CharField(max_length=20, unique=True)
     patient             = models.ForeignKey(PatientProfile, on_delete=models.CASCADE, related_name="appointments")
     doctor              = models.ForeignKey(DoctorProfile, on_delete=models.CASCADE, related_name="appointments")
-    slot                = models.OneToOneField(AppointmentSlot, on_delete=models.RESTRICT, related_name="appointment")
+    slot                = models.ForeignKey(AppointmentSlot, on_delete=models.RESTRICT, related_name="appointments")
     scheduled_start     = models.DateTimeField()
     scheduled_end       = models.DateTimeField()
     status              = models.CharField(max_length=20, choices=Status.choices, default=Status.REQUESTED)

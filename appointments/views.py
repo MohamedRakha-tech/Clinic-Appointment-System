@@ -86,6 +86,7 @@ class AppointmentDetailView(LoginRequiredMixin, AppointmentQuerysetMixin, Detail
         }
         context["can_cancel"] = status not in {
             Appointment.Status.CANCELLED,
+            Appointment.Status.CHECKED_IN,
             Appointment.Status.COMPLETED,
         } and (is_staff_user or status == Appointment.Status.REQUESTED)
 
