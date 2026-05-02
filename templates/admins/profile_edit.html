@@ -75,37 +75,13 @@ tailwind.config = {
 </div>
 <h2 class="text-xl font-bold text-on-surface">{{ user.first_name }} {{ user.last_name }}</h2>
 <p class="text-sm text-on-surface-variant font-medium">Administrator</p>
-<div class="mt-6 w-full pt-6 border-t border-outline-variant/10">
-<span class="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">System Status</span>
-<div class="inline-flex items-center px-3 py-1 bg-tertiary-fixed text-on-tertiary-fixed rounded-full text-xs font-semibold">
-<span class="w-1.5 h-1.5 rounded-full bg-tertiary mr-2"></span>
-                                    ACTIVE ACCOUNT
-                                </div>
 </div>
-</div>
-</div>
-<div class="bg-primary/5 p-8 rounded-xl border border-primary/10">
-<h3 class="text-sm font-bold text-primary uppercase tracking-wider mb-4 flex items-center">
-<span class="material-symbols-outlined text-sm mr-2">info</span>
-                            Help Center
-                        </h3>
-<p class="text-sm text-on-surface-variant leading-relaxed">Need help updating your clinical credentials? Contact the system security team if you need to change your unique employee code.</p>
-<button class="mt-4 text-primary font-semibold text-sm hover:underline" type="button">Read security policy</button>
 </div>
 </div>
 <!-- Fields Card -->
 <div class="col-span-12 lg:col-span-8 flex flex-col gap-8">
 <div class="bg-surface-container-lowest p-10 rounded-xl border border-outline-variant/10 shadow-sm">
 <div class="grid grid-cols-2 gap-x-8 gap-y-10">
-<!-- Read Only Field -->
-<div class="col-span-2 md:col-span-1 group">
-<label class="block text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">Employee Code</label>
-<div class="relative">
-<input class="w-full bg-surface-container border-0 border-b-2 border-outline-variant/30 py-3 px-0 text-on-surface-variant font-mono cursor-not-allowed focus:ring-0" readonly="" type="text" value="{{ user.admin_profile.employee_code|default:"—" }}"/>
-<span class="material-symbols-outlined absolute right-0 top-3 text-on-surface-variant/40 text-sm">lock</span>
-</div>
-<p class="mt-2 text-[10px] text-on-surface-variant/60 font-medium">Unique system identifier (Read-only)</p>
-</div>
 {% include "includes/profile_shared_fields.html" %}
 </div>
 <!-- Form Actions -->
@@ -117,16 +93,6 @@ tailwind.config = {
 <span class="material-symbols-outlined text-sm mr-2" style="font-variation-settings: 'FILL' 1;">save</span>
                                 Save Profile
                             </button>
-</div>
-</div>
-<!-- Security Alert Section -->
-<div class="glass-panel p-8 rounded-xl border border-error/10 flex items-start gap-4">
-<div class="w-12 h-12 rounded-full bg-error-container/20 flex items-center justify-center shrink-0">
-<span class="material-symbols-outlined text-error">security</span>
-</div>
-<div>
-<h4 class="text-on-surface font-bold">Security &amp; Privacy</h4>
-<p class="text-sm text-on-surface-variant mt-1 leading-relaxed">Updating your work email will require re-verification. An authentication link will be sent to your new address to confirm the change. All clinical actions will still be logged under your permanent employee code.</p>
 </div>
 </div>
 </div>

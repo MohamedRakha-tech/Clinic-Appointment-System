@@ -26,3 +26,4 @@ scripts/
 .idea/
 README.md
 media/
+test_selectors.py

@@ -44,8 +44,8 @@ tailwind.config = {
 {% endblock %}
 
 {% block content %}
-<div class="bg-surface text-on-surface font-body antialiased max-w-5xl mx-auto rounded-xl p-8 mb-12 shadow-sm border border-outline-variant/10">
-<div class="flex justify-between items-end mb-10">
+<div class="bg-surface text-on-surface font-body antialiased max-w-5xl mx-auto rounded-xl p-4 sm:p-8 mb-12 shadow-sm border border-outline-variant/10">
+<div class="flex flex-col lg:flex-row lg:justify-between lg:items-end gap-6 mb-10">
 <div>
 <h2 class="text-4xl font-extrabold tracking-tight text-on-surface mb-2">Doctor Profile</h2>
 <p class="text-on-surface-variant font-medium">Manage your clinical identity and consultation preferences.</p>
@@ -58,9 +58,9 @@ tailwind.config = {
 <!-- Bento Grid Layout -->
 <div class="grid grid-cols-12 gap-6">
 <!-- Primary Bio Card -->
-<div class="col-span-12 lg:col-span-8 space-y-6">
+<div class="col-span-12 space-y-6">
 <section class="bg-surface-container-lowest p-8 rounded-xl shadow-sm">
-<div class="flex items-start gap-8 mb-8">
+<div class="flex flex-col sm:flex-row sm:items-start gap-6 sm:gap-8 mb-8">
 <div class="w-32 h-32 rounded-2xl overflow-hidden shadow-xl">
 {% if user.profile_picture %}
 <img alt="Doctor profile" class="w-full h-full object-cover" src="{{ user.profile_picture.url }}"/>
@@ -70,9 +70,9 @@ tailwind.config = {
 </div>
 {% endif %}
 </div>
-<div class="flex-1">
-<div class="flex items-center gap-3 mb-2">
-<h3 class="text-2xl font-bold">Dr. {{ user.last_name }}</h3>
+<div class="flex-1 min-w-0">
+<div class="flex flex-wrap items-center gap-3 mb-2">
+<h3 class="text-2xl font-bold break-words">Dr. {{ user.last_name }}</h3>
 <span class="bg-primary-fixed text-on-primary-fixed-variant px-3 py-1 rounded-full text-xs font-bold tracking-wider">CONFIRMED</span>
 </div>
 <div class="flex flex-wrap gap-2 mb-4">
@@ -80,22 +80,27 @@ tailwind.config = {
 <span class="bg-tertiary-fixed text-on-tertiary-fixed-variant px-3 py-1 rounded-lg text-xs font-semibold">{{ doctor.specialization }}</span>
 {% endif %}
 </div>
-<div class="grid grid-cols-2 gap-4">
-<div class="flex items-center text-sm text-on-surface-variant">
-<span class="material-symbols-outlined text-sm mr-2">badge</span>
-<span class="font-mono">{{ doctor.license_number|default:"—" }}</span>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="rounded-xl bg-surface-container-low p-4 border border-outline-variant/10">
+<div class="flex items-center gap-2 text-outline mb-2">
+<span class="material-symbols-outlined text-[18px]">alternate_email</span>
+<span class="text-[10px] font-bold uppercase tracking-widest">Username</span>
 </div>
-<div class="flex items-center text-sm text-on-surface-variant">
-<span class="material-symbols-outlined text-sm mr-2">mail</span>
-<span>{{ user.email }}</span>
+<p class="text-sm font-semibold text-on-surface break-all">{{ user.username|default:"—" }}</p>
 </div>
-<div class="flex items-center text-sm text-on-surface-variant">
-<span class="material-symbols-outlined text-sm mr-2">person</span>
-<span class="font-mono">{{ user.username }}</span>
+<div class="rounded-xl bg-surface-container-low p-4 border border-outline-variant/10">
+<div class="flex items-center gap-2 text-outline mb-2">
+<span class="material-symbols-outlined text-[18px]">mail</span>
+<span class="text-[10px] font-bold uppercase tracking-widest">Email</span>
 </div>
-<div class="flex items-center text-sm text-on-surface-variant">
-<span class="material-symbols-outlined text-sm mr-2">call</span>
-<span>{{ user.phone|default:"—" }}</span>
+<p class="text-sm font-semibold text-on-surface break-all">{{ user.email|default:"—" }}</p>
+</div>
+<div class="rounded-xl bg-surface-container-low p-4 border border-outline-variant/10">
+<div class="flex items-center gap-2 text-outline mb-2">
+<span class="material-symbols-outlined text-[18px]">call</span>
+<span class="text-[10px] font-bold uppercase tracking-widest">Phone</span>
+</div>
+<p class="text-sm font-semibold text-on-surface break-words">{{ user.phone|default:"—" }}</p>
 </div>
 </div>
 </div>
@@ -125,79 +130,6 @@ tailwind.config = {
 <span class="material-symbols-outlined text-tertiary mb-3 text-3xl">more_time</span>
 <span class="text-3xl font-black text-tertiary mb-1">{{ doctor.buffer_after_minutes|default:"0" }}</span>
 <span class="text-xs font-bold text-outline uppercase tracking-tighter">Post-Buffer (Min)</span>
-</div>
-</div>
-</section>
-</div>
-<!-- Side Cards -->
-<div class="col-span-12 lg:col-span-4 space-y-6">
-<!-- Status/Metrics Card -->
-<section class="bg-primary text-white p-8 rounded-xl shadow-lg relative overflow-hidden">
-<div class="relative z-10">
-<h4 class="text-sm font-bold uppercase tracking-widest opacity-60 mb-6">Clinic Authority</h4>
-<div class="space-y-6">
-<div>
-<div class="text-5xl font-black tracking-tighter mb-1">98%</div>
-<div class="text-sm font-medium opacity-80">Patient Trust Score</div>
-</div>
-<div class="h-1 bg-white/20 rounded-full">
-<div class="h-full bg-tertiary-fixed w-[98%] rounded-full"></div>
-</div>
-<div class="grid grid-cols-2 gap-4 pt-4">
-<div>
-<div class="text-2xl font-bold">1.2k</div>
-<div class="text-xs opacity-60">Consultations</div>
-</div>
-<div>
-<div class="text-2xl font-bold">4.9/5</div>
-<div class="text-xs opacity-60">Rating</div>
-</div>
-</div>
-</div>
-</div>
-<!-- Decorative Element -->
-<div class="absolute -bottom-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
-</section>
-<!-- Availability Card -->
-<section class="bg-surface-container-highest p-8 rounded-xl">
-<h4 class="text-sm font-bold uppercase tracking-widest text-outline mb-4">Availability Summary</h4>
-<ul class="space-y-4">
-<li class="flex justify-between items-center pb-2 border-b border-outline-variant/10">
-<span class="text-sm font-semibold">Mon - Thu</span>
-<span class="text-sm font-mono text-primary font-bold">08:00 - 17:00</span>
-</li>
-<li class="flex justify-between items-center pb-2 border-b border-outline-variant/10">
-<span class="text-sm font-semibold">Friday</span>
-<span class="text-sm font-mono text-primary font-bold">09:00 - 15:00</span>
-</li>
-<li class="flex justify-between items-center opacity-50">
-<span class="text-sm font-semibold">Weekend</span>
-<span class="text-xs font-bold uppercase">Closed</span>
-</li>
-</ul>
-<div class="mt-8">
-<button class="w-full py-3 bg-surface-container-lowest border border-outline-variant text-on-surface font-bold rounded-lg text-sm hover:bg-white transition-colors">
-                            Manage Calendar
-                        </button>
-</div>
-</section>
-<!-- Quick Actions Card -->
-<section class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10">
-<h4 class="text-xs font-bold uppercase tracking-widest text-outline mb-4 text-center">Platform Credentials</h4>
-<div class="space-y-3">
-<div class="flex items-center gap-3 p-3 bg-surface-container-low rounded-lg">
-<span class="material-symbols-outlined text-primary">verified_user</span>
-<div>
-<div class="text-xs font-bold">Identity Verified</div>
-<div class="text-[10px] text-outline">Verified on Oct 2023</div>
-</div>
-</div>
-<div class="flex items-center gap-3 p-3 bg-surface-container-low rounded-lg">
-<span class="material-symbols-outlined text-secondary">workspace_premium</span>
-<div>
-<div class="text-xs font-bold">Tier 1 Provider</div>
-<div class="text-[10px] text-outline">Top 5% of Specialists</div>
-</div>
 </div>
 </div>
 </section>

@@ -72,17 +72,11 @@ tailwind.config = {
 </div>
 <div>
 <h3 class="text-xl font-bold text-on-surface mb-1">Dr. {{ user.last_name }}</h3>
-<p class="text-sm text-on-surface-variant font-medium">ID: {{ user.id }}</p>
+<p class="text-sm text-on-surface-variant font-medium">Doctor profile</p>
 </div>
 </div>
 <div class="grid grid-cols-2 gap-6">
 {% include "includes/profile_shared_fields.html" %}
-<div class="col-span-2 md:col-span-1">
-<label class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">license_number</label>
-<div class="bg-surface-container-low px-4 py-3 rounded-lg text-on-surface/60 font-mono text-sm border-b-2 border-outline-variant/30">
-    {{ user.doctor_profile.license_number|default:"No License Registered" }}
-</div>
-</div>
 <div class="col-span-2 md:col-span-1">
 <label class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">specialization</label>
 <input name="specialization" class="w-full bg-surface-container-high border-0 border-b-2 border-outline-variant px-4 py-3 rounded-t-lg focus:ring-0 focus:border-primary transition-colors text-on-surface font-medium" type="text" value="{{ form.specialization.value|default:'' }}"/>
@@ -136,29 +130,6 @@ tailwind.config = {
 {% endif %}
 </div>
 </div>
-</div>
-<!-- Glassmorphism Stats/Status Info -->
-<div class="glass-panel p-8 rounded-xl border border-white/50 shadow-xl shadow-on-surface/5 relative overflow-hidden">
-<div class="absolute -top-10 -right-10 w-32 h-32 bg-primary/5 rounded-full blur-3xl"></div>
-<h4 class="text-sm font-bold uppercase tracking-widest text-on-surface-variant mb-4">Account Status</h4>
-<div class="flex items-center gap-3 mb-6">
-<span class="w-3 h-3 rounded-full bg-tertiary-fixed-dim ring-4 ring-tertiary-fixed/20"></span>
-<span class="font-bold text-on-surface">Verified Practitioner</span>
-</div>
-<div class="space-y-4">
-<div class="flex justify-between items-center text-sm">
-<span class="text-on-surface-variant font-medium">Profile Visibility</span>
-<span class="px-2 py-1 rounded bg-secondary-fixed text-on-secondary-fixed-variant text-[10px] font-black uppercase tracking-tighter">Public</span>
-</div>
-<div class="flex justify-between items-center text-sm">
-<span class="text-on-surface-variant font-medium">Last Modified</span>
-<span class="text-on-surface font-semibold">Oct 12, 2023</span>
-</div>
-</div>
-</div>
-<!-- Helpful Tip -->
-<div class="p-6 rounded-xl bg-primary/5 border-l-4 border-primary">
-<p class="text-sm text-primary font-medium italic">"Detailed bios and accurate consultation durations help reduce patient no-shows by 14%."</p>
 </div>
 </div>
 </div>

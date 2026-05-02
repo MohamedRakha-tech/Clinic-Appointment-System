@@ -45,10 +45,10 @@ tailwind.config = {
 {% endblock %}
 
 {% block content %}
-<div class="bg-surface text-on-surface font-body antialiased max-w-5xl mx-auto rounded-xl p-8 mb-12 shadow-sm border border-outline-variant/10">
+<div class="bg-surface text-on-surface font-body antialiased max-w-5xl mx-auto rounded-xl p-4 sm:p-8 mb-12 shadow-sm border border-outline-variant/10">
 
-<div class="flex justify-between items-end mb-10">
-<div class="flex gap-8 items-center">
+<div class="flex flex-col lg:flex-row lg:justify-between lg:items-end gap-6 mb-10">
+<div class="flex flex-col sm:flex-row gap-6 sm:gap-8 sm:items-center min-w-0">
 <div class="relative">
 <div class="w-24 h-24 rounded-full overflow-hidden shadow-sm border border-outline-variant/20">
 {% if user.profile_picture %}
@@ -60,15 +60,12 @@ tailwind.config = {
 {% endif %}
 </div>
 </div>
-<div>
-<h2 class="text-3xl font-bold tracking-tight text-on-surface mb-1">{{ user.first_name }} {{ user.last_name }}</h2>
-<div class="flex gap-4 items-center text-on-surface-variant">
-<span class="flex items-center gap-1 text-sm font-medium"><span class="material-symbols-outlined text-[18px]">fingerprint</span> ID: {{ user.id }}</span>
-<span class="flex items-center gap-1 text-sm font-medium"><span class="material-symbols-outlined text-[18px]">mail</span> {{ user.email }}</span>
+<div class="min-w-0">
+<h2 class="text-3xl font-bold tracking-tight text-on-surface mb-2 break-words">{{ user.first_name }} {{ user.last_name }}</h2>
+<p class="text-sm font-medium text-on-surface-variant">Patient profile</p>
 </div>
 </div>
-</div>
-<a href="{% url 'accounts:patient_profile_edit' %}" class="bg-gradient-to-b from-primary to-primary-container text-white px-6 py-2.5 rounded-lg font-semibold flex items-center gap-2 hover:opacity-90 transition-all shadow-lg shadow-primary/20">
+<a href="{% url 'accounts:patient_profile_edit' %}" class="bg-gradient-to-b from-primary to-primary-container text-white px-6 py-2.5 rounded-lg font-semibold inline-flex items-center justify-center gap-2 hover:opacity-90 transition-all shadow-lg shadow-primary/20">
 <span class="material-symbols-outlined text-[20px]">edit</span>
                 Edit Profile
             </a>
@@ -76,12 +73,11 @@ tailwind.config = {
 <!-- Bento Grid Layout -->
 <div class="grid grid-cols-12 gap-6">
 <!-- Core Identity Card -->
-<div class="col-span-8 bg-surface-container-lowest rounded-xl p-8 shadow-sm">
+<div class="col-span-12 lg:col-span-8 bg-surface-container-lowest rounded-xl p-6 sm:p-8 shadow-sm">
 <div class="flex items-center justify-between mb-8">
 <h3 class="text-sm font-bold uppercase tracking-[0.1em] text-outline">Identity &amp; Demographics</h3>
-<span class="material-symbols-outlined text-outline/40">badge</span>
 </div>
-<div class="grid grid-cols-2 gap-y-10 gap-x-12">
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-y-10 gap-x-12">
 <div>
 <label class="block text-[11px] font-bold text-outline uppercase tracking-wider mb-2">First Name</label>
 <p class="text-lg font-semibold text-on-surface">{{ user.first_name }}</p>
@@ -98,55 +94,26 @@ tailwind.config = {
 <label class="block text-[11px] font-bold text-outline uppercase tracking-wider mb-2">Gender</label>
 <p class="text-lg font-semibold text-on-surface">{{ patient.gender|default:"—" }}</p>
 </div>
-<div class="col-span-2">
+<div class="sm:col-span-2">
 <label class="block text-[11px] font-bold text-outline uppercase tracking-wider mb-2">Residential Address</label>
 <p class="text-lg font-semibold text-on-surface leading-relaxed">{{ patient.address|default:"—" }}</p>
 </div>
 </div>
 </div>
 <!-- Communication Card -->
-<div class="col-span-4 bg-surface-container-low rounded-xl p-8 border border-outline-variant/10">
+<div class="col-span-12 lg:col-span-4 bg-surface-container-low rounded-xl p-6 sm:p-8 border border-outline-variant/10">
 <div class="flex items-center justify-between mb-8">
-<h3 class="text-sm font-bold uppercase tracking-[0.1em] text-on-surface-variant">Direct Channels</h3>
-<span class="material-symbols-outlined text-primary/40">contact_phone</span>
+<h3 class="text-sm font-bold uppercase tracking-[0.1em] text-on-surface-variant">Contact</h3>
 </div>
 <div class="space-y-8">
-<div class="flex items-start gap-4">
+<div class="flex items-start gap-4 min-w-0">
 <div class="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center text-primary">
 <span class="material-symbols-outlined">call</span>
 </div>
-<div>
+<div class="min-w-0">
 <label class="block text-[10px] font-bold text-outline uppercase tracking-widest mb-1">Mobile Phone</label>
-<p class="text-md font-bold text-on-surface">{{ user.phone|default:"—" }}</p>
+<p class="text-md font-bold text-on-surface break-words">{{ user.phone|default:"—" }}</p>
 </div>
-</div>
-<div class="flex items-start gap-4">
-<div class="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center text-primary">
-<span class="material-symbols-outlined">mail</span>
-</div>
-<div>
-<label class="block text-[10px] font-bold text-outline uppercase tracking-widest mb-1">Personal Email</label>
-<p class="text-md font-bold text-on-surface">{{ user.email|default:"—" }}</p>
-</div>
-</div>
-<div class="pt-6 border-t border-outline-variant/30">
-</div>
-</div>
-</div>
-<!-- Emergency Contact Card -->
-<div class="col-span-4 glass-panel rounded-xl p-8 border border-surface-container-highest shadow-xl shadow-on-surface/5">
-<div class="flex items-center justify-between mb-8">
-<h3 class="text-sm font-bold uppercase tracking-[0.1em] text-error">Emergency Contact</h3>
-<span class="material-symbols-outlined text-error/60" style="font-variation-settings: 'FILL' 1;">emergency</span>
-</div>
-<div class="space-y-6">
-<div>
-<label class="block text-[11px] font-bold text-outline uppercase tracking-wider mb-1">Contact Name</label>
-<p class="text-xl font-extrabold text-on-surface">{{ patient.emergency_contact_name|default:"—" }}</p>
-</div>
-<div class="bg-error-container/20 p-4 rounded-lg">
-<label class="block text-[10px] font-bold text-on-error-container uppercase tracking-wider mb-1">Emergency Phone</label>
-<p class="text-lg font-black text-on-error-container tracking-tight">{{ patient.emergency_contact_phone|default:"—" }}</p>
 </div>
 </div>
 </div>

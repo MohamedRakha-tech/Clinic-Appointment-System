@@ -45,7 +45,7 @@ tailwind.config = {
 {% endblock %}
 
 {% block content %}
-<div class="p-8 max-w-6xl mx-auto">
+<div class="p-4 sm:p-8 max-w-6xl mx-auto">
 <!-- Page Header -->
 <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
 <div>
@@ -60,9 +60,9 @@ tailwind.config = {
 <!-- Bento Grid Layout -->
 <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
 <!-- Primary Identity Card -->
-<div class="md:col-span-8 bg-surface-container-lowest rounded-2xl p-8 shadow-sm border border-outline-variant/10">
-<div class="flex items-start gap-8 mb-10">
-<div class="relative">
+<div class="md:col-span-12 bg-surface-container-lowest rounded-2xl p-8 shadow-sm border border-outline-variant/10">
+<div class="flex flex-col sm:flex-row sm:items-start gap-6 sm:gap-8 mb-10">
+<div>
 <div class="w-32 h-32 rounded-2xl overflow-hidden ring-4 ring-surface-container shadow-xl">
 {% if user.profile_picture %}
 <img alt="Admin user image" class="w-full h-full object-cover" src="{{ user.profile_picture.url }}"/>
@@ -72,21 +72,14 @@ tailwind.config = {
 </div>
 {% endif %}
 </div>
-<div class="absolute -bottom-2 -right-2 bg-tertiary text-white p-1.5 rounded-lg shadow-lg">
-<span class="material-symbols-outlined text-[18px]" data-icon="verified_user" style="font-variation-settings: 'FILL' 1;">verified_user</span>
 </div>
-</div>
-<div class="flex-1">
-<div class="flex items-center gap-3 mb-1">
-<h2 class="text-3xl font-bold text-on-surface tracking-tight">{{ user.first_name }} {{ user.last_name }}</h2>
+<div class="flex-1 min-w-0">
+<div class="flex flex-wrap items-center gap-3 mb-1">
+<h2 class="text-3xl font-bold text-on-surface tracking-tight break-words">{{ user.first_name }} {{ user.last_name }}</h2>
 <span class="px-2 py-0.5 bg-primary-fixed text-on-primary-fixed text-[10px] font-bold rounded uppercase tracking-wider">Admin</span>
 </div>
 <p class="text-lg text-on-surface/60 font-medium mb-4">Administration</p>
 <div class="flex flex-wrap gap-4">
-<div class="flex items-center gap-2 px-3 py-1.5 bg-surface-container-low rounded-lg">
-<span class="material-symbols-outlined text-primary text-[18px]" data-icon="id_card">id_card</span>
-<span class="text-sm font-semibold text-on-surface/80">{{ user.admin_profile.employee_code|default:"—" }}</span>
-</div>
 <div class="flex items-center gap-2 px-3 py-1.5 bg-surface-container-low rounded-lg">
 <span class="material-symbols-outlined text-primary text-[18px]" data-icon="calendar_month">calendar_month</span>
 <span class="text-sm font-semibold text-on-surface/80">Joined {{ user.date_joined|date:"M Y" }}</span>
@@ -94,139 +87,27 @@ tailwind.config = {
 </div>
 </div>
 </div>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8 pt-8 border-t border-outline-variant/10">
-<div class="space-y-1">
-<label class="text-[10px] font-bold text-on-surface/40 uppercase tracking-widest">Username</label>
-<div class="flex items-center gap-3 py-2 border-b-2 border-outline-variant/20 hover:border-primary transition-colors cursor-default">
-<span class="material-symbols-outlined text-on-surface/30" data-icon="alternate_email">alternate_email</span>
-<span class="text-on-surface font-semibold">{{ user.username }}</span>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-8 border-t border-outline-variant/10">
+<div class="rounded-xl bg-surface-container-low p-4 border border-outline-variant/10">
+<div class="flex items-center gap-2 text-on-surface/50 mb-2">
+<span class="material-symbols-outlined text-[18px]" data-icon="alternate_email">alternate_email</span>
+<span class="text-[10px] font-bold uppercase tracking-widest">Username</span>
 </div>
+<p class="text-sm font-semibold text-on-surface break-all">{{ user.username|default:"—" }}</p>
 </div>
-<div class="space-y-1">
-<label class="text-[10px] font-bold text-on-surface/40 uppercase tracking-widest">Official Email</label>
-<div class="flex items-center gap-3 py-2 border-b-2 border-outline-variant/20 hover:border-primary transition-colors cursor-default">
-<span class="material-symbols-outlined text-on-surface/30" data-icon="mail">mail</span>
-<span class="text-on-surface font-semibold">{{ user.email }}</span>
+<div class="rounded-xl bg-surface-container-low p-4 border border-outline-variant/10">
+<div class="flex items-center gap-2 text-on-surface/50 mb-2">
+<span class="material-symbols-outlined text-[18px]" data-icon="mail">mail</span>
+<span class="text-[10px] font-bold uppercase tracking-widest">Email</span>
 </div>
+<p class="text-sm font-semibold text-on-surface break-all">{{ user.email|default:"—" }}</p>
 </div>
-<div class="space-y-1">
-<label class="text-[10px] font-bold text-on-surface/40 uppercase tracking-widest">Mobile Contact</label>
-<div class="flex items-center gap-3 py-2 border-b-2 border-outline-variant/20 hover:border-primary transition-colors cursor-default">
-<span class="material-symbols-outlined text-on-surface/30" data-icon="phone_iphone">phone_iphone</span>
-<span class="text-on-surface font-semibold">{{ user.phone|default:"—" }}</span>
+<div class="rounded-xl bg-surface-container-low p-4 border border-outline-variant/10">
+<div class="flex items-center gap-2 text-on-surface/50 mb-2">
+<span class="material-symbols-outlined text-[18px]" data-icon="phone_iphone">phone_iphone</span>
+<span class="text-[10px] font-bold uppercase tracking-widest">Phone</span>
 </div>
-</div>
-<div class="space-y-1">
-<label class="text-[10px] font-bold text-on-surface/40 uppercase tracking-widest">Office Extension</label>
-<div class="flex items-center gap-3 py-2 border-b-2 border-outline-variant/20 hover:border-primary transition-colors cursor-default">
-<span class="material-symbols-outlined text-on-surface/30" data-icon="call">call</span>
-<span class="text-on-surface font-semibold">EXT 4022</span>
-</div>
-</div>
-</div>
-</div>
-<!-- System Access / Stats Column -->
-<div class="md:col-span-4 space-y-6">
-<!-- Privilege Status Card -->
-<div class="bg-primary text-white rounded-2xl p-6 shadow-xl relative overflow-hidden">
-<div class="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full blur-3xl"></div>
-<div class="flex justify-between items-start mb-6">
-<div class="p-3 bg-white/10 rounded-xl backdrop-blur-md">
-<span class="material-symbols-outlined text-[28px]" data-icon="security">security</span>
-</div>
-<span class="text-[10px] font-bold bg-white/20 px-2 py-1 rounded">TIER 1 ACCESS</span>
-</div>
-<h3 class="text-xl font-bold mb-2 tracking-tight">System Authority</h3>
-<p class="text-white/70 text-sm mb-6 leading-relaxed">Full administrative oversight for patient records, billing workflows, and staff scheduling modules.</p>
-<div class="flex gap-2">
-<span class="w-2 h-2 rounded-full bg-tertiary-fixed shadow-[0_0_8px_rgba(131,252,142,0.5)]"></span>
-<span class="text-[10px] font-bold uppercase tracking-wider text-white/90">Systems Online</span>
-</div>
-</div>
-<!-- Security Activity Bento -->
-<div class="bg-surface-container-high rounded-2xl p-6 border border-outline-variant/20">
-<h4 class="text-label-md font-bold text-on-surface/60 uppercase tracking-widest mb-4">Security Logs</h4>
-<div class="space-y-4">
-<div class="flex gap-4 items-start">
-<div class="w-1 bg-primary h-8 rounded-full"></div>
-<div>
-<p class="text-sm font-bold text-on-surface">Last Password Reset</p>
-<p class="text-xs text-on-surface/50 font-medium">14 Days ago • Sept 28, 2023</p>
-</div>
-</div>
-<div class="flex gap-4 items-start">
-<div class="w-1 bg-outline-variant h-8 rounded-full"></div>
-<div>
-<p class="text-sm font-bold text-on-surface">2FA Device Linked</p>
-<p class="text-xs text-on-surface/50 font-medium">iPhone 14 Pro Max • Active</p>
-</div>
-</div>
-</div>
-</div>
-<!-- Quick Metrics -->
-<div class="grid grid-cols-2 gap-4">
-<div class="bg-surface-container-lowest rounded-2xl p-4 shadow-sm border border-outline-variant/10">
-<p class="text-[10px] font-bold text-on-surface/40 uppercase tracking-widest mb-1">Approvals</p>
-<p class="text-2xl font-black text-primary">124</p>
-</div>
-<div class="bg-surface-container-lowest rounded-2xl p-4 shadow-sm border border-outline-variant/10">
-<p class="text-[10px] font-bold text-on-surface/40 uppercase tracking-widest mb-1">Reports</p>
-<p class="text-2xl font-black text-secondary">42</p>
-</div>
-</div>
-</div>
-<!-- Secondary Section: Departmental Info & Preferences -->
-<div class="md:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-<div class="bg-surface-container-low rounded-2xl p-6 border border-outline-variant/5">
-<div class="flex items-center gap-3 mb-4">
-<span class="material-symbols-outlined text-primary" data-icon="corporate_fare">corporate_fare</span>
-<h4 class="font-bold text-on-surface tracking-tight">Organization</h4>
-</div>
-<ul class="space-y-3">
-<li class="flex justify-between text-sm py-2 border-b border-on-surface/5">
-<span class="text-on-surface/60">Department</span>
-<span class="font-semibold text-on-surface">Clinical Operations</span>
-</li>
-<li class="flex justify-between text-sm py-2 border-b border-on-surface/5">
-<span class="text-on-surface/60">Clinic Location</span>
-<span class="font-semibold text-on-surface">Main Campus - North Wing</span>
-</li>
-<li class="flex justify-between text-sm py-2 border-b border-on-surface/5">
-<span class="text-on-surface/60">Direct Manager</span>
-<span class="font-semibold text-on-surface">Dr. Simon Vane</span>
-</li>
-</ul>
-</div>
-<div class="bg-surface-container-low rounded-2xl p-6 border border-outline-variant/5">
-<div class="flex items-center gap-3 mb-4">
-<span class="material-symbols-outlined text-secondary" data-icon="tune">tune</span>
-<h4 class="font-bold text-on-surface tracking-tight">Preferences</h4>
-</div>
-<ul class="space-y-3">
-<li class="flex justify-between text-sm py-2 border-b border-on-surface/5">
-<span class="text-on-surface/60">Default View</span>
-<span class="font-semibold text-on-surface">Surgical Calendar</span>
-</li>
-<li class="flex justify-between text-sm py-2 border-b border-on-surface/5">
-<span class="text-on-surface/60">Language</span>
-<span class="font-semibold text-on-surface">English (US)</span>
-</li>
-<li class="flex justify-between text-sm py-2 border-b border-on-surface/5">
-<span class="text-on-surface/60">Timezone</span>
-<span class="font-semibold text-on-surface">UTC -05:00 (EST)</span>
-</li>
-</ul>
-</div>
-<div class="bg-surface-container-low rounded-2xl p-6 border border-outline-variant/5">
-<div class="flex items-center gap-3 mb-4">
-<span class="material-symbols-outlined text-tertiary" data-icon="badge">badge</span>
-<h4 class="font-bold text-on-surface tracking-tight">Credentials</h4>
-</div>
-<div class="flex flex-wrap gap-2">
-<span class="px-3 py-1 bg-white text-xs font-bold text-on-surface/70 rounded-full border border-on-surface/5">MHA</span>
-<span class="px-3 py-1 bg-white text-xs font-bold text-on-surface/70 rounded-full border border-on-surface/5">FACMPE</span>
-<span class="px-3 py-1 bg-white text-xs font-bold text-on-surface/70 rounded-full border border-on-surface/5">HIPAA-CERT</span>
-<span class="px-3 py-1 bg-white text-xs font-bold text-on-surface/70 rounded-full border border-on-surface/5">Lean Six Sigma</span>
+<p class="text-sm font-semibold text-on-surface break-words">{{ user.phone|default:"—" }}</p>
 </div>
 </div>
 </div>
