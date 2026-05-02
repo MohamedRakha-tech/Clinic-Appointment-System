@@ -248,6 +248,7 @@
                         <th class="border-0 pb-3">Doctor</th>
                         <th class="border-0 pb-3">Date</th>
                         <th class="border-0 pb-3">Time</th>
+                        <th class="border-0 pb-3">Fee</th>
                         <th class="border-0 pb-3">Status</th>
                     </tr>
                 </thead>
@@ -265,6 +266,7 @@
                         </td>
                         <td>{{ appt.scheduled_start|date:"M j, Y" }}</td>
                         <td style="font-weight:700;color:var(--brand);">{{ appt.scheduled_start|time:"H:i" }}</td>
+                        <td style="font-weight:700;">${{ appt.doctor.consultation_fee }}</td>
                         <td>
                             <span class="status-badge status-{{ appt.status }}">
                                 {{ appt.status|lower|capfirst }}
@@ -273,7 +275,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="text-center py-5 text-muted">
+                        <td colspan="7" class="text-center py-5 text-muted">
                             <i class="bi bi-search" style="font-size:2rem;"></i>
                             <p class="mt-2 fw-bold">No appointments found.</p>
                         </td>

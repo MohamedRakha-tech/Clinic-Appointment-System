@@ -77,6 +77,7 @@
                     {% if not user.doctor_profile %}
                     <th>Doctor</th>
                     {% endif %}
+                    <th>Fee</th>
                     <th>Status</th>
                     <th class="text-end">Actions</th>
                 </tr>
@@ -114,6 +115,9 @@
                         </div>
                     </td>
                     {% endif %}
+                    <td>
+                        <div class="fw-semibold">${{ appointment.doctor.consultation_fee }}</div>
+                    </td>
                     <td><span class="appt-status appt-status-{{ appointment.status|lower }}">{{ appointment.display_status }}</span></td>
                     <td class="text-end">
                         <div class="appt-actions">
@@ -133,7 +137,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="{% if user.doctor_profile %}5{% elif show_staff_actions %}6{% else %}5{% endif %}" class="text-center py-5">
+                    <td colspan="{% if user.doctor_profile %}6{% elif show_staff_actions %}7{% else %}6{% endif %}" class="text-center py-5">
                         <div class="appt-icon mx-auto mb-3"><i class="bi bi-calendar-x"></i></div>
                         <div class="fw-semibold">No appointments found</div>
                         <div class="text-muted small">Try changing the filters or book a new appointment.</div>

@@ -68,6 +68,7 @@
                         {% for slot in available_slots %}
                             <button type="submit" name="slot_id" value="{{ slot.id }}" class="py-3 px-4 rounded-xl border border-outline-variant/30 text-sm font-bold text-on-surface hover:bg-surface-container-high transition-all text-left">
                                 {{ slot.start_datetime|date:"M d" }} | {{ slot.start_datetime|time:"h:i A" }} - {{ slot.end_datetime|time:"h:i A" }}
+                                <span class="block text-xs text-on-surface-variant mt-1">${{ appointment.doctor.consultation_fee }}</span>
                             </button>
                         {% endfor %}
                     </div>
@@ -97,6 +98,10 @@
                 <h5 class="text-base font-bold text-on-surface">Dr. {{ appointment.doctor.user.first_name|default:appointment.doctor.user.username }}</h5>
             </div>
             <div class="space-y-2">
+                <p class="text-[10px] font-black text-secondary uppercase tracking-widest">Consultation Fee</p>
+                <p class="text-sm font-bold text-on-surface">${{ appointment.doctor.consultation_fee }}</p>
+            </div>
+            <div class="space-y-2">
                 <p class="text-[10px] font-black text-secondary uppercase tracking-widest">Selected Date</p>
                 <p class="text-sm font-bold text-on-surface" id="summary-date">{{ selected_date|date:"M d, Y" }}</p>
             </div>
@@ -120,6 +125,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const slotEmpty = document.getElementById("slot-empty");
     const slotStatus = document.getElementById("slot-status");
     const summaryDate = document.getElementById("summary-date");
+    const formatFee = (fee) => fee ? `$${Number(fee).toFixed(2)}` : "${{ appointment.doctor.consultation_fee }}";
 
     const validateDate = () => {
         if (!dateInput.value) {
@@ -156,7 +162,7 @@ document.addEventListener("DOMContentLoaded", () => {
             button.value = slot.id;
             button.className = "py-3 px-4 rounded-xl border border-outline-variant/30 text-sm font-bold text-on-surface hover:bg-surface-container-high transition-all text-left";
 
-            button.textContent = `${slot.display_date} | ${slot.display_time}`;
+            button.innerHTML = `${slot.display_date} | ${slot.display_time}<span class="block text-xs text-on-surface-variant mt-1">${formatFee(slot.consultation_fee)}</span>`;
             slotGrid.appendChild(button);
         });
     };

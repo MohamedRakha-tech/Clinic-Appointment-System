@@ -29,7 +29,7 @@ def export_appointments_csv(qs=None, filters=None):
 
     writer.writerow([
         'ID', 'Patient Name', 'Patient Email',
-        'Doctor Name', 'Date', 'Start Time', 'Status', 'Booked At',
+        'Doctor Name', 'Consultation Fee', 'Date', 'Start Time', 'Status', 'Booked At',
     ])
 
     for appt in qs:
@@ -40,6 +40,7 @@ def export_appointments_csv(qs=None, filters=None):
             patient_name,
             appt.patient.user.email,
             doctor_name,
+            appt.doctor.consultation_fee,
             appt.scheduled_start.date(),
             appt.scheduled_start.strftime('%H:%M'),
             appt.status,
@@ -79,12 +80,13 @@ def export_revenue_report_csv(months=6):
     response = _make_csv_response('revenue_report')
     writer   = csv.writer(response)
 
-    writer.writerow(['Month', 'Appointments Count'])
+    writer.writerow(['Month', 'Appointments Count', 'Revenue'])
 
     for row in data:
         writer.writerow([
             row['month'].strftime('%Y-%m'),
             row['count'],
+            row['revenue'],
         ])
 
     return response

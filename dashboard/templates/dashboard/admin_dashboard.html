@@ -787,7 +787,7 @@
                 labels: data.map(d => fmtDate(d)),
                 datasets: [{ 
                     label:'Revenue', 
-                    data: data.map(d => (d.revenue !== undefined ? d.revenue : d.count * 150.00)),
+                    data: data.map(d => (d.revenue !== undefined ? d.revenue : 0)),
                     borderColor: '#006877',
                     backgroundColor: 'rgba(0,104,119,0.08)',
                     borderWidth: 2,

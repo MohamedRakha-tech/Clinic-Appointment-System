@@ -1,4 +1,7 @@
+from collections import defaultdict
 from datetime import timedelta, datetime, time
+from decimal import Decimal
+
 from django.db.models import Count, Q, Value
 from django.db.models.functions import ExtractHour, ExtractWeekDay, TruncDate, TruncMonth
 from django.utils import timezone
@@ -7,6 +10,46 @@ from accounts.models import PatientProfile, DoctorProfile, User
 from django.db.models.functions import Concat
 import re
 from queueing.models import AppointmentCheckin
+
+
+def _appointment_fee(appointment):
+    return appointment.doctor.consultation_fee or Decimal("0.00")
+
+
+def _completed_appointments_with_fees(**filters):
+    return (
+        Appointment.objects
+        .filter(status=Appointment.Status.COMPLETED, **filters)
+        .select_related("doctor")
+    )
+
+
+def _revenue_points_for_dates(start_date, end_date):
+    start_since, _ = get_day_bounds(start_date)
+    _, end_until = get_day_bounds(end_date)
+    rows = _completed_appointments_with_fees(
+        scheduled_start__gte=start_since,
+        scheduled_start__lte=end_until,
+    )
+
+    revenue_by_date = defaultdict(Decimal)
+    count_by_date = defaultdict(int)
+    for appt in rows:
+        date_key = timezone.localtime(appt.scheduled_start).date().isoformat()
+        revenue_by_date[date_key] += _appointment_fee(appt)
+        count_by_date[date_key] += 1
+
+    results = []
+    current_date = start_date
+    while current_date <= end_date:
+        date_key = current_date.isoformat()
+        results.append({
+            'date': current_date,
+            'count': count_by_date.get(date_key, 0),
+            'revenue': float(revenue_by_date.get(date_key, Decimal("0.00"))),
+        })
+        current_date += timedelta(days=1)
+    return results
 
 
 def get_day_bounds(date_obj):
@@ -75,32 +118,19 @@ def get_monthly_revenue(year=None, month=None):
 
     start, end = get_month_bounds(year, month)
 
-    completed = (
-        Appointment.objects
-        .filter(
-            status='COMPLETED',
+    return sum(
+        _appointment_fee(appt)
+        for appt in _completed_appointments_with_fees(
             scheduled_start__gte=start,
             scheduled_start__lte=end,
         )
-        .select_related('doctor')
     )
-
-    total = sum(
-        getattr(appt.doctor, 'consultation_fee', 0)
-        for appt in completed
-    )
-    return total
 
 
 def get_total_revenue():
-    completed = (
-        Appointment.objects
-        .filter(status='COMPLETED')
-        .select_related('doctor')
-    )
     return sum(
-        getattr(appt.doctor, 'consultation_fee', 0)
-        for appt in completed
+        _appointment_fee(appt)
+        for appt in _completed_appointments_with_fees()
     )
 
 
@@ -113,17 +143,14 @@ def get_revenue_last_n_months(n=6):
     since = today.replace(day=1) - timedelta(days=n * 30)
     since_dt = timezone.make_aware(datetime.combine(since.replace(day=1), time.min))
 
-    rows = (
-        Appointment.objects
-        .filter(status='COMPLETED', scheduled_start__gte=since_dt)
-        .values_list('scheduled_start', flat=True)
-    )
+    rows = _completed_appointments_with_fees(scheduled_start__gte=since_dt)
 
-    data_dict = {}
-    for dt in rows:
-        local_dt = timezone.localtime(dt)
-        month_str = local_dt.date().replace(day=1).isoformat()
-        data_dict[month_str] = data_dict.get(month_str, 0) + 1
+    count_by_month = defaultdict(int)
+    revenue_by_month = defaultdict(Decimal)
+    for appt in rows:
+        month_str = timezone.localtime(appt.scheduled_start).date().replace(day=1).isoformat()
+        count_by_month[month_str] += 1
+        revenue_by_month[month_str] += _appointment_fee(appt)
 
     results = []
     current = today.replace(day=1)
@@ -136,40 +163,18 @@ def get_revenue_last_n_months(n=6):
             current = current.replace(month=current.month - 1)
             
     for m in months:
-        count = data_dict.get(m.isoformat(), 0)
+        month_key = m.isoformat()
         results.append({
             'month': m,
-            'count': count,
-            'revenue': count * 150.00
+            'count': count_by_month.get(month_key, 0),
+            'revenue': float(revenue_by_month.get(month_key, Decimal("0.00"))),
         })
 
     return results
 
 def get_revenue_last_n_days(n=30):
     since_date = timezone.localdate() - timedelta(days=n)
-    start_since, _ = get_day_bounds(since_date)
-    rows = (
-        Appointment.objects
-        .filter(status='COMPLETED', scheduled_start__gte=start_since)
-        .values_list('scheduled_start', flat=True)
-    )
-    
-    data_dict = {}
-    for dt in rows:
-        local_dt = timezone.localtime(dt)
-        date_str = local_dt.date().isoformat()
-        data_dict[date_str] = data_dict.get(date_str, 0) + 1
-            
-    results = []
-    for i in range(n + 1):
-        current_date = since_date + timedelta(days=i)
-        count = data_dict.get(current_date.isoformat(), 0)
-        results.append({
-            'date': current_date,
-            'count': count,
-            'revenue': count * 150.00
-        })
-    return results
+    return _revenue_points_for_dates(since_date, timezone.localdate())
 
 
 def get_top_doctors(limit=5):
@@ -511,29 +516,7 @@ def get_appointments_all_dates(years_back=3):
 def get_revenue_all_dates(years_back=3):
     today = timezone.localdate()
     since_date = today - timedelta(days=years_back * 365)
-    start_since, _ = get_day_bounds(since_date)
-    rows = (
-        Appointment.objects
-        .filter(status='COMPLETED', scheduled_start__gte=start_since)
-        .values_list('scheduled_start', flat=True)
-    )
-    
-    data_dict = {}
-    for dt in rows:
-        date_str = timezone.localtime(dt).date().isoformat()
-        data_dict[date_str] = data_dict.get(date_str, 0) + 1
-            
-    results = []
-    current_date = since_date
-    while current_date <= today:
-        count = data_dict.get(current_date.isoformat(), 0)
-        results.append({
-            'date': current_date,
-            'count': count,
-            'revenue': count * 150.00
-        })
-        current_date += timedelta(days=1)
-    return results
+    return _revenue_points_for_dates(since_date, today)
 
 
 def get_revenue_all_months(years_back=3):
@@ -541,22 +524,20 @@ def get_revenue_all_months(years_back=3):
     since = today.replace(day=1) - timedelta(days=years_back * 365)
     since_dt = timezone.make_aware(datetime.combine(since.replace(day=1), time.min))
     
-    rows = (
-        Appointment.objects
-        .filter(status='COMPLETED', scheduled_start__gte=since_dt)
-        .values_list('scheduled_start', flat=True)
-    )
-    
-    data_dict = {}
-    for dt in rows:
-        month_str = timezone.localtime(dt).date().replace(day=1).isoformat()
-        data_dict[month_str] = data_dict.get(month_str, 0) + 1
+    rows = _completed_appointments_with_fees(scheduled_start__gte=since_dt)
+
+    count_by_month = defaultdict(int)
+    revenue_by_month = defaultdict(Decimal)
+    for appt in rows:
+        month_str = timezone.localtime(appt.scheduled_start).date().replace(day=1).isoformat()
+        count_by_month[month_str] += 1
+        revenue_by_month[month_str] += _appointment_fee(appt)
         
     results = []
-    for month_str, count in sorted(data_dict.items()):
+    for month_str, count in sorted(count_by_month.items()):
         results.append({
             'date': datetime.fromisoformat(month_str).date(),
             'count': count,
-            'revenue': count * 150.00
+            'revenue': float(revenue_by_month.get(month_str, Decimal("0.00"))),
         })
     return results

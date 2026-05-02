@@ -169,11 +169,10 @@ class AdminDashboardView(AdminRequiredMixin, TemplateView):
         else:
             ctx['analytics_peak_hour'] = '—'
         noshow = ctx['noshow_summary']
-        completed = noshow['total'] - noshow['noshows']
-        ctx['analytics_completed_30d'] = completed
-        
+        revenue_last_30 = list(selectors.get_revenue_last_n_days(30))
+        ctx['analytics_completed_30d'] = sum(row['count'] for row in revenue_last_30)
 
-        revenue_30d = completed * 150.00
+        revenue_30d = sum(row['revenue'] for row in revenue_last_30)
 
         if revenue_30d >= 1000000:
             ctx['analytics_revenue_30d'] = f"${revenue_30d / 1000000:.2f}m"

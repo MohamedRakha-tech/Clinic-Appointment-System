@@ -446,6 +446,8 @@
                             &nbsp;·&nbsp;
                             <i class="bi bi-person-badge me-1"></i>
                             Dr. {{ appt.doctor.user.first_name }} {{ appt.doctor.user.last_name }}
+                            &nbsp;·&nbsp;
+                            <i class="bi bi-currency-dollar me-1"></i>{{ appt.doctor.consultation_fee }}
                         </div>
                     </div>
 
@@ -496,6 +498,7 @@
                     <th class="border-0 pb-3">Patient</th>
                     <th class="border-0 pb-3">Time</th>
                     <th class="border-0 pb-3">Doctor</th>
+                    <th class="border-0 pb-3">Fee</th>
                     <th class="border-0 pb-3">Status</th>
                     <th class="border-0 pb-3">Actions</th>
                 </tr>
@@ -521,6 +524,9 @@
                     </td>
                     <td style="color:var(--muted);">
                         Dr. {{ appt.doctor.user.first_name }} {{ appt.doctor.user.last_name }}
+                    </td>
+                    <td style="font-weight:700;">
+                        ${{ appt.doctor.consultation_fee }}
                     </td>
                     <td>
                         <span class="status-badge status-{{ appt.status }}">
@@ -551,7 +557,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="6" class="text-center py-5 text-muted">
+                    <td colspan="7" class="text-center py-5 text-muted">
                         <i class="bi bi-calendar-x" style="font-size:2rem;"></i>
                         <p class="mt-2 fw-bold">No appointments scheduled for today.</p>
                     </td>

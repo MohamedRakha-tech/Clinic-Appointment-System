@@ -7,6 +7,7 @@ from scheduling.models import AppointmentSlot
 class AppointmentSlotSerializer(serializers.ModelSerializer):
     doctor_name = serializers.SerializerMethodField()
     specialization = serializers.CharField(source="doctor.specialization", read_only=True)
+    consultation_fee = serializers.DecimalField(source="doctor.consultation_fee", max_digits=8, decimal_places=2, read_only=True)
     display_date = serializers.SerializerMethodField()
     display_time = serializers.SerializerMethodField()
     display_start = serializers.SerializerMethodField()
@@ -19,6 +20,7 @@ class AppointmentSlotSerializer(serializers.ModelSerializer):
             "doctor",
             "doctor_name",
             "specialization",
+            "consultation_fee",
             "slot_date",
             "start_datetime",
             "end_datetime",
@@ -50,4 +52,3 @@ class AppointmentSlotSerializer(serializers.ModelSerializer):
 
     def get_display_end(self, obj):
         return timezone.localtime(obj.end_datetime).strftime("%b %d, %Y %I:%M %p")
-

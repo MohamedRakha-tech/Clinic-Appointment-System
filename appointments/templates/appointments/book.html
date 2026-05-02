@@ -34,7 +34,7 @@
                         <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-[0.15em] mb-2" for="doctor_id">Doctor</label>
                         <select id="doctor_id" name="doctor_id" class="w-full bg-surface-container-high border border-outline-variant rounded-xl p-3 text-sm">
                             {% for doctor in doctors %}
-                                <option value="{{ doctor.id }}" {% if selected_doctor and doctor.id == selected_doctor.id %}selected{% endif %}>
+                                <option value="{{ doctor.id }}" data-fee="{{ doctor.consultation_fee }}" {% if selected_doctor and doctor.id == selected_doctor.id %}selected{% endif %}>
                                     {% firstof doctor.user.first_name doctor.user.username %} - {{ doctor.specialization }}
                                 </option>
                             {% endfor %}
@@ -100,6 +100,7 @@
                     <p class="text-[10px] font-black text-secondary uppercase tracking-widest">Specialist</p>
                     <h5 class="text-lg font-bold text-on-surface">{% firstof selected_doctor.user.first_name selected_doctor.user.username %}</h5>
                     <p class="text-sm text-on-surface-variant">{{ selected_doctor.specialization }}</p>
+                    <p class="text-sm font-bold text-on-surface">${{ selected_doctor.consultation_fee }}</p>
                 </div>
             {% endif %}
             <div class="space-y-2">
@@ -130,9 +131,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const bookButton = document.getElementById("book-button");
     const summaryDate = document.getElementById("summary-date");
 
+    const selectedDoctorFee = () => doctorSelect.options[doctorSelect.selectedIndex]?.dataset.fee || "";
+    const formatFee = (fee) => fee ? `$${Number(fee).toFixed(2)}` : "Fee unavailable";
+
     const setSelectedSlot = (slot, card) => {
         slotIdInput.value = slot.id;
-        selectedSlotText.textContent = `${slot.doctor_name} | ${slot.display_start}`;
+        selectedSlotText.textContent = `${slot.doctor_name} | ${slot.display_start} | ${formatFee(slot.consultation_fee || selectedDoctorFee())}`;
         bookButton.disabled = false;
         slotGrid.querySelectorAll("[data-slot-card]").forEach((el) => {
             el.classList.remove("border-primary", "ring-4", "ring-primary/10");
@@ -162,6 +166,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         <p class="text-[10px] font-black text-secondary uppercase tracking-widest">Available</p>
                         <h4 class="text-lg font-bold text-on-surface">${slot.display_date}</h4>
                         <p class="text-sm text-on-surface-variant">${slot.display_time}</p>
+                        <p class="text-sm font-bold text-on-surface mt-1">${formatFee(slot.consultation_fee || selectedDoctorFee())}</p>
                     </div>
                     <span class="px-3 py-1 rounded-full text-xs font-bold bg-primary-fixed text-on-primary-fixed">Pick</span>
                 </div>

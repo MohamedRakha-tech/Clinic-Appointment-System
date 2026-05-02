@@ -23,25 +23,32 @@
         <div class="appt-card">
             <div class="card-body p-4">
                 <div class="row g-3 mb-4">
-                    <div class="col-12 col-md-4">
+                    <div class="col-12 col-md-3">
                         <div class="appt-summary-card">
                             <div class="label">Doctor</div>
                             <div class="fw-semibold">Dr. {{ appointment.doctor.user.first_name|default:appointment.doctor.user.username }}</div>
                             <div class="text-muted small">{{ appointment.doctor.specialization }}</div>
                         </div>
                     </div>
-                    <div class="col-12 col-md-4">
+                    <div class="col-12 col-md-3">
                         <div class="appt-summary-card">
                             <div class="label">Date and time</div>
                             <div class="fw-semibold">{{ appointment.scheduled_start|date:"M d, Y" }}</div>
                             <div class="text-muted small">{{ appointment.scheduled_start|time:"h:i A" }} - {{ appointment.scheduled_end|time:"h:i A" }}</div>
                         </div>
                     </div>
-                    <div class="col-12 col-md-4">
+                    <div class="col-12 col-md-3">
                         <div class="appt-summary-card">
                             <div class="label">Patient</div>
                             <div class="fw-semibold">{{ appointment.patient.user.get_full_name|default:appointment.patient.user.username }}</div>
                             <div class="text-muted small">{{ appointment.get_booking_source_display }}</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <div class="appt-summary-card">
+                            <div class="label">Consultation Fee</div>
+                            <div class="fw-semibold">${{ appointment.doctor.consultation_fee }}</div>
+                            <div class="text-muted small">Doctor profile fee</div>
                         </div>
                     </div>
                 </div>
