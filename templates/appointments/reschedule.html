@@ -7,23 +7,36 @@
 {% endblock %}
 
 {% block appointment_content %}
+<div class="appt-hero d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+    <div class="d-flex gap-3 align-items-start">
+        <span class="appt-icon"><i class="bi bi-arrow-repeat"></i></span>
+        <div>
+            <div class="appt-eyebrow mb-1">Reschedule</div>
+            <h1 class="h3 fw-bold mb-1">Choose a New Time</h1>
+            <p class="appt-muted mb-0">Move {{ appointment.appointment_code }} to another available slot.</p>
+        </div>
+    </div>
+    <a href="{% url 'appointment-detail' pk=appointment.pk %}" class="btn btn-outline-secondary align-self-start align-self-lg-center">
+        <i class="bi bi-arrow-left me-1"></i>Back to Appointment
+    </a>
+</div>
+
 <div class="row g-4">
     <div class="col-12 col-lg-8">
-        <div class="card border-0 shadow-sm mb-4">
+        <div class="appt-card mb-4">
             <div class="card-body p-4">
-                <h1 class="h4 fw-bold mb-3">Reschedule Appointment</h1>
-
-                <div class="p-3 border rounded-3 bg-light mb-4">
-                    <div class="fw-semibold">Current Appointment</div>
+                <div class="appt-summary-card mb-4">
+                    <div class="label mb-1">Current appointment</div>
+                    <div class="fw-semibold">{{ appointment.appointment_code }}</div>
                     <div class="text-muted small">Dr. {{ appointment.doctor.user.first_name|default:appointment.doctor.user.username }}</div>
                     <div class="text-muted small">{{ appointment.scheduled_start|date:"M d, Y" }} at {{ appointment.scheduled_start|time:"h:i A" }}</div>
-                    <div class="text-muted small">Status: {{ appointment.display_status }}</div>
+                    <span class="appt-status appt-status-{{ appointment.status|lower }} d-inline-flex mt-2">{{ appointment.display_status }}</span>
                 </div>
 
                 <form method="post" action="{% url 'appointment-reschedule' pk=appointment.pk %}">
                     {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="{{ form.reason.id_for_label }}" class="form-label">Reason for Rescheduling</label>
+                    <div class="mb-4">
+                        <label for="{{ form.reason.id_for_label }}" class="form-label fw-semibold">Reason for Rescheduling</label>
                         {{ form.reason }}
                         {% if form.reason.errors %}
                             <div class="text-danger small mt-1">{{ form.reason.errors|striptags }}</div>
@@ -32,7 +45,7 @@
 
                     <div class="row g-3 mb-3">
                         <div class="col-12 col-md-8">
-                            <label class="form-label" for="slot_date">Choose New Date</label>
+                            <label class="form-label fw-semibold" for="slot_date">Choose New Date</label>
                             <input
                                 id="slot_date"
                                 type="date"
@@ -51,24 +64,38 @@
                         <div class="alert alert-danger">{{ form.non_field_errors|striptags }}</div>
                     {% endif %}
 
-                    <div class="card border-0 bg-light">
+                    <div class="appt-summary-card">
                         <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <div class="text-uppercase text-muted small fw-semibold">Available Times</div>
+                            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-1 mb-3">
+                                <div class="appt-section-title">Available Times</div>
                                 <span class="text-muted small" id="slot-status">{{ available_slots|length }} slot{{ available_slots|length|pluralize }} loaded</span>
                             </div>
                             <div class="row g-3" id="slot-grid">
                                 {% for slot in available_slots %}
                                 <div class="col-12 col-md-6">
-                                    <button type="submit" name="slot_id" value="{{ slot.id }}" class="btn btn-outline-primary w-100 text-start">
-                                        <div class="fw-semibold">{{ slot.start_datetime|date:"M d, Y" }}</div>
-                                        <div class="small">{{ slot.start_datetime|time:"h:i A" }} - {{ slot.end_datetime|time:"h:i A" }}</div>
+                                    <button type="submit" name="slot_id" value="{{ slot.id }}" class="btn appt-slot-card appt-slot-button w-100">
+                                        <span>
+                                            <span class="appt-slot-date d-block">{{ slot.start_datetime|date:"M d, Y" }}</span>
+                                            <span class="appt-slot-time d-block">{{ slot.start_datetime|time:"h:i A" }} - {{ slot.end_datetime|time:"h:i A" }}</span>
+                                        </span>
+                                        <span class="appt-slot-action"><i class="bi bi-arrow-right"></i></span>
                                     </button>
                                 </div>
                                 {% endfor %}
                             </div>
                             <div id="slot-empty" class="text-muted {% if available_slots %}d-none{% endif %}">
                                 No available slots for this doctor on the selected date.
+                            </div>
+                            <div id="slot-pagination" class="appt-slot-pagination d-none d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+                                <span id="slot-page-status" class="text-muted small"></span>
+                                <div class="btn-group btn-group-sm" role="group" aria-label="Slot pagination">
+                                    <button type="button" id="slot-prev" class="btn btn-outline-secondary">
+                                        <i class="bi bi-chevron-left me-1"></i>Previous
+                                    </button>
+                                    <button type="button" id="slot-next" class="btn btn-outline-secondary">
+                                        Next<i class="bi bi-chevron-right ms-1"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -89,14 +116,23 @@
     </div>
 
     <div class="col-12 col-lg-4">
-        <div class="card border-0 shadow-sm">
+        <div class="appt-card position-sticky" style="top: 6rem;">
             <div class="card-body p-4">
-                <h2 class="h6 text-uppercase text-muted fw-semibold">New Schedule</h2>
-                <p class="mb-2 fw-semibold">Doctor</p>
-                <p class="text-muted small">Dr. {{ appointment.doctor.user.first_name|default:appointment.doctor.user.username }}</p>
-                <p class="mb-2 fw-semibold">Selected Date</p>
-                <p class="text-muted small" id="summary-date">{{ selected_date|date:"M d, Y" }}</p>
-                <p class="text-muted small mb-0">Rescheduling moves the appointment back to REQUESTED until the staff reconfirms it.</p>
+                <div class="appt-eyebrow mb-3">New schedule</div>
+                <div class="d-grid gap-3">
+                    <div class="appt-summary-card">
+                        <div class="label mb-1">Doctor</div>
+                        <div class="fw-semibold">Dr. {{ appointment.doctor.user.first_name|default:appointment.doctor.user.username }}</div>
+                    </div>
+                    <div class="appt-summary-card">
+                        <div class="label mb-1">Selected date</div>
+                        <div class="fw-semibold" id="summary-date">{{ selected_date|date:"M d, Y" }}</div>
+                    </div>
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Choosing a slot submits the request immediately.
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -114,7 +150,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const slotGrid = document.getElementById("slot-grid");
     const slotEmpty = document.getElementById("slot-empty");
     const slotStatus = document.getElementById("slot-status");
+    const slotPagination = document.getElementById("slot-pagination");
+    const slotPageStatus = document.getElementById("slot-page-status");
+    const slotPrev = document.getElementById("slot-prev");
+    const slotNext = document.getElementById("slot-next");
     const summaryDate = document.getElementById("summary-date");
+    const slotPageSize = 5;
+    let currentSlotPage = 1;
+    let hasPreviousSlots = false;
+    let hasNextSlots = false;
 
     const validateDate = () => {
         if (!dateInput.value) {
@@ -140,11 +184,6 @@ document.addEventListener("DOMContentLoaded", () => {
         year: "numeric",
     });
 
-    const formatTime = (date) => date.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-    });
-
     const renderSlots = (slots) => {
         slotGrid.innerHTML = "";
         slotEmpty.classList.toggle("d-none", slots.length !== 0);
@@ -157,13 +196,14 @@ document.addEventListener("DOMContentLoaded", () => {
             button.type = "submit";
             button.name = "slot_id";
             button.value = slot.id;
-            button.className = "btn btn-outline-primary w-100 text-start";
+            button.className = "btn appt-slot-card appt-slot-button w-100";
 
-            const start = new Date(slot.start_datetime);
-            const end = new Date(slot.end_datetime);
             button.innerHTML = `
-                <div class="fw-semibold">${formatDate(start)}</div>
-                <div class="small">${formatTime(start)} - ${formatTime(end)}</div>
+                <span>
+                    <span class="appt-slot-date d-block">${slot.display_date}</span>
+                    <span class="appt-slot-time d-block">${slot.display_time}</span>
+                </span>
+                <span class="appt-slot-action"><i class="bi bi-arrow-right"></i></span>
             `;
 
             col.appendChild(button);
@@ -171,19 +211,40 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     };
 
-    const loadSlots = async () => {
+    const updateSlotPagination = (data, slots) => {
+        const total = Number(data.count || 0);
+        hasPreviousSlots = Boolean(data.previous);
+        hasNextSlots = Boolean(data.next);
+        slotPagination.classList.toggle("d-none", total <= slotPageSize && currentSlotPage === 1);
+        slotPrev.disabled = !hasPreviousSlots;
+        slotNext.disabled = !hasNextSlots;
+
+        if (!total) {
+            slotPageStatus.textContent = "";
+            return;
+        }
+
+        const first = (currentSlotPage - 1) * slotPageSize + 1;
+        const last = Math.min(first + slots.length - 1, total);
+        slotPageStatus.textContent = `Showing ${first}-${last} of ${total} slots`;
+    };
+
+    const loadSlots = async (page = 1) => {
         if (!validateDate()) {
             slotGrid.innerHTML = "";
             slotEmpty.classList.remove("d-none");
             slotEmpty.textContent = "Please select a valid date to load available slots.";
             slotStatus.textContent = "Date validation failed";
+            slotPagination.classList.add("d-none");
             return;
         }
 
         const params = new URLSearchParams({
             doctor: doctorId,
             slot_date: dateInput.value,
+            page,
         });
+        currentSlotPage = page;
         summaryDate.textContent = formatDate(new Date(`${dateInput.value}T00:00:00`));
         slotStatus.textContent = "Loading from slot API...";
         slotGrid.innerHTML = "";
@@ -198,19 +259,32 @@ document.addEventListener("DOMContentLoaded", () => {
             });
             const data = await response.json();
             const slots = Array.isArray(data.results) ? data.results : [];
-            slotStatus.textContent = `${slots.length} slot${slots.length === 1 ? "" : "s"} loaded`;
+            slotStatus.textContent = `${data.count ?? slots.length} slot${(data.count ?? slots.length) === 1 ? "" : "s"} available`;
             slotEmpty.textContent = "No available slots for this doctor on the selected date.";
             renderSlots(slots);
+            updateSlotPagination(data, slots);
         } catch (error) {
             slotStatus.textContent = "Could not load slots right now.";
             slotGrid.innerHTML = "";
             slotEmpty.classList.remove("d-none");
             slotEmpty.textContent = "Unable to load slots from the slot API.";
+            slotPagination.classList.add("d-none");
         }
     };
 
-    reloadButton.addEventListener("click", loadSlots);
-    dateInput.addEventListener("change", loadSlots);
+    reloadButton.addEventListener("click", () => loadSlots(1));
+    dateInput.addEventListener("change", () => loadSlots(1));
+    slotPrev.addEventListener("click", () => {
+        if (hasPreviousSlots && currentSlotPage > 1) {
+            loadSlots(currentSlotPage - 1);
+        }
+    });
+    slotNext.addEventListener("click", () => {
+        if (hasNextSlots) {
+            loadSlots(currentSlotPage + 1);
+        }
+    });
+    loadSlots(1);
 });
 </script>
 {% endblock %}

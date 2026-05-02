@@ -3,10 +3,475 @@
 {% block topbar_subtitle %}Appointments Workspace{% endblock %}
 {% block topbar_role %}Role: {{ user.get_role_display|default:"User" }}{% endblock %}
 
-{% block extra_css %}{% endblock %}
+{% block extra_css %}
+<style>
+    .appointments-shell {
+        --appt-primary: #0b4ea2;
+        --appt-primary-strong: #083f84;
+        --appt-accent: #1f8a70;
+        --appt-warning: #c78116;
+        --appt-danger: #c33c3c;
+        --appt-ink: #141d23;
+        --appt-muted: #5f6975;
+        --appt-line: #dce8f5;
+        --appt-soft: #eef6ff;
+    }
+
+    .appointments-shell .breadcrumb {
+        background: rgba(255, 255, 255, .82);
+        border: 1px solid rgba(221, 232, 244, .86);
+        border-radius: 999px;
+        padding: .45rem .55rem;
+        box-shadow: 0 10px 26px rgba(15, 55, 110, .05);
+        display: inline-flex;
+        align-items: center;
+        gap: .25rem;
+        width: auto;
+        max-width: 100%;
+    }
+
+    .appointments-shell .breadcrumb-item {
+        display: inline-flex;
+        align-items: center;
+        color: var(--appt-muted);
+        font-size: .9rem;
+        font-weight: 700;
+        min-width: 0;
+    }
+
+    .appointments-shell .breadcrumb-item + .breadcrumb-item {
+        padding-left: .25rem;
+    }
+
+    .appointments-shell .breadcrumb-item + .breadcrumb-item::before {
+        content: "\F285";
+        font-family: "bootstrap-icons";
+        color: #8aa1ba;
+        font-size: .72rem;
+        padding-right: .45rem;
+        line-height: 1;
+    }
+
+    .appointments-shell .breadcrumb-item a,
+    .appt-crumb-link {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        border-radius: 999px;
+        padding: .45rem .75rem;
+        color: var(--appt-primary);
+        text-decoration: none;
+        transition: background .18s ease, color .18s ease, box-shadow .18s ease;
+    }
+
+    .appointments-shell .breadcrumb-item a:hover,
+    .appt-crumb-link:hover {
+        background: #eaf3ff;
+        color: var(--appt-primary-strong);
+        box-shadow: inset 0 0 0 1px #cfe2f7;
+    }
+
+    .appointments-shell .breadcrumb-item.active {
+        background: #f3f8fe;
+        border-radius: 999px;
+        color: var(--appt-ink);
+        padding: .45rem .75rem;
+    }
+
+    .appt-hero,
+    .appt-card {
+        background: rgba(255, 255, 255, .94);
+        border: 1px solid var(--appt-line);
+        border-radius: 1rem;
+        box-shadow: 0 14px 34px rgba(15, 55, 110, .08);
+    }
+
+    .appt-hero {
+        padding: 1.35rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .appt-hero::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--appt-primary), var(--appt-accent));
+    }
+
+    .appt-eyebrow {
+        color: var(--appt-primary);
+        font-size: .72rem;
+        font-weight: 800;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+    }
+
+    .appt-muted {
+        color: var(--appt-muted);
+    }
+
+    .appt-icon {
+        width: 2.7rem;
+        height: 2.7rem;
+        border-radius: .9rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        background: linear-gradient(135deg, var(--appt-primary), #5ca6f8);
+        box-shadow: 0 12px 22px rgba(11, 78, 162, .2);
+    }
+
+    .appt-summary-card {
+        background: #f7fbff;
+        border: 1px solid #dce8f5;
+        border-radius: .9rem;
+        padding: 1rem;
+        height: 100%;
+    }
+
+    .appt-summary-card .label {
+        color: var(--appt-muted);
+        font-size: .72rem;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+
+    .appt-status {
+        border-radius: 999px;
+        font-weight: 800;
+        padding: .45rem .75rem;
+    }
+
+    .appt-status-requested,
+    .appt-status-confirmed {
+        background: #eaf3ff;
+        color: var(--appt-primary);
+    }
+
+    .appt-status-checked_in {
+        background: #e9f8f3;
+        color: var(--appt-accent);
+    }
+
+    .appt-status-completed {
+        background: #eef6ef;
+        color: #47744a;
+    }
+
+    .appt-status-cancelled,
+    .appt-status-no_show {
+        background: #fff0f0;
+        color: var(--appt-danger);
+    }
+
+    .appt-table th {
+        color: var(--appt-muted);
+        font-size: .72rem;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .appt-table td {
+        vertical-align: middle;
+    }
+
+    .appt-table tbody tr {
+        transition: background .18s ease, transform .18s ease;
+    }
+
+    .appt-table tbody tr:hover {
+        background: #f7fbff;
+    }
+
+    .appt-avatar {
+        width: 2.35rem;
+        height: 2.35rem;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #eaf3ff;
+        color: var(--appt-primary);
+        font-weight: 800;
+        flex: 0 0 auto;
+    }
+
+    .appt-actions {
+        display: inline-flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: .4rem;
+    }
+
+    .appt-filter-bar {
+        background: rgba(255, 255, 255, .88);
+        border: 1px solid var(--appt-line);
+        border-radius: 1rem;
+        box-shadow: 0 10px 28px rgba(15, 55, 110, .06);
+    }
+
+    .appointments-shell .form-label {
+        display: block;
+        margin-bottom: .45rem;
+        color: var(--appt-ink);
+    }
+
+    .appointments-shell .form-control,
+    .appointments-shell .form-select {
+        min-height: 3.1rem;
+        border-color: #cfddec;
+        border-radius: .7rem;
+        color: var(--appt-ink);
+        box-shadow: none;
+    }
+
+    .appointments-shell .form-control:focus,
+    .appointments-shell .form-select:focus {
+        border-color: #8fb9e8;
+        box-shadow: 0 0 0 .2rem rgba(11, 78, 162, .12);
+    }
+
+    .appointments-shell textarea.form-control {
+        width: 100%;
+        min-height: 7.5rem;
+        resize: vertical;
+        line-height: 1.5;
+    }
+
+    .appointments-shell .btn {
+        border-radius: .7rem;
+        font-weight: 700;
+    }
+
+    .appt-section-title {
+        color: var(--appt-muted);
+        font-size: .76rem;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+
+    .appt-slot-card {
+        border: 1px solid #dce8f5 !important;
+        border-radius: .9rem !important;
+        background: #fff !important;
+        color: var(--appt-ink) !important;
+        transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+    }
+
+    .appt-slot-card:hover {
+        border-color: #9fc4ee !important;
+        box-shadow: 0 12px 24px rgba(15, 55, 110, .09);
+        transform: translateY(-1px);
+    }
+
+    .appt-slot-card.selected {
+        border-color: var(--appt-primary) !important;
+        box-shadow: 0 0 0 .2rem rgba(11, 78, 162, .14), 0 12px 26px rgba(15, 55, 110, .1);
+    }
+
+    .appt-slot-button {
+        min-height: 4.15rem;
+        padding: .8rem .95rem !important;
+        display: flex !important;
+        align-items: center;
+        justify-content: space-between;
+        gap: .75rem;
+        text-align: left !important;
+    }
+
+    .appt-slot-time {
+        font-weight: 800;
+        color: var(--appt-primary);
+    }
+
+    .appt-slot-date {
+        color: var(--appt-muted);
+        font-size: .78rem;
+        font-weight: 700;
+    }
+
+    .appt-slot-action {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #eaf3ff;
+        color: var(--appt-primary);
+        flex: 0 0 auto;
+    }
+
+    .appt-pagination-footer,
+    .appt-slot-pagination {
+        border-top: 1px solid #dce8f5;
+        background: #fbfdff;
+        padding: 1rem 1.1rem;
+    }
+
+    .appt-pagination-footer {
+        border-radius: 0 0 1rem 1rem;
+    }
+
+    .appt-slot-pagination {
+        border-radius: .85rem;
+        border: 1px solid #dce8f5;
+        margin-top: 1rem;
+    }
+
+    .appointments-shell .pagination .page-link,
+    .appt-slot-pagination .btn {
+        min-width: 2.35rem;
+        min-height: 2.35rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-color: #cfddec;
+    }
+
+    .appointments-shell .pagination .page-item.active .page-link {
+        background: var(--appt-primary);
+        border-color: var(--appt-primary);
+    }
+
+    .appt-timeline-item {
+        border: 1px solid #dce8f5;
+        border-radius: .9rem;
+        padding: 1rem;
+        background: #fbfdff;
+    }
+
+    .appt-panel-header {
+        padding: 1rem 1.1rem;
+        border-bottom: 1px solid #e3edf7;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+        border-radius: 1rem 1rem 0 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .appt-panel-body {
+        padding: 1rem 1.25rem 1.25rem;
+    }
+
+    .appt-panel-title {
+        display: flex;
+        align-items: center;
+        gap: .65rem;
+        margin: 0;
+        font-size: .98rem;
+        font-weight: 800;
+    }
+
+    .appt-panel-icon {
+        width: 2rem;
+        height: 2rem;
+        border-radius: .7rem;
+        background: #eaf3ff;
+        color: var(--appt-primary);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+    }
+
+    .appt-timeline {
+        position: relative;
+        display: grid;
+        gap: .9rem;
+        padding-left: .15rem;
+    }
+
+    .appt-timeline-entry {
+        position: relative;
+        display: grid;
+        grid-template-columns: 2.35rem minmax(0, 1fr);
+        gap: .95rem;
+        align-items: start;
+    }
+
+    .appt-timeline-marker {
+        width: 2.1rem;
+        height: 2.1rem;
+        border-radius: 999px;
+        background: #e9f8f3;
+        color: var(--appt-accent);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: inset 0 0 0 1px rgba(31, 138, 112, .18);
+        margin-top: .05rem;
+    }
+
+    .appt-timeline-card {
+        border: 1px solid #dce8f5;
+        border-radius: .9rem;
+        padding: 1rem;
+        background: #fbfdff;
+        box-shadow: 0 8px 18px rgba(15, 55, 110, .04);
+    }
+
+    .appt-note-box {
+        min-height: 8rem;
+        border: 1px dashed #c8daee;
+        border-radius: .9rem;
+        background: #f8fbff;
+        padding: 1.15rem;
+        display: flex;
+        gap: .9rem;
+        align-items: flex-start;
+    }
+
+    .appt-card .appt-note-box {
+        margin: 0;
+    }
+
+    .appt-note-icon {
+        width: 2.4rem;
+        height: 2.4rem;
+        border-radius: .8rem;
+        background: #eef6ff;
+        color: var(--appt-primary);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+    }
+
+    .appointments-shell .btn-primary {
+        background: var(--appt-primary);
+        border-color: var(--appt-primary);
+        box-shadow: 0 8px 16px rgba(11, 78, 162, .16);
+    }
+
+    .appointments-shell .btn-primary:hover {
+        background: var(--appt-primary-strong);
+        border-color: var(--appt-primary-strong);
+    }
+
+    @media (max-width: 767.98px) {
+        .appt-hero {
+            padding: 1rem;
+        }
+
+        .appointments-shell .table-responsive {
+            border-radius: 1rem;
+        }
+    }
+</style>
+{% block appointment_extra_css %}{% endblock %}
+{% endblock %}
 
 {% block content %}
-<div class="container-xxl py-4">
+<div class="appointments-shell container-xxl py-4">
     {% if messages %}
         <div class="mb-4 d-grid gap-2">
             {% for message in messages %}
@@ -17,9 +482,14 @@
         </div>
     {% endif %}
 
-    <nav aria-label="breadcrumb" class="mb-4">
+    <nav aria-label="Appointment navigation" class="mb-4">
         <ol class="breadcrumb mb-0">
-            <li class="breadcrumb-item"><a href="{% url 'appointment-list' %}">Appointments</a></li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'appointment-list' %}">
+                    <i class="bi bi-calendar2-week"></i>
+                    <span>Appointments</span>
+                </a>
+            </li>
             {% block breadcrumb %}{% endblock %}
         </ol>
     </nav>

@@ -145,11 +145,6 @@ document.addEventListener("DOMContentLoaded", () => {
         year: "numeric",
     });
 
-    const formatTime = (date) => date.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-    });
-
     const renderSlots = (slots) => {
         slotGrid.innerHTML = "";
         slotEmpty.classList.toggle("hidden", slots.length !== 0);
@@ -161,9 +156,7 @@ document.addEventListener("DOMContentLoaded", () => {
             button.value = slot.id;
             button.className = "py-3 px-4 rounded-xl border border-outline-variant/30 text-sm font-bold text-on-surface hover:bg-surface-container-high transition-all text-left";
 
-            const start = new Date(slot.start_datetime);
-            const end = new Date(slot.end_datetime);
-            button.textContent = `${start.toLocaleDateString(undefined, { month: "short", day: "numeric" })} | ${formatTime(start)} - ${formatTime(end)}`;
+            button.textContent = `${slot.display_date} | ${slot.display_time}`;
             slotGrid.appendChild(button);
         });
     };

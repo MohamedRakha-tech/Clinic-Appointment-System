@@ -7,9 +7,18 @@
 {% endblock %}
 
 {% block appointment_content %}
+<div class="appt-hero d-flex gap-3 align-items-start mb-4">
+    <span class="appt-icon" style="background: linear-gradient(135deg, #c33c3c, #f08f8f);"><i class="bi bi-exclamation-triangle"></i></span>
+    <div>
+        <div class="appt-eyebrow mb-1">Cancellation</div>
+        <h1 class="h3 fw-bold mb-1">Cancel Appointment</h1>
+        <p class="appt-muted mb-0">Review the appointment and add a reason before cancelling it.</p>
+    </div>
+</div>
+
 <div class="row justify-content-center">
     <div class="col-12 col-lg-7">
-        <div class="card border-0 shadow-sm">
+        <div class="appt-card">
             <div class="card-body p-4">
                 <div class="alert alert-warning d-flex align-items-center gap-2 mb-4">
                     <i class="bi bi-exclamation-triangle-fill"></i>
@@ -19,17 +28,17 @@
                     </div>
                 </div>
 
-                <div class="p-3 border rounded-3 bg-light mb-4">
-                    <div class="text-uppercase text-muted small fw-semibold">Appointment Summary</div>
+                <div class="appt-summary-card mb-4">
+                    <div class="label">Appointment Summary</div>
                     <div class="fw-semibold">{{ appointment.appointment_code }}</div>
                     <div class="text-muted small">{{ appointment.scheduled_start|date:"M d, Y" }} at {{ appointment.scheduled_start|time:"h:i A" }}</div>
-                    <div class="text-muted small">Status: {{ appointment.display_status }}</div>
+                    <span class="appt-status appt-status-{{ appointment.status|lower }} d-inline-flex mt-2">{{ appointment.display_status }}</span>
                 </div>
 
                 <form method="post" action="{% url 'appointment-cancel' pk=appointment.pk %}">
                     {% csrf_token %}
                     <div class="mb-3">
-                        <label for="{{ form.reason.id_for_label }}" class="form-label">Reason for Cancellation</label>
+                        <label for="{{ form.reason.id_for_label }}" class="form-label fw-semibold">Reason for Cancellation</label>
                         {{ form.reason }}
                         {% if form.reason.errors %}
                             <div class="text-danger small mt-1">{{ form.reason.errors|striptags }}</div>

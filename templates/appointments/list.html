@@ -6,10 +6,14 @@
 {% endblock %}
 
 {% block appointment_content %}
-<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-4">
-    <div>
-        <h1 class="h3 fw-bold mb-1">My Appointments</h1>
-        <p class="text-muted mb-0">Manage upcoming visits and review appointment status.</p>
+<div class="appt-hero d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+    <div class="d-flex gap-3 align-items-start">
+        <span class="appt-icon"><i class="bi bi-calendar2-week"></i></span>
+        <div>
+            <div class="appt-eyebrow mb-1">Appointments</div>
+            <h1 class="h3 fw-bold mb-1">Appointment Schedule</h1>
+            <p class="appt-muted mb-0">Review visits, filter by status or date, and open the right record quickly.</p>
+        </div>
     </div>
     {% if can_book_appointments %}
     <a href="{% url 'appointment-book' %}" class="btn btn-primary">
@@ -19,11 +23,11 @@
     {% endif %}
 </div>
 
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-body">
+<div class="appt-filter-bar mb-4">
+    <div class="p-3 p-lg-4">
         <form method="get" class="row g-3 align-items-end">
             <div class="col-12 col-md-2">
-                <label class="form-label small text-uppercase fw-semibold">Status</label>
+                <label class="form-label small text-uppercase fw-semibold text-muted">Status</label>
                 <select name="status" class="form-select">
                     <option value="">All</option>
                     <option value="REQUESTED" {% if selected_status == "REQUESTED" %}selected{% endif %}>Requested</option>
@@ -35,27 +39,34 @@
                 </select>
             </div>
             <div class="col-12 col-md-3">
-                <label class="form-label small text-uppercase fw-semibold">Search</label>
+                <label class="form-label small text-uppercase fw-semibold text-muted">Search</label>
                 <input name="q" value="{{ search_query }}" class="form-control" placeholder="Appointment code, doctor, patient" type="text"/>
             </div>
             <div class="col-6 col-md-2">
-                <label class="form-label small text-uppercase fw-semibold">From</label>
+                <label class="form-label small text-uppercase fw-semibold text-muted">From</label>
                 <input name="date_from" value="{{ date_from }}" class="form-control" type="date"/>
             </div>
             <div class="col-6 col-md-2">
-                <label class="form-label small text-uppercase fw-semibold">To</label>
+                <label class="form-label small text-uppercase fw-semibold text-muted">To</label>
                 <input name="date_to" value="{{ date_to }}" class="form-control" type="date"/>
             </div>
             <div class="col-12 col-md-3">
-                <button class="btn btn-outline-primary w-100" type="submit">Apply Filters</button>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary flex-grow-1" type="submit">
+                        <i class="bi bi-funnel me-1"></i>Apply
+                    </button>
+                    <a href="{% url 'appointment-list' %}" class="btn btn-outline-secondary" title="Clear filters" aria-label="Clear filters">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
+                </div>
             </div>
         </form>
     </div>
 </div>
 
-<div class="card border-0 shadow-sm">
+<div class="appt-card">
     <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
+        <table class="table appt-table align-middle mb-0">
             <thead class="table-light">
                 <tr>
                     <th>Code</th>
@@ -73,39 +84,100 @@
             <tbody>
                 {% for appointment in appointments %}
                 <tr>
-                    <td class="fw-semibold">{{ appointment.appointment_code }}</td>
+                    <td>
+                        <div class="fw-bold">{{ appointment.appointment_code }}</div>
+                        <div class="text-muted small">Created {{ appointment.created_at|date:"M d" }}</div>
+                    </td>
                     <td>
                         <div class="fw-semibold">{{ appointment.scheduled_start|date:"M d, Y" }}</div>
                         <div class="text-muted small">{{ appointment.scheduled_start|time:"h:i A" }} - {{ appointment.scheduled_end|time:"h:i A" }}</div>
                     </td>
                     {% if show_staff_actions or user.doctor_profile %}
                     <td>
-                        <div class="fw-semibold">{{ appointment.patient.user.get_full_name|default:appointment.patient.user.username }}</div>
-                        <div class="text-muted small">{{ appointment.patient.phone_number|default:"No phone" }}</div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="appt-avatar">{{ appointment.patient.user.first_name|default:appointment.patient.user.username|slice:":1" }}</span>
+                            <div>
+                                <div class="fw-semibold">{{ appointment.patient.user.get_full_name|default:appointment.patient.user.username }}</div>
+                                <div class="text-muted small">{{ appointment.patient.phone_number|default:"No phone" }}</div>
+                            </div>
+                        </div>
                     </td>
                     {% endif %}
                     {% if not user.doctor_profile %}
                     <td>
-                        <div class="fw-semibold">Dr. {% firstof appointment.doctor.user.first_name appointment.doctor.user.username %}</div>
-                        <div class="text-muted small">{{ appointment.doctor.specialization }}</div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="appt-avatar">{% firstof appointment.doctor.user.first_name appointment.doctor.user.username as doctor_name %}{{ doctor_name|slice:":1" }}</span>
+                            <div>
+                                <div class="fw-semibold">Dr. {{ doctor_name }}</div>
+                                <div class="text-muted small">{{ appointment.doctor.specialization }}</div>
+                            </div>
+                        </div>
                     </td>
                     {% endif %}
-                    <td><span class="badge text-bg-primary">{{ appointment.display_status }}</span></td>
+                    <td><span class="appt-status appt-status-{{ appointment.status|lower }}">{{ appointment.display_status }}</span></td>
                     <td class="text-end">
-                        <a href="{% url 'appointment-detail' pk=appointment.pk %}" class="btn btn-sm btn-outline-secondary">View</a>
+                        <div class="appt-actions">
+                        <a href="{% url 'appointment-detail' pk=appointment.pk %}" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-eye me-1"></i>View
+                        </a>
                         {% if appointment.status != "CANCELLED" and appointment.status != "COMPLETED" %}
-                            <a href="{% url 'appointment-reschedule' pk=appointment.pk %}" class="btn btn-sm btn-outline-primary">Reschedule</a>
-                            <a href="{% url 'appointment-cancel' pk=appointment.pk %}" class="btn btn-sm btn-outline-danger">Cancel</a>
+                            <a href="{% url 'appointment-reschedule' pk=appointment.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-arrow-repeat me-1"></i>Reschedule
+                            </a>
+                            <a href="{% url 'appointment-cancel' pk=appointment.pk %}" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-x-circle me-1"></i>Cancel
+                            </a>
                         {% endif %}
+                        </div>
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="{% if user.doctor_profile %}5{% elif show_staff_actions %}6{% else %}5{% endif %}" class="text-center text-muted py-5">No appointments match your current filters.</td>
+                    <td colspan="{% if user.doctor_profile %}5{% elif show_staff_actions %}6{% else %}5{% endif %}" class="text-center py-5">
+                        <div class="appt-icon mx-auto mb-3"><i class="bi bi-calendar-x"></i></div>
+                        <div class="fw-semibold">No appointments found</div>
+                        <div class="text-muted small">Try changing the filters or book a new appointment.</div>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+    {% if is_paginated %}
+    <div class="appt-pagination-footer d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+        <div class="text-muted small">
+            Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ paginator.count }} appointments
+        </div>
+        <nav aria-label="Appointments pagination">
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+                    <a class="page-link" href="{% if page_obj.has_previous %}?{% if pagination_query %}{{ pagination_query }}&{% endif %}page={{ page_obj.previous_page_number }}{% else %}#{% endif %}" aria-label="Previous">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+
+                {% for page_number in paginator.page_range %}
+                    {% if page_number == page_obj.number %}
+                        <li class="page-item active" aria-current="page">
+                            <span class="page-link">{{ page_number }}</span>
+                        </li>
+                    {% elif page_number <= 2 or page_number > paginator.num_pages|add:"-2" or page_number >= page_obj.number|add:"-1" and page_number <= page_obj.number|add:"1" %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% if pagination_query %}{{ pagination_query }}&{% endif %}page={{ page_number }}">{{ page_number }}</a>
+                        </li>
+                    {% elif page_number == 3 and page_obj.number > 4 or page_number == paginator.num_pages|add:"-2" and page_obj.number < paginator.num_pages|add:"-3" %}
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                {% endfor %}
+
+                <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+                    <a class="page-link" href="{% if page_obj.has_next %}?{% if pagination_query %}{{ pagination_query }}&{% endif %}page={{ page_obj.next_page_number }}{% else %}#{% endif %}" aria-label="Next">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

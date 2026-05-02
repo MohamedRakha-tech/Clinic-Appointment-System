@@ -34,6 +34,7 @@ from scheduling.models import AppointmentSlot
 class AppointmentListView(LoginRequiredMixin, AppointmentQuerysetMixin, ListView):
     template_name = "appointments/list.html"
     context_object_name = "appointments"
+    paginate_by = 5
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -51,6 +52,9 @@ class AppointmentListView(LoginRequiredMixin, AppointmentQuerysetMixin, ListView
         context["date_to"] = (self.request.GET.get("date_to") or "").strip()
         context["doctor_id"] = (self.request.GET.get("doctor_id") or "").strip()
         context["show_staff_actions"] = self.context_is_staff()
+        query_params = self.request.GET.copy()
+        query_params.pop("page", None)
+        context["pagination_query"] = query_params.urlencode()
         return context
 
 

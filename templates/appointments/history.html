@@ -7,67 +7,107 @@
 {% endblock %}
 
 {% block appointment_content %}
-<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-4">
-    <div>
-        <h1 class="h3 fw-bold mb-1">Appointment History</h1>
-        <p class="text-muted mb-0">Complete audit trail for {{ appointment.appointment_code }}</p>
+<div class="appt-hero d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+    <div class="d-flex gap-3 align-items-start">
+        <span class="appt-icon"><i class="bi bi-clock-history"></i></span>
+        <div>
+            <div class="appt-eyebrow mb-1">Audit trail</div>
+            <h1 class="h3 fw-bold mb-1">Appointment History</h1>
+            <p class="appt-muted mb-0">Complete audit trail for {{ appointment.appointment_code }}</p>
+        </div>
     </div>
-    <a href="{% url 'appointment-detail' pk=appointment.pk %}" class="btn btn-outline-secondary">Back to Detail</a>
+    <a href="{% url 'appointment-detail' pk=appointment.pk %}" class="btn btn-outline-secondary align-self-start align-self-lg-center">
+        <i class="bi bi-arrow-left me-1"></i>Back to Detail
+    </a>
 </div>
 
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-header bg-white">
-        <h2 class="h6 mb-0 fw-bold">Status Changes</h2>
+<div class="appt-card mb-4">
+    <div class="appt-panel-header">
+        <h2 class="appt-panel-title">
+            <span class="appt-panel-icon"><i class="bi bi-activity"></i></span>
+            Status Changes
+        </h2>
+        <span class="text-muted small">{{ status_history|length }} update{{ status_history|length|pluralize }}</span>
     </div>
-    <div class="card-body">
+    <div class="appt-panel-body">
+        <div class="appt-timeline">
         {% for entry in status_history %}
-            <div class="border rounded-3 p-3 mb-3">
-                <div class="d-flex flex-wrap justify-content-between gap-2 mb-1">
-                    <span class="badge text-bg-primary">{{ entry.old_status|default:"" }} → {{ entry.new_status }}</span>
-                    <span class="text-muted small">{{ entry.created_at|date:"M d, Y h:i A" }}</span>
+            <div class="appt-timeline-entry">
+                <span class="appt-timeline-marker"><i class="bi bi-check2"></i></span>
+                <div class="appt-timeline-card">
+                    <div class="d-flex flex-wrap justify-content-between gap-2 mb-2">
+                        <div class="fw-bold">{{ entry.old_status|default:"Start" }} &rarr; {{ entry.new_status }}</div>
+                        <span class="text-muted small">{{ entry.created_at|date:"M d, Y h:i A" }}</span>
+                    </div>
+                    <div class="text-muted small"><i class="bi bi-person me-1"></i>{{ entry.changed_by.username|default:"System" }}</div>
+                    {% if entry.change_reason %}
+                        <div class="text-muted small mt-1"><i class="bi bi-chat-left-text me-1"></i>{{ entry.change_reason }}</div>
+                    {% endif %}
                 </div>
-                <div class="text-muted small">Changed by: {{ entry.changed_by.username|default:"System" }}</div>
-                {% if entry.change_reason %}
-                    <div class="text-muted small">Reason: {{ entry.change_reason }}</div>
-                {% endif %}
             </div>
         {% empty %}
-            <div class="text-muted">No status changes recorded yet.</div>
+            <div class="appt-note-box">
+                <span class="appt-note-icon"><i class="bi bi-clock-history"></i></span>
+                <div>
+                    <div class="fw-semibold">No status changes recorded</div>
+                    <div class="text-muted small">Status changes will appear here as the appointment progresses.</div>
+                </div>
+            </div>
         {% endfor %}
+        </div>
     </div>
 </div>
 
-<div class="card border-0 shadow-sm">
-    <div class="card-header bg-white">
-        <h2 class="h6 mb-0 fw-bold">Reschedule History</h2>
+<div class="appt-card">
+    <div class="appt-panel-header">
+        <h2 class="appt-panel-title">
+            <span class="appt-panel-icon"><i class="bi bi-arrow-repeat"></i></span>
+            Reschedule History
+        </h2>
+        <span class="text-muted small">{{ reschedule_history|length }} change{{ reschedule_history|length|pluralize }}</span>
     </div>
-    <div class="card-body">
+    <div class="appt-panel-body">
+        <div class="appt-timeline">
         {% for entry in reschedule_history %}
-            <div class="border rounded-3 p-3 mb-3">
-                <div class="d-flex flex-wrap justify-content-between gap-2 mb-2">
-                    <span class="badge text-bg-secondary">Reschedule</span>
-                    <span class="text-muted small">{{ entry.created_at|date:"M d, Y h:i A" }}</span>
-                </div>
-                <div class="row g-3">
-                    <div class="col-12 col-md-6">
-                        <div class="text-uppercase text-muted small fw-semibold">Old Slot</div>
-                        <div class="fw-semibold">{{ entry.old_start_datetime|date:"M d, Y" }}</div>
-                        <div class="text-muted small">{{ entry.old_start_datetime|time:"h:i A" }} - {{ entry.old_end_datetime|time:"h:i A" }}</div>
+            <div class="appt-timeline-entry">
+                <span class="appt-timeline-marker"><i class="bi bi-arrow-repeat"></i></span>
+                <div class="appt-timeline-card">
+                    <div class="d-flex flex-wrap justify-content-between gap-2 mb-3">
+                        <div class="fw-bold">Rescheduled appointment</div>
+                        <span class="text-muted small">{{ entry.created_at|date:"M d, Y h:i A" }}</span>
                     </div>
-                    <div class="col-12 col-md-6">
-                        <div class="text-uppercase text-muted small fw-semibold">New Slot</div>
-                        <div class="fw-semibold">{{ entry.new_start_datetime|date:"M d, Y" }}</div>
-                        <div class="text-muted small">{{ entry.new_start_datetime|time:"h:i A" }} - {{ entry.new_end_datetime|time:"h:i A" }}</div>
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <div class="appt-summary-card">
+                                <div class="label mb-1">Old Slot</div>
+                                <div class="fw-semibold">{{ entry.old_start_datetime|date:"M d, Y" }}</div>
+                                <div class="text-muted small">{{ entry.old_start_datetime|time:"h:i A" }} - {{ entry.old_end_datetime|time:"h:i A" }}</div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <div class="appt-summary-card">
+                                <div class="label mb-1">New Slot</div>
+                                <div class="fw-semibold">{{ entry.new_start_datetime|date:"M d, Y" }}</div>
+                                <div class="text-muted small">{{ entry.new_start_datetime|time:"h:i A" }} - {{ entry.new_end_datetime|time:"h:i A" }}</div>
+                            </div>
+                        </div>
                     </div>
+                    <div class="text-muted small mt-3"><i class="bi bi-person me-1"></i>{{ entry.changed_by.username|default:"System" }}</div>
+                    {% if entry.reason %}
+                        <div class="text-muted small mt-1"><i class="bi bi-chat-left-text me-1"></i>{{ entry.reason }}</div>
+                    {% endif %}
                 </div>
-                <div class="text-muted small mt-2">Changed by: {{ entry.changed_by.username|default:"System" }}</div>
-                {% if entry.reason %}
-                    <div class="text-muted small">Reason: {{ entry.reason }}</div>
-                {% endif %}
             </div>
         {% empty %}
-            <div class="text-muted">No reschedules recorded yet.</div>
+            <div class="appt-note-box">
+                <span class="appt-note-icon"><i class="bi bi-calendar2-check"></i></span>
+                <div>
+                    <div class="fw-semibold">No reschedules recorded</div>
+                    <div class="text-muted small">This appointment has not been moved to another slot.</div>
+                </div>
+            </div>
         {% endfor %}
+        </div>
     </div>
 </div>
 {% endblock %}

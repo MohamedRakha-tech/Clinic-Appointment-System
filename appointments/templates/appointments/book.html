@@ -132,7 +132,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const setSelectedSlot = (slot, card) => {
         slotIdInput.value = slot.id;
-        selectedSlotText.textContent = `${slot.doctor_name} | ${new Date(slot.start_datetime).toLocaleString()}`;
+        selectedSlotText.textContent = `${slot.doctor_name} | ${slot.display_start}`;
         bookButton.disabled = false;
         slotGrid.querySelectorAll("[data-slot-card]").forEach((el) => {
             el.classList.remove("border-primary", "ring-4", "ring-primary/10");
@@ -156,14 +156,12 @@ document.addEventListener("DOMContentLoaded", () => {
             card.type = "button";
             card.dataset.slotCard = "true";
             card.className = "text-left group bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant/10 transition-all hover:border-primary hover:shadow-lg";
-            const start = new Date(slot.start_datetime);
-            const end = new Date(slot.end_datetime);
             card.innerHTML = `
                 <div class="flex items-start justify-between gap-3">
                     <div>
                         <p class="text-[10px] font-black text-secondary uppercase tracking-widest">Available</p>
-                        <h4 class="text-lg font-bold text-on-surface">${start.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</h4>
-                        <p class="text-sm text-on-surface-variant">${start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} - ${end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</p>
+                        <h4 class="text-lg font-bold text-on-surface">${slot.display_date}</h4>
+                        <p class="text-sm text-on-surface-variant">${slot.display_time}</p>
                     </div>
                     <span class="px-3 py-1 rounded-full text-xs font-bold bg-primary-fixed text-on-primary-fixed">Pick</span>
                 </div>

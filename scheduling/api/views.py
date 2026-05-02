@@ -8,7 +8,7 @@ from scheduling.models import AppointmentSlot
 
 
 class AppointmentSlotPagination(pagination.PageNumberPagination):
-    page_size = 20
+    page_size = 5
 
 
 class AppointmentSlotViewSet(viewsets.ReadOnlyModelViewSet):
