@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from django.core.exceptions import ValidationError
-from datetime import date
+from datetime import date, datetime, time
+from django.utils import timezone
 
 from appointments.models import Appointment
 from accounts.mixins import DoctorRequiredMixin, ReceptionistRequiredMixin
@@ -56,9 +57,14 @@ class DoctorQueueView(DoctorRequiredMixin, View):
                 'error': 'User does not have doctor profile'
             }, status=403)
 
+        today = timezone.localdate()
+        start_of_day = timezone.make_aware(datetime.combine(today, time.min))
+        end_of_day = timezone.make_aware(datetime.combine(today, time.max))
+
         queue_entries = AppointmentCheckin.objects.filter(
             appointment__doctor=doctor_profile,
-            appointment__scheduled_start__date=date.today(),
+            appointment__scheduled_start__gte=start_of_day,
+            appointment__scheduled_start__lte=end_of_day,
             appointment__status=Appointment.Status.CHECKED_IN,
         ).select_related(
             'appointment',
@@ -77,7 +83,7 @@ class ReceptionQueueMonitorView(ReceptionistRequiredMixin, View):
     login_url = '/accounts/login/'
 
     def get(self, request):
-        today = date.today()
+        today = timezone.localdate()
         selected_date = today
         raw_date = request.GET.get("date")
         if raw_date:
@@ -88,9 +94,13 @@ class ReceptionQueueMonitorView(ReceptionistRequiredMixin, View):
 
         read_only = selected_date != today
 
+        start_of_day = timezone.make_aware(datetime.combine(selected_date, time.min))
+        end_of_day = timezone.make_aware(datetime.combine(selected_date, time.max))
+
         pending_checkins = Appointment.objects.filter(
             status=Appointment.Status.CONFIRMED,
-            scheduled_start__date=selected_date,
+            scheduled_start__gte=start_of_day,
+            scheduled_start__lte=end_of_day,
         ).select_related(
             'patient',
             'patient__user',
@@ -99,7 +109,8 @@ class ReceptionQueueMonitorView(ReceptionistRequiredMixin, View):
         ).order_by('scheduled_start')
 
         queue_entries = AppointmentCheckin.objects.filter(
-            appointment__scheduled_start__date=selected_date,
+            appointment__scheduled_start__gte=start_of_day,
+            appointment__scheduled_start__lte=end_of_day,
             appointment__status=Appointment.Status.CHECKED_IN,
         ).select_related(
             'appointment',
