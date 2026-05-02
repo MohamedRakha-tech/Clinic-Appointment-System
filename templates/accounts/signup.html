@@ -106,8 +106,6 @@
                   <option value="">Select Option</option>
                   <option value="Female" {% if form.gender.value == 'Female' %}selected{% endif %}>Female</option>
                   <option value="Male" {% if form.gender.value == 'Male' %}selected{% endif %}>Male</option>
-                  <option value="Non-binary" {% if form.gender.value == 'Non-binary' %}selected{% endif %}>Non-binary</option>
-                  <option value="Prefer not to say" {% if form.gender.value == 'Prefer not to say' %}selected{% endif %}>Prefer not to say</option>
                 </select>
               </div>
 
@@ -201,22 +199,6 @@
 
             </div>
           </section>
-
-          <!-- Terms -->
-          <div class="space-y-4 pt-4">
-            <label class="flex items-start gap-3 cursor-pointer group">
-              <input
-                id="terms" name="terms" type="checkbox"
-                required
-                data-error-required="You must agree to the Terms of Service"
-                class="mt-1 rounded-sm border-outline-variant text-primary focus:ring-primary/20 bg-surface"
-              />
-              <span class="text-sm text-on-surface-variant leading-relaxed">
-                I agree to the <a class="text-primary font-medium hover:underline" href="{% url 'accounts:terms_of_service' %}">Terms of Service</a> and acknowledge the <a class="text-primary font-medium hover:underline" href="{% url 'accounts:privacy_policy' %}">Privacy Policy</a>.
-              </span>
-            </label>
-            <p class="text-xs text-error mt-1 ml-1 hidden" data-error-for="terms"></p>
-          </div>
 
           <div class="pt-6">
             <button class="w-full flex items-center justify-center gap-2 py-4 px-6 bg-gradient-to-b from-primary to-primary-container text-on-primary font-semibold rounded-xl ambient-shadow hover:opacity-90 transition-all active:scale-[0.98]" type="submit">

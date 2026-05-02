@@ -58,6 +58,7 @@
               <div>
                 <label class="block text-xs font-medium uppercase tracking-wider text-outline mb-1.5 ml-1" for="date_of_birth">Date of Birth</label>
                 <input class="w-full bg-surface-container-high border-x-0 border-t-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 focus-visible:outline-none px-4 py-3 text-on-surface transition-all rounded-t-lg" data-error-required="Date of birth is required" id="date_of_birth" name="date_of_birth" required type="date" value="{{ form.data.date_of_birth|default:'' }}"/>
+                {% for error in form.date_of_birth.errors %}<p class="text-xs text-error mt-1 ml-1">{{ error }}</p>{% endfor %}
                 <p class="text-xs text-error mt-1 ml-1 hidden" data-error-for="date_of_birth"></p>
               </div>
               <div>
@@ -123,15 +124,6 @@
               </div>
             </div>
           </section>
-
-          <div class="space-y-4 pt-4">
-            <label class="flex items-start gap-3 cursor-pointer group">
-              <input class="mt-1 rounded-sm border-outline-variant text-primary focus:ring-primary/20 bg-surface" type="checkbox"/>
-              <span class="text-sm text-on-surface-variant leading-relaxed">
-                I agree to the <a class="text-primary font-medium hover:underline" href="{% url 'accounts:terms_of_service' %}">Terms of Service</a> and acknowledge the <a class="text-primary font-medium hover:underline" href="{% url 'accounts:privacy_policy' %}">Privacy Policy</a>.
-              </span>
-            </label>
-          </div>
 
           <div class="pt-6">
             <button class="w-full py-4 px-6 bg-gradient-to-b from-primary to-primary-container text-on-primary font-semibold rounded-xl ambient-shadow hover:opacity-90 transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25" type="submit">
