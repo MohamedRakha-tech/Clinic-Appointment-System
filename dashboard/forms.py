@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.password_validation import validate_password
 
-from accounts.models import AdminProfile, PatientProfile, ReceptionistProfile, User
+from accounts.models import AdminProfile, DoctorProfile, PatientProfile, ReceptionistProfile, User
 from accounts.utils import ROLE_NAMES, ensure_role_groups, set_user_role
 
 

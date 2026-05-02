@@ -93,6 +93,7 @@ class DoctorProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="doctor_profile")
     specialization = models.CharField(max_length=120)
     license_number = models.CharField(max_length=120, unique=True)
+    consultation_fee = models.DecimalField(max_digits=8, decimal_places=2, default=150.00)
     consultation_duration_minutes = models.IntegerField(default=15)
     buffer_before_minutes = models.IntegerField(default=5)
     buffer_after_minutes = models.IntegerField(default=5)
