@@ -2,22 +2,25 @@ from django import forms
 from django.contrib.auth.forms import AuthenticationForm
 
 from accounts.models import User
+from accounts.models import PatientProfile, validate_not_future_date, validate_logical_age
 
 
 class LoginForm(AuthenticationForm):
-    """Login form using Django AuthenticationForm (session auth)."""
 
     username = forms.CharField(label="Username or Email", max_length=150)
 
 
 class PatientRegisterForm(forms.ModelForm):
-    """Public registration form (patient only)."""
 
     password1 = forms.CharField(widget=forms.PasswordInput)
     password2 = forms.CharField(widget=forms.PasswordInput)
 
     # PatientProfile fields collected on the signup page
-    date_of_birth = forms.DateField(required=False, widget=forms.DateInput(attrs={"type": "date"}))
+    date_of_birth = forms.DateField(
+        required=False, 
+        validators=[validate_not_future_date, validate_logical_age],
+        widget=forms.DateInput(attrs={"type": "date"})
+    )
     gender = forms.ChoiceField(
         required=True,
         choices=[
@@ -60,8 +63,6 @@ class PatientRegisterForm(forms.ModelForm):
         return user
 
     def save_profile(self, user):
-        """Write the profile-specific fields to the PatientProfile row."""
-        from accounts.models import PatientProfile
 
         profile, created = PatientProfile.objects.get_or_create(
             user=user,
@@ -79,7 +80,11 @@ class PatientRegisterForm(forms.ModelForm):
 
 
 class PatientProfileForm(forms.ModelForm):
-    date_of_birth = forms.DateField(required=False, widget=forms.DateInput(attrs={"type": "date"}))
+    date_of_birth = forms.DateField(
+        required=False, 
+        validators=[validate_not_future_date, validate_logical_age],
+        widget=forms.DateInput(attrs={"type": "date"})
+    )
     gender = forms.ChoiceField(required=True, choices=[
         ('Male', 'Male'), ('Female', 'Female')
     ])

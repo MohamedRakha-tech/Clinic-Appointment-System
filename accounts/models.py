@@ -1,10 +1,28 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
+from django.core.exceptions import ValidationError
+from datetime import date
 
 
-# ─────────────────────────────────────────────
+def validate_not_future_date(value):
+    if value and value > date.today():
+        raise ValidationError("Date of birth cannot be in the future.")
+    
+def validate_logical_age(value):
+    if not value:
+        return
+    today = date.today()
+    age = today.year - value.year - (
+        (today.month, today.day) < (value.month, value.day)
+    )
+    if age > 110:
+        raise ValidationError("Please select a valid age.")
+    
+    if age < 0:
+        raise ValidationError("Invalid date of birth.")
+
+
 # USERS
-# ─────────────────────────────────────────────
 
 class UserManager(BaseUserManager):
     def create_user(self, username, email, password=None, **extra_fields):
@@ -23,14 +41,14 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser, PermissionsMixin):
-    username    = models.CharField(max_length=150, unique=True)
-    email       = models.EmailField(max_length=255, unique=True)
-    first_name  = models.CharField(max_length=150)
-    last_name   = models.CharField(max_length=150)
-    phone       = models.CharField(max_length=20)
+    username = models.CharField(max_length=150, unique=True)
+    email = models.EmailField(max_length=255, unique=True)
+    first_name = models.CharField(max_length=150)
+    last_name = models.CharField(max_length=150)
+    phone = models.CharField(max_length=20)
     profile_picture = models.ImageField(upload_to="profile_pictures/", blank=True, null=True)
-    is_active   = models.BooleanField(default=True)
-    is_staff    = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)
 
     objects = UserManager()
@@ -45,19 +63,17 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.username
 
 
-# ─────────────────────────────────────────────
 # PROFILE TABLES
-# ─────────────────────────────────────────────
 
 class PatientProfile(models.Model):
-    user                    = models.OneToOneField(User, on_delete=models.CASCADE, related_name="patient_profile")
-    date_of_birth           = models.DateField()
-    gender                  = models.CharField(max_length=10)
-    address                 = models.TextField()
-    emergency_contact_name  = models.CharField(max_length=120, blank=True, null=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="patient_profile")
+    date_of_birth = models.DateField(validators=[validate_not_future_date, validate_logical_age], null=True, blank=True)
+    gender = models.CharField(max_length=10, null=True, blank=True)
+    address = models.TextField(null=True, blank=True)
+    emergency_contact_name = models.CharField(max_length=120, blank=True, null=True)
     emergency_contact_phone = models.CharField(max_length=20, blank=True, null=True)
-    created_at              = models.DateTimeField(auto_now_add=True)
-    updated_at              = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = "patient_profiles"
@@ -67,15 +83,15 @@ class PatientProfile(models.Model):
 
 
 class DoctorProfile(models.Model):
-    user                          = models.OneToOneField(User, on_delete=models.CASCADE, related_name="doctor_profile")
-    specialization                = models.CharField(max_length=120)
-    license_number                = models.CharField(max_length=120, unique=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="doctor_profile")
+    specialization = models.CharField(max_length=120)
+    license_number = models.CharField(max_length=120, unique=True)
     consultation_duration_minutes = models.IntegerField(default=15)
-    buffer_before_minutes         = models.IntegerField(default=5)
-    buffer_after_minutes          = models.IntegerField(default=5)
-    bio                           = models.TextField(blank=True, null=True)
-    created_at                    = models.DateTimeField(auto_now_add=True)
-    updated_at                    = models.DateTimeField(auto_now=True)
+    buffer_before_minutes = models.IntegerField(default=5)
+    buffer_after_minutes = models.IntegerField(default=5)
+    bio = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = "doctor_profiles"
@@ -85,10 +101,10 @@ class DoctorProfile(models.Model):
 
 
 class ReceptionistProfile(models.Model):
-    user          = models.OneToOneField(User, on_delete=models.CASCADE, related_name="receptionist_profile")
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="receptionist_profile")
     employee_code = models.CharField(max_length=50, unique=True)
-    created_at    = models.DateTimeField(auto_now_add=True)
-    updated_at    = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = "receptionist_profiles"
@@ -98,10 +114,10 @@ class ReceptionistProfile(models.Model):
 
 
 class AdminProfile(models.Model):
-    user          = models.OneToOneField(User, on_delete=models.CASCADE, related_name="admin_profile")
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="admin_profile")
     employee_code = models.CharField(max_length=50, unique=True)
-    created_at    = models.DateTimeField(auto_now_add=True)
-    updated_at    = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = "admin_profiles"
