@@ -1,3 +1,5 @@
+from datetime import timezone as datetime_timezone
+
 from rest_framework import serializers
 
 from appointments.models import Appointment, AppointmentRescheduleHistory, AppointmentStatusHistory
@@ -34,6 +36,10 @@ class AppointmentStatusHistorySerializer(serializers.ModelSerializer):
 
 class AppointmentRescheduleHistorySerializer(serializers.ModelSerializer):
     changed_by_name = serializers.SerializerMethodField()
+    old_start_datetime = serializers.SerializerMethodField()
+    old_end_datetime = serializers.SerializerMethodField()
+    new_start_datetime = serializers.SerializerMethodField()
+    new_end_datetime = serializers.SerializerMethodField()
 
     class Meta:
         model = AppointmentRescheduleHistory
@@ -53,6 +59,23 @@ class AppointmentRescheduleHistorySerializer(serializers.ModelSerializer):
 
     def get_changed_by_name(self, obj):
         return _user_display_name(obj.changed_by)
+
+    def _serialize_utc(self, value):
+        if value is None:
+            return None
+        return value.astimezone(datetime_timezone.utc).isoformat().replace("+00:00", "Z")
+
+    def get_old_start_datetime(self, obj):
+        return self._serialize_utc(obj.old_start_datetime)
+
+    def get_old_end_datetime(self, obj):
+        return self._serialize_utc(obj.old_end_datetime)
+
+    def get_new_start_datetime(self, obj):
+        return self._serialize_utc(obj.new_start_datetime)
+
+    def get_new_end_datetime(self, obj):
+        return self._serialize_utc(obj.new_end_datetime)
 
 
 class AppointmentSerializer(serializers.ModelSerializer):

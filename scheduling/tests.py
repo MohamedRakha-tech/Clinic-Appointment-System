@@ -479,6 +479,7 @@ class AppointmentSlotViewActionTests(TestCase):
 
 class AppointmentSlotApiTests(TestCase):
     def setUp(self):
+        self.base_date = timezone.localdate() + timedelta(days=2)
         self.api_user = User.objects.create_user(
             username="slot_api_user",
             email="slot_api_user@example.com",
@@ -519,25 +520,29 @@ class AppointmentSlotApiTests(TestCase):
 
         self.slot = AppointmentSlot.objects.create(
             doctor=self.doctor,
-            slot_date=date(2026, 5, 1),
-            start_datetime=timezone.make_aware(timezone.datetime(2026, 5, 1, 9, 0)),
-            end_datetime=timezone.make_aware(timezone.datetime(2026, 5, 1, 9, 30)),
+            slot_date=self.base_date,
+            start_datetime=timezone.make_aware(timezone.datetime.combine(self.base_date, time(9, 0))),
+            end_datetime=timezone.make_aware(timezone.datetime.combine(self.base_date, time(9, 30))),
             status=AppointmentSlot.Status.AVAILABLE,
             generated_from=AppointmentSlot.GeneratedFrom.WEEKLY_SCHEDULE,
         )
         self.booked_slot = AppointmentSlot.objects.create(
             doctor=self.doctor,
-            slot_date=date(2026, 5, 1),
-            start_datetime=timezone.make_aware(timezone.datetime(2026, 5, 1, 10, 0)),
-            end_datetime=timezone.make_aware(timezone.datetime(2026, 5, 1, 10, 30)),
+            slot_date=self.base_date,
+            start_datetime=timezone.make_aware(timezone.datetime.combine(self.base_date, time(10, 0))),
+            end_datetime=timezone.make_aware(timezone.datetime.combine(self.base_date, time(10, 30))),
             status=AppointmentSlot.Status.BOOKED,
             generated_from=AppointmentSlot.GeneratedFrom.EXCEPTION,
         )
         self.other_slot = AppointmentSlot.objects.create(
             doctor=self.other_doctor,
-            slot_date=date(2026, 5, 2),
-            start_datetime=timezone.make_aware(timezone.datetime(2026, 5, 2, 11, 0)),
-            end_datetime=timezone.make_aware(timezone.datetime(2026, 5, 2, 11, 30)),
+            slot_date=self.base_date + timedelta(days=1),
+            start_datetime=timezone.make_aware(
+                timezone.datetime.combine(self.base_date + timedelta(days=1), time(11, 0))
+            ),
+            end_datetime=timezone.make_aware(
+                timezone.datetime.combine(self.base_date + timedelta(days=1), time(11, 30))
+            ),
             status=AppointmentSlot.Status.AVAILABLE,
             generated_from=AppointmentSlot.GeneratedFrom.MANUAL,
         )
@@ -566,7 +571,7 @@ class AppointmentSlotApiTests(TestCase):
             "/api/slots/",
             {
                 "doctor": self.doctor.pk,
-                "slot_date": "2026-05-01",
+                "slot_date": self.base_date.isoformat(),
                 "status": AppointmentSlot.Status.AVAILABLE,
                 "generated_from": AppointmentSlot.GeneratedFrom.WEEKLY_SCHEDULE,
             },
@@ -604,7 +609,7 @@ class AppointmentSlotApiTests(TestCase):
             "/api/slots/available/",
             {
                 "doctor": self.doctor.pk,
-                "slot_date": "2026-05-01",
+                "slot_date": self.base_date.isoformat(),
                 "generated_from": AppointmentSlot.GeneratedFrom.WEEKLY_SCHEDULE,
             },
         )

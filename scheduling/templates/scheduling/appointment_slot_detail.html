@@ -39,7 +39,9 @@
                                     <i class="bi bi-person-badge fs-5"></i>
                                 </div>
                                 <div>
-                                    <div class="fw-bold text-dark fs-5">{{ slot.doctor.user.get_full_name|default:slot.doctor.user.username }}</div>
+                                    <div class="fw-bold text-dark fs-5">
+                                        {% firstof slot.doctor.user.get_full_name slot.doctor.user.username %}
+                                    </div>
                                     <div class="text-muted small">{{ slot.doctor.specialization|default:"General Practitioner" }}</div>
                                 </div>
                             </div>

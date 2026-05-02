@@ -84,26 +84,10 @@ def AppointmentSlotFactory(**kwargs):
         end = start + timedelta(minutes=choice([20, 30, 45]))
     if slot_date is None:
         slot_date = start.date()
-    status = kwargs.pop(
-        "status",
-        choice(
-            [
-                AppointmentSlot.Status.AVAILABLE,
-                AppointmentSlot.Status.BOOKED,
-                AppointmentSlot.Status.BLOCKED,
-                AppointmentSlot.Status.EXPIRED,
-            ]
-        ),
-    )
+    status = kwargs.pop("status", AppointmentSlot.Status.AVAILABLE)
     generated_from = kwargs.pop(
         "generated_from",
-        choice(
-            [
-                AppointmentSlot.GeneratedFrom.WEEKLY_SCHEDULE,
-                AppointmentSlot.GeneratedFrom.EXCEPTION,
-                AppointmentSlot.GeneratedFrom.MANUAL,
-            ]
-        ),
+        AppointmentSlot.GeneratedFrom.WEEKLY_SCHEDULE,
     )
     return AppointmentSlot.objects.create(
         doctor=doctor,
