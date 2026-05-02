@@ -8,7 +8,14 @@ from accounts.utils import set_user_role
 
 def _ensure_patient_membership(user):
     set_user_role(user, "patient")
-    PatientProfile.objects.get_or_create(user=user)
+    PatientProfile.objects.get_or_create(
+        user=user,
+        defaults={
+            'date_of_birth': '1990-01-01',
+            'gender': 'Unknown',
+            'address': 'Not Provided',
+        }
+    )
 
 
 @receiver(user_signed_up)

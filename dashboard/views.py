@@ -219,7 +219,7 @@ class DashboardRedirectView(LoginRequiredMixin, View):
         if role == 'receptionist':
             return redirect('dashboard:receptionist')
 
-        return redirect('accounts:patient_dashboard')
+        return redirect('emr:patient_list')
 
 
 

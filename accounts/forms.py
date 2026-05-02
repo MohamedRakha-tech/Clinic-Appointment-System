@@ -17,7 +17,7 @@ class PatientRegisterForm(forms.ModelForm):
 
     # PatientProfile fields collected on the signup page
     date_of_birth = forms.DateField(
-        required=False, 
+        required=True, 
         validators=[validate_not_future_date, validate_logical_age],
         widget=forms.DateInput(attrs={"type": "date"})
     )
@@ -81,7 +81,7 @@ class PatientRegisterForm(forms.ModelForm):
 
 class PatientProfileForm(forms.ModelForm):
     date_of_birth = forms.DateField(
-        required=False, 
+        required=True, 
         validators=[validate_not_future_date, validate_logical_age],
         widget=forms.DateInput(attrs={"type": "date"})
     )

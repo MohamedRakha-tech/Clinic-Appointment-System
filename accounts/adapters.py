@@ -47,9 +47,27 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
         if not sociallogin.is_existing:
             sociallogin.connect(request, existing_user)
 
+        if role == "patient" or not role:
+            set_user_role(existing_user, "patient")
+            PatientProfile.objects.get_or_create(
+                user=existing_user,
+                defaults={
+                    'date_of_birth': '1990-01-01',
+                    'gender': 'Unknown',
+                    'address': 'Not Provided',
+                }
+            )
+
     def save_user(self, request, sociallogin, form=None):
         self._mark_google_login(request, sociallogin)
         user = super().save_user(request, sociallogin, form=form)
         set_user_role(user, "patient")
-        PatientProfile.objects.get_or_create(user=user)
+        PatientProfile.objects.get_or_create(
+            user=user,
+            defaults={
+                'date_of_birth': '1990-01-01',
+                'gender': 'Unknown',
+                'address': 'Not Provided',
+            }
+        )
         return user
