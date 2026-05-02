@@ -5,80 +5,185 @@
 {% block topbar_role %}Role: Admin{% endblock %}
 
 {% block content %}
-<section class="surface-card p-4 p-lg-5 d-grid gap-3">
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+<section class="glass-card p-4 p-lg-5 d-grid gap-4 shadow-sm" style="border-radius: 16px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px);">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 border-bottom pb-3">
         <div>
-            <h1 class="h4 fw-bold mb-1">{% if mode == "edit" %}Edit User{% else %}Create User{% endif %}</h1>
-            <p class="text-muted mb-0">Assign roles using groups and create basic profiles.</p>
+            <h1 class="h3 fw-bold mb-1 text-primary">{% if mode == "edit" %}Edit User{% else %}Create User{% endif %}</h1>
+            <p class="text-muted mb-0">Fill in the profile details. Fields will adjust based on the selected role.</p>
         </div>
-        <a class="btn btn-outline-secondary" href="{% url 'dashboard:users' %}">Back to Users</a>
+        <a class="btn btn-outline-secondary rounded-pill px-4" href="{% url 'dashboard:users' %}">
+            <i class="bi bi-arrow-left me-1"></i> Back to Users
+        </a>
     </div>
 
-    <form method="post" class="d-grid gap-3">
+    <form method="post" class="d-grid gap-4" id="userForm">
         {% csrf_token %}
+        
+        <h5 class="fw-semibold text-secondary mb-0 border-bottom pb-2">Basic Information</h5>
         <div class="row g-3">
             <div class="col-md-6">
-                <label class="form-label" for="id_username">Username</label>
+                <label class="form-label fw-medium" for="id_username">Username <span class="text-danger">*</span></label>
                 {{ form.username }}
-                {{ form.username.errors }}
+                {% if form.username.errors %}<div class="text-danger small mt-1">{{ form.username.errors }}</div>{% endif %}
             </div>
             <div class="col-md-6">
-                <label class="form-label" for="id_email">Email</label>
+                <label class="form-label fw-medium" for="id_email">Email <span class="text-danger">*</span></label>
                 {{ form.email }}
-                {{ form.email.errors }}
+                {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors }}</div>{% endif %}
             </div>
             <div class="col-md-6">
-                <label class="form-label" for="id_first_name">First name</label>
+                <label class="form-label fw-medium" for="id_first_name">First name <span class="text-danger">*</span></label>
                 {{ form.first_name }}
+                {% if form.first_name.errors %}<div class="text-danger small mt-1">{{ form.first_name.errors }}</div>{% endif %}
             </div>
             <div class="col-md-6">
-                <label class="form-label" for="id_last_name">Last name</label>
+                <label class="form-label fw-medium" for="id_last_name">Last name <span class="text-danger">*</span></label>
                 {{ form.last_name }}
+                {% if form.last_name.errors %}<div class="text-danger small mt-1">{{ form.last_name.errors }}</div>{% endif %}
             </div>
             <div class="col-md-6">
-                <label class="form-label" for="id_phone">Phone</label>
+                <label class="form-label fw-medium" for="id_phone">Phone <span class="text-danger">*</span></label>
                 {{ form.phone }}
+                {% if form.phone.errors %}<div class="text-danger small mt-1">{{ form.phone.errors }}</div>{% endif %}
             </div>
             <div class="col-md-6">
-                <label class="form-label" for="id_role">Role</label>
-                {{ form.role }}
-                {{ form.role.errors }}
-            </div>
-            <div class="col-md-6">
-                <label class="form-label" for="id_employee_code">Employee Code (Reception/Admin)</label>
-                {{ form.employee_code }}
-                {{ form.employee_code.errors }}
-            </div>
-            <div class="col-md-6">
-                <label class="form-label" for="id_is_active">Status</label>
-                <div class="form-check">
+                <label class="form-label fw-medium" for="id_is_active">Status</label>
+                <div class="form-check form-switch mt-2">
                     {{ form.is_active }}
-                    <label class="form-check-label" for="id_is_active">Active</label>
+                    <label class="form-check-label" for="id_is_active">Active Account</label>
                 </div>
             </div>
         </div>
 
         {% if form.password1 %}
+        <h5 class="fw-semibold text-secondary mb-0 border-bottom pb-2 mt-2">Security</h5>
         <div class="row g-3">
             <div class="col-md-6">
-                <label class="form-label" for="id_password1">Password</label>
+                <label class="form-label fw-medium" for="id_password1">Password <span class="text-danger">*</span></label>
                 {{ form.password1 }}
-                {{ form.password1.errors }}
+                {% if form.password1.errors %}<div class="text-danger small mt-1">{{ form.password1.errors }}</div>{% endif %}
             </div>
             <div class="col-md-6">
-                <label class="form-label" for="id_password2">Confirm Password</label>
+                <label class="form-label fw-medium" for="id_password2">Confirm Password <span class="text-danger">*</span></label>
                 {{ form.password2 }}
-                {{ form.password2.errors }}
+                {% if form.password2.errors %}<div class="text-danger small mt-1">{{ form.password2.errors }}</div>{% endif %}
             </div>
         </div>
         {% endif %}
 
-        <div class="d-flex gap-2">
-            <button class="btn btn-primary" type="submit">Save User</button>
+        <h5 class="fw-semibold text-secondary mb-0 border-bottom pb-2 mt-2">Role Assignment</h5>
+        <div class="row g-3">
+            <div class="col-md-12">
+                <label class="form-label fw-medium" for="id_role">System Role <span class="text-danger">*</span></label>
+                {{ form.role }}
+                {% if form.role.errors %}<div class="text-danger small mt-1">{{ form.role.errors }}</div>{% endif %}
+            </div>
+        </div>
+        
+        <!-- Dynamic Role Fields Container -->
+        <div class="p-4 bg-light rounded-3 border" id="dynamicRoleContainer" style="display: none; transition: all 0.3s ease;">
+            <h6 class="fw-bold mb-3 text-primary" id="roleSectionTitle">Role Specific Details</h6>
+            <div class="row g-3">
+                <!-- Receptionist & Admin Fields -->
+                <div class="col-md-6 role-field group-staff" style="display: none;">
+                    <label class="form-label fw-medium" for="id_employee_code">Employee Code <span class="text-danger">*</span></label>
+                    {{ form.employee_code }}
+                    {% if form.employee_code.errors %}<div class="text-danger small mt-1">{{ form.employee_code.errors }}</div>{% endif %}
+                </div>
+                
+                <!-- Doctor Fields -->
+                <div class="col-md-6 role-field group-doctor" style="display: none;">
+                    <label class="form-label fw-medium" for="id_specialization">Specialization <span class="text-danger">*</span></label>
+                    {{ form.specialization }}
+                    {% if form.specialization.errors %}<div class="text-danger small mt-1">{{ form.specialization.errors }}</div>{% endif %}
+                </div>
+                <div class="col-md-6 role-field group-doctor" style="display: none;">
+                    <label class="form-label fw-medium" for="id_license_number">License Number <span class="text-danger">*</span></label>
+                    {{ form.license_number }}
+                    {% if form.license_number.errors %}<div class="text-danger small mt-1">{{ form.license_number.errors }}</div>{% endif %}
+                </div>
+                <div class="col-md-6 role-field group-doctor" style="display: none;">
+                    <label class="form-label fw-medium" for="id_consultation_fee">Consultation Fee <span class="text-danger">*</span></label>
+                    {{ form.consultation_fee }}
+                    {% if form.consultation_fee.errors %}<div class="text-danger small mt-1">{{ form.consultation_fee.errors }}</div>{% endif %}
+                </div>
+                
+                <!-- Patient Fields -->
+                <div class="col-md-6 role-field group-patient" style="display: none;">
+                    <label class="form-label fw-medium" for="id_date_of_birth">Date of Birth</label>
+                    {{ form.date_of_birth }}
+                    {% if form.date_of_birth.errors %}<div class="text-danger small mt-1">{{ form.date_of_birth.errors }}</div>{% endif %}
+                </div>
+                <div class="col-md-6 role-field group-patient" style="display: none;">
+                    <label class="form-label fw-medium" for="id_gender">Gender</label>
+                    {{ form.gender }}
+                    {% if form.gender.errors %}<div class="text-danger small mt-1">{{ form.gender.errors }}</div>{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-3 mt-3 pt-3 border-top">
+            <button class="btn btn-primary rounded-pill px-5 shadow-sm" type="submit">
+                <i class="bi bi-check2-circle me-1"></i> Save User
+            </button>
             {% if user_item %}
-            <a class="btn btn-outline-secondary" href="{% url 'dashboard:user_detail' user_item.id %}">Cancel</a>
+            <a class="btn btn-light rounded-pill px-4 shadow-sm border" href="{% url 'dashboard:user_detail' user_item.id %}">Cancel</a>
             {% endif %}
         </div>
     </form>
 </section>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const roleSelect = document.getElementById("id_role");
+    const container = document.getElementById("dynamicRoleContainer");
+    const title = document.getElementById("roleSectionTitle");
+    const allRoleFields = document.querySelectorAll(".role-field");
+    const doctorFields = document.querySelectorAll(".group-doctor");
+    const staffFields = document.querySelectorAll(".group-staff");
+    const patientFields = document.querySelectorAll(".group-patient");
+
+    function updateFields() {
+        const role = roleSelect.value;
+        
+        // Hide all fields initially
+        allRoleFields.forEach(el => {
+            el.style.display = "none";
+            // Remove required attr to avoid browser validation blocking
+            const input = el.querySelector("input, select");
+            if (input) input.removeAttribute("required");
+        });
+        
+        container.style.display = "none";
+        
+        if (role === "admin" || role === "receptionist") {
+            title.textContent = role === "admin" ? "Admin Details" : "Receptionist Details";
+            container.style.display = "block";
+            staffFields.forEach(el => {
+                el.style.display = "block";
+                const input = el.querySelector("input, select");
+                if (input) input.setAttribute("required", "required");
+            });
+        } else if (role === "doctor") {
+            title.textContent = "Doctor Details";
+            container.style.display = "block";
+            doctorFields.forEach(el => {
+                el.style.display = "block";
+                const input = el.querySelector("input, select");
+                if (input) input.setAttribute("required", "required");
+            });
+        } else if (role === "patient") {
+            title.textContent = "Patient Details";
+            container.style.display = "block";
+            patientFields.forEach(el => {
+                el.style.display = "block";
+            });
+        }
+    }
+
+    roleSelect.addEventListener("change", updateFields);
+    // Initial call to set correct state on page load (e.g. for edit mode)
+    updateFields();
+});
+</script>
 {% endblock %}

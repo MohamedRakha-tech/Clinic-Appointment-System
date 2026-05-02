@@ -5,57 +5,70 @@
 {% block topbar_role %}Role: Admin{% endblock %}
 
 {% block content %}
-<section class="surface-card p-4 p-lg-5 d-grid gap-3">
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+<section class="glass-card p-4 p-lg-5 d-grid gap-4 shadow-sm" style="border-radius: 16px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px);">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 border-bottom pb-3">
         <div>
-            <h1 class="h4 fw-bold mb-1">Users</h1>
+            <h1 class="h3 fw-bold mb-1 text-primary">Users</h1>
             <p class="text-muted mb-0">Filter by role or export the list.</p>
         </div>
         <div class="d-flex gap-2">
-            <a class="btn btn-primary" href="{% url 'dashboard:user_create' %}">Add User</a>
-            <a class="btn btn-outline-secondary" href="{% url 'dashboard:users_export' %}">Export CSV</a>
+            <a class="btn btn-primary rounded-pill px-4 shadow-sm" href="{% url 'dashboard:user_create' %}">
+                <i class="bi bi-person-plus me-1"></i> Add User
+            </a>
+            <a class="btn btn-outline-secondary rounded-pill px-4" href="{% url 'dashboard:users_export' %}">
+                <i class="bi bi-file-earmark-excel me-1"></i> Export CSV
+            </a>
         </div>
     </div>
 
-    <div class="d-flex flex-wrap gap-2">
-        <a class="btn btn-outline-secondary{% if not role_filter %} active{% endif %}" href="{% url 'dashboard:users' %}">All</a>
+    <div class="d-flex flex-wrap gap-2 mb-2">
+        <a class="btn btn-outline-primary rounded-pill px-4 {% if not role_filter %}active{% endif %}" href="{% url 'dashboard:users' %}">All Roles</a>
         {% for role in roles %}
-        <a class="btn btn-outline-secondary{% if role_filter == role %} active{% endif %}" href="{% url 'dashboard:users' %}?role={{ role }}">{{ role|title }}</a>
+        <a class="btn btn-outline-primary rounded-pill px-4 {% if role_filter == role %}active{% endif %}" href="{% url 'dashboard:users' %}?role={{ role }}">{{ role|title }}</a>
         {% endfor %}
     </div>
 
-    <div class="table-responsive">
+    <div class="table-responsive rounded-3 border bg-white shadow-sm">
         <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
+            <thead class="table-light text-secondary">
                 <tr>
-                    <th>Username</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Status</th>
-                    <th class="text-end">Actions</th>
+                    <th class="ps-4 py-3 fw-semibold border-bottom-0">Username</th>
+                    <th class="py-3 fw-semibold border-bottom-0">Email</th>
+                    <th class="py-3 fw-semibold border-bottom-0">Role</th>
+                    <th class="py-3 fw-semibold border-bottom-0">Status</th>
+                    <th class="text-end pe-4 py-3 fw-semibold border-bottom-0">Actions</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="border-top-0">
                 {% for row in user_rows %}
                 <tr>
-                    <td>{{ row.user.username }}</td>
-                    <td>{{ row.user.email }}</td>
-                    <td>{{ row.role|title }}</td>
+                    <td class="ps-4 fw-medium text-dark">{{ row.user.username }}</td>
+                    <td class="text-muted">{{ row.user.email }}</td>
+                    <td>
+                        <span class="badge bg-light text-primary border border-primary-subtle px-3 py-2 rounded-pill">{{ row.role|title }}</span>
+                    </td>
                     <td>
                         {% if row.user.is_active %}
-                        <span class="badge text-bg-success">Active</span>
+                        <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill"><i class="bi bi-check-circle me-1"></i> Active</span>
                         {% else %}
-                        <span class="badge text-bg-secondary">Inactive</span>
+                        <span class="badge bg-secondary-subtle text-secondary px-3 py-2 rounded-pill"><i class="bi bi-x-circle me-1"></i> Inactive</span>
                         {% endif %}
                     </td>
-                    <td class="text-end">
-                        <a class="btn btn-sm btn-outline-primary" href="{% url 'dashboard:user_detail' row.user.id %}">View</a>
-                        <a class="btn btn-sm btn-outline-secondary" href="{% url 'dashboard:user_edit' row.user.id %}">Edit</a>
+                    <td class="text-end pe-4">
+                        <div class="btn-group shadow-sm rounded-pill">
+                            <a class="btn btn-sm btn-outline-primary px-3" href="{% url 'dashboard:user_detail' row.user.id %}">View</a>
+                            <a class="btn btn-sm btn-primary px-3" href="{% url 'dashboard:user_edit' row.user.id %}">Edit</a>
+                        </div>
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" class="text-center text-muted py-4">No users found.</td>
+                    <td colspan="5" class="text-center text-muted py-5">
+                        <div class="d-flex flex-column align-items-center">
+                            <i class="bi bi-inbox fs-1 text-secondary opacity-50 mb-2"></i>
+                            <p class="mb-0">No users found.</p>
+                        </div>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>

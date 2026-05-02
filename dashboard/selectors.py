@@ -1,50 +1,65 @@
-from datetime import timedelta
+from datetime import timedelta, datetime, time
 from django.db.models import Count, Q, Value
 from django.db.models.functions import ExtractHour, ExtractWeekDay, TruncDate, TruncMonth
 from django.utils import timezone
 from appointments.models import Appointment
 from accounts.models import PatientProfile, DoctorProfile, User
-from datetime import timedelta
 from django.db.models.functions import Concat
 import re
 from queueing.models import AppointmentCheckin
 
 
+def get_day_bounds(date_obj):
+    start = timezone.make_aware(datetime.combine(date_obj, time.min))
+    end = timezone.make_aware(datetime.combine(date_obj, time.max))
+    return start, end
+
+def get_month_bounds(year, month):
+    start = timezone.make_aware(datetime(year, month, 1))
+    if month == 12:
+        end = timezone.make_aware(datetime(year + 1, 1, 1)) - timedelta(microseconds=1)
+    else:
+        end = timezone.make_aware(datetime(year, month + 1, 1)) - timedelta(microseconds=1)
+    return start, end
+
+
 def get_today_appointments_count():
-    return Appointment.objects.filter(scheduled_start__date=timezone.localdate()).count()
+    start, end = get_day_bounds(timezone.localdate())
+    return Appointment.objects.filter(scheduled_start__gte=start, scheduled_start__lte=end).count()
 
 
 def get_appointments_by_status(date=None):
     qs = Appointment.objects.all()
     if date:
-        qs = qs.filter(scheduled_start__date=date)
+        start, end = get_day_bounds(date)
+        qs = qs.filter(scheduled_start__gte=start, scheduled_start__lte=end)
 
     result = qs.values('status').annotate(count=Count('id'))
     return {row['status']: row['count'] for row in result}
 
 
 def get_appointments_last_n_days(n=30):
-    since = timezone.localdate() - timedelta(days=n)
+    since_date = timezone.localdate() - timedelta(days=n)
+    start_since, _ = get_day_bounds(since_date)
+    
     rows = (
         Appointment.objects
-        .filter(scheduled_start__date__gte=since)
-        .annotate(date=TruncDate('scheduled_start'))
-        .values('date')
-        .annotate(count=Count('id'))
-        .order_by('date')
+        .filter(scheduled_start__gte=start_since)
+        .values_list('scheduled_start', flat=True)
     )
     
     data_dict = {}
-    for row in rows:
-        if row['date']:
-            data_dict[str(row['date'])[:10]] = row['count']
+    for dt in rows:
+        local_dt = timezone.localtime(dt)
+        date_str = local_dt.date().isoformat()
+        data_dict[date_str] = data_dict.get(date_str, 0) + 1
             
     results = []
     for i in range(n + 1):
-        current_date = since + timedelta(days=i)
+        current_date = since_date + timedelta(days=i)
         results.append({
             'date': current_date,
-            'count': data_dict.get(str(current_date), 0)
+            'count': data_dict.get(current_date.isoformat(), 0)
         })
     return results
 
@@ -58,12 +73,14 @@ def get_monthly_revenue(year=None, month=None):
     year = year or today.year
     month = month or today.month
 
+    start, end = get_month_bounds(year, month)
+
     completed = (
         Appointment.objects
         .filter(
             status='COMPLETED',
-            scheduled_start__year=year,
-            scheduled_start__month=month,
+            scheduled_start__gte=start,
+            scheduled_start__lte=end,
         )
         .select_related('doctor')
     )
@@ -94,46 +111,59 @@ def get_revenue_last_n_months(n=6):
 
     today = timezone.localdate()
     since = today.replace(day=1) - timedelta(days=n * 30)
+    since_dt = timezone.make_aware(datetime.combine(since.replace(day=1), time.min))
 
     rows = (
         Appointment.objects
-        .filter(status='COMPLETED', scheduled_start__date__gte=since)
-        .annotate(month=TruncMonth('scheduled_start'))
-        .values('month')
-        .annotate(count=Count('id'))
-        .order_by('month')
+        .filter(status='COMPLETED', scheduled_start__gte=since_dt)
+        .values_list('scheduled_start', flat=True)
     )
 
+    data_dict = {}
+    for dt in rows:
+        local_dt = timezone.localtime(dt)
+        month_str = local_dt.date().replace(day=1).isoformat()
+        data_dict[month_str] = data_dict.get(month_str, 0) + 1
+
     results = []
-    for row in rows:
+    current = today.replace(day=1)
+    months = []
+    for _ in range(n + 1):
+        months.insert(0, current)
+        if current.month == 1:
+            current = current.replace(year=current.year - 1, month=12)
+        else:
+            current = current.replace(month=current.month - 1)
+            
+    for m in months:
+        count = data_dict.get(m.isoformat(), 0)
         results.append({
-            'month': row['month'],
-            'count': row['count'],
-            'revenue': row['count'] * 150.00
+            'month': m,
+            'count': count,
+            'revenue': count * 150.00
         })
 
     return results
 
 def get_revenue_last_n_days(n=30):
-    since = timezone.localdate() - timedelta(days=n)
+    since_date = timezone.localdate() - timedelta(days=n)
+    start_since, _ = get_day_bounds(since_date)
     rows = (
         Appointment.objects
-        .filter(status='COMPLETED', scheduled_start__date__gte=since)
-        .annotate(date=TruncDate('scheduled_start'))
-        .values('date')
-        .annotate(count=Count('id'))
-        .order_by('date')
+        .filter(status='COMPLETED', scheduled_start__gte=start_since)
+        .values_list('scheduled_start', flat=True)
     )
     
     data_dict = {}
-    for row in rows:
-        if row['date']:
-            data_dict[str(row['date'])[:10]] = row['count']
+    for dt in rows:
+        local_dt = timezone.localtime(dt)
+        date_str = local_dt.date().isoformat()
+        data_dict[date_str] = data_dict.get(date_str, 0) + 1
             
     results = []
     for i in range(n + 1):
-        current_date = since + timedelta(days=i)
-        count = data_dict.get(str(current_date), 0)
+        current_date = since_date + timedelta(days=i)
+        count = data_dict.get(current_date.isoformat(), 0)
         results.append({
             'date': current_date,
             'count': count,
@@ -143,10 +173,11 @@ def get_revenue_last_n_days(n=30):
 
 
 def get_top_doctors(limit=5):
-    since = timezone.localdate() - timedelta(days=30)
+    since_date = timezone.localdate() - timedelta(days=30)
+    start_since, _ = get_day_bounds(since_date)
     return (
         Appointment.objects
-        .filter(scheduled_start__date__gte=since, status='COMPLETED')
+        .filter(scheduled_start__gte=start_since, status='COMPLETED')
         .values('doctor__user__first_name', 'doctor__user__last_name', 'doctor__id')
         .annotate(total=Count('id'))
         .order_by('-total')[:limit]
@@ -154,11 +185,13 @@ def get_top_doctors(limit=5):
 
 
 def get_doctor_today_queue(doctor_user_id):
+    start, end = get_day_bounds(timezone.localdate())
     return (
         Appointment.objects
         .filter(
             doctor__user_id=doctor_user_id,
-            scheduled_start__date=timezone.localdate(),
+            scheduled_start__gte=start,
+            scheduled_start__lte=end,
             status=Appointment.Status.CHECKED_IN,
         )
         .select_related('patient__user')
@@ -167,11 +200,13 @@ def get_doctor_today_queue(doctor_user_id):
 
 
 def get_doctor_today_schedule(doctor_user_id):
+    start, end = get_day_bounds(timezone.localdate())
     return (
         Appointment.objects
         .filter(
             doctor__user_id=doctor_user_id,
-            scheduled_start__date=timezone.localdate(),
+            scheduled_start__gte=start,
+            scheduled_start__lte=end,
             status__in=[
                 Appointment.Status.CONFIRMED,
                 Appointment.Status.CHECKED_IN,
@@ -184,50 +219,61 @@ def get_doctor_today_schedule(doctor_user_id):
 
 
 def get_doctor_today_queue_count(doctor_user_id):
+    start, end = get_day_bounds(timezone.localdate())
     return AppointmentCheckin.objects.filter(
         appointment__doctor__user_id=doctor_user_id,
-        appointment__scheduled_start__date=timezone.localdate(),
+        appointment__scheduled_start__gte=start,
+        appointment__scheduled_start__lte=end,
         appointment__status=Appointment.Status.CHECKED_IN,
     ).count()
 
 
 def get_doctor_completed_today_count(doctor_user_id):
+    start, end = get_day_bounds(timezone.localdate())
     return Appointment.objects.filter(
         doctor__user_id=doctor_user_id,
-        scheduled_start__date=timezone.localdate(),
+        scheduled_start__gte=start,
+        scheduled_start__lte=end,
         status=Appointment.Status.COMPLETED,
     ).count()
 
 
 def get_doctor_upcoming_today_count(doctor_user_id):
+    start, end = get_day_bounds(timezone.localdate())
     return Appointment.objects.filter(
         doctor__user_id=doctor_user_id,
-        scheduled_start__date=timezone.localdate(),
+        scheduled_start__gte=start,
+        scheduled_start__lte=end,
         status__in=[Appointment.Status.CONFIRMED, Appointment.Status.CHECKED_IN],
     ).count()
 
 
 def get_doctor_requested_today_count(doctor_user_id):
+    start, end = get_day_bounds(timezone.localdate())
     return Appointment.objects.filter(
         doctor__user_id=doctor_user_id,
-        scheduled_start__date=timezone.localdate(),
+        scheduled_start__gte=start,
+        scheduled_start__lte=end,
         status=Appointment.Status.REQUESTED,
     ).count()
 
 
 def get_doctor_confirmed_today_count(doctor_user_id):
+    start, end = get_day_bounds(timezone.localdate())
     return Appointment.objects.filter(
         doctor__user_id=doctor_user_id,
-        scheduled_start__date=timezone.localdate(),
+        scheduled_start__gte=start,
+        scheduled_start__lte=end,
         status=Appointment.Status.CONFIRMED,
     ).count()
 
 
 def get_doctor_today_status_summary(doctor_user_id):
-    today = timezone.localdate()
+    start, end = get_day_bounds(timezone.localdate())
     appointments = Appointment.objects.filter(
         doctor__user_id=doctor_user_id,
-        scheduled_start__date=today,
+        scheduled_start__gte=start,
+        scheduled_start__lte=end,
     )
     requested_count = appointments.filter(status=Appointment.Status.REQUESTED).count()
     confirmed_count = appointments.filter(status=Appointment.Status.CONFIRMED).count()
@@ -273,9 +319,10 @@ def get_doctor_today_status_summary(doctor_user_id):
 
 
 def get_today_appointments_list():
+    start, end = get_day_bounds(timezone.localdate())
     return (
         Appointment.objects
-        .filter(scheduled_start__date=timezone.localdate())
+        .filter(scheduled_start__gte=start, scheduled_start__lte=end)
         .select_related('patient__user', 'doctor__user')
         .order_by('scheduled_start')
     )
@@ -287,46 +334,61 @@ def get_total_patients_count():
 
 def get_new_patients_this_month():
     today = timezone.localdate()
+    start, end = get_month_bounds(today.year, today.month)
     return PatientProfile.objects.filter(
-        user__date_joined__year=today.year,
-        user__date_joined__month=today.month,
+        user__date_joined__gte=start,
+        user__date_joined__lte=end,
         user__is_active=True,
     ).count()
 
 
 def get_peak_hours(days_back=30):
-
-    since = timezone.localdate() - timedelta(days=days_back)
-
-    return (
+    since_date = timezone.localdate() - timedelta(days=days_back)
+    start_since, _ = get_day_bounds(since_date)
+    
+    rows = (
         Appointment.objects
-        .filter(scheduled_start__date__gte=since)
+        .filter(scheduled_start__gte=start_since)
         .exclude(status='CANCELLED')
-        .annotate(hour=ExtractHour('scheduled_start'))
-        .values('hour')
-        .annotate(count=Count('id'))
-        .order_by('-count')
+        .values_list('scheduled_start', flat=True)
     )
+    
+    data_dict = {}
+    for dt in rows:
+        hour = timezone.localtime(dt).hour
+        data_dict[hour] = data_dict.get(hour, 0) + 1
+        
+    results = [{'hour': h, 'count': c} for h, c in data_dict.items()]
+    results.sort(key=lambda x: x['count'], reverse=True)
+    return results
 
 
 def get_busiest_days(days_back=30):
-
-    since = timezone.localdate() - timedelta(days=days_back)
-
-    return (
+    since_date = timezone.localdate() - timedelta(days=days_back)
+    start_since, _ = get_day_bounds(since_date)
+    
+    rows = (
         Appointment.objects
-        .filter(scheduled_start__date__gte=since)
+        .filter(scheduled_start__gte=start_since)
         .exclude(status='CANCELLED')
-        .annotate(weekday=ExtractWeekDay('scheduled_start'))
-        .values('weekday')
-        .annotate(count=Count('id'))
-        .order_by('-count')
+        .values_list('scheduled_start', flat=True)
     )
+    
+    data_dict = {}
+    for dt in rows:
+        weekday = timezone.localtime(dt).isoweekday()
+        django_weekday = (weekday % 7) + 1
+        data_dict[django_weekday] = data_dict.get(django_weekday, 0) + 1
+        
+    results = [{'weekday': w, 'count': c} for w, c in data_dict.items()]
+    results.sort(key=lambda x: x['count'], reverse=True)
+    return results
 
 
 def get_noshow_rate(days_back=30):
-    since = timezone.localdate() - timedelta(days=days_back)
-    qs = Appointment.objects.filter(scheduled_start__date__gte=since)
+    since_date = timezone.localdate() - timedelta(days=days_back)
+    start_since, _ = get_day_bounds(since_date)
+    qs = Appointment.objects.filter(scheduled_start__gte=start_since)
     total = qs.exclude(status='CANCELLED').count()
     noshows = qs.filter(status='NO_SHOW').count()
     rate = round((noshows / total * 100), 1) if total > 0 else 0.0
@@ -338,10 +400,11 @@ def get_noshow_rate(days_back=30):
 
 
 def get_noshow_rate_per_doctor(days_back=30):
-    since = timezone.localdate() - timedelta(days=days_back)
+    since_date = timezone.localdate() - timedelta(days=days_back)
+    start_since, _ = get_day_bounds(since_date)
     doctors = (
         Appointment.objects
-        .filter(scheduled_start__date__gte=since)
+        .filter(scheduled_start__gte=start_since)
         .exclude(status='CANCELLED')
         .values('doctor__user__id', 'doctor__user__first_name', 'doctor__user__last_name')
         .annotate(
@@ -385,10 +448,12 @@ def get_filtered_appointments(
         qs = qs.filter(status=status)
 
     if date_from:
-        qs = qs.filter(scheduled_start__date__gte=date_from)
+        start_from, _ = get_day_bounds(date_from)
+        qs = qs.filter(scheduled_start__gte=start_from)
 
     if date_to:
-        qs = qs.filter(scheduled_start__date__lte=date_to)
+        _, end_to = get_day_bounds(date_to)
+        qs = qs.filter(scheduled_start__lte=end_to)
 
     if doctor_id:
         qs = qs.filter(doctor__user__id=doctor_id)
@@ -420,52 +485,48 @@ def get_all_staff_users():
 
 def get_appointments_all_dates(years_back=3):
     today = timezone.localdate()
-    since = today - timedelta(days=years_back * 365)
+    since_date = today - timedelta(days=years_back * 365)
+    start_since, _ = get_day_bounds(since_date)
     rows = (
         Appointment.objects
-        .filter(scheduled_start__date__gte=since)
-        .annotate(date=TruncDate('scheduled_start'))
-        .values('date')
-        .annotate(count=Count('id'))
-        .order_by('date')
+        .filter(scheduled_start__gte=start_since)
+        .values_list('scheduled_start', flat=True)
     )
     
     data_dict = {}
-    for row in rows:
-        if row['date']:
-            data_dict[str(row['date'])[:10]] = row['count']
+    for dt in rows:
+        date_str = timezone.localtime(dt).date().isoformat()
+        data_dict[date_str] = data_dict.get(date_str, 0) + 1
             
     results = []
-    current_date = since
+    current_date = since_date
     while current_date <= today:
         results.append({
             'date': current_date,
-            'count': data_dict.get(str(current_date), 0)
+            'count': data_dict.get(current_date.isoformat(), 0)
         })
         current_date += timedelta(days=1)
     return results
 
 def get_revenue_all_dates(years_back=3):
     today = timezone.localdate()
-    since = today - timedelta(days=years_back * 365)
+    since_date = today - timedelta(days=years_back * 365)
+    start_since, _ = get_day_bounds(since_date)
     rows = (
         Appointment.objects
-        .filter(status='COMPLETED', scheduled_start__date__gte=since)
-        .annotate(date=TruncDate('scheduled_start'))
-        .values('date')
-        .annotate(count=Count('id'))
-        .order_by('date')
+        .filter(status='COMPLETED', scheduled_start__gte=start_since)
+        .values_list('scheduled_start', flat=True)
     )
     
     data_dict = {}
-    for row in rows:
-        if row['date']:
-            data_dict[str(row['date'])[:10]] = row['count']
+    for dt in rows:
+        date_str = timezone.localtime(dt).date().isoformat()
+        data_dict[date_str] = data_dict.get(date_str, 0) + 1
             
     results = []
-    current_date = since
+    current_date = since_date
     while current_date <= today:
-        count = data_dict.get(str(current_date), 0)
+        count = data_dict.get(current_date.isoformat(), 0)
         results.append({
             'date': current_date,
             'count': count,
@@ -476,20 +537,26 @@ def get_revenue_all_dates(years_back=3):
 
 
 def get_revenue_all_months(years_back=3):
-    since = timezone.localdate().replace(day=1) - timedelta(days=years_back * 365)
+    today = timezone.localdate()
+    since = today.replace(day=1) - timedelta(days=years_back * 365)
+    since_dt = timezone.make_aware(datetime.combine(since.replace(day=1), time.min))
+    
     rows = (
         Appointment.objects
-        .filter(status='COMPLETED', scheduled_start__date__gte=since)
-        .annotate(month=TruncMonth('scheduled_start'))
-        .values('month')
-        .annotate(count=Count('id'))
-        .order_by('month')
+        .filter(status='COMPLETED', scheduled_start__gte=since_dt)
+        .values_list('scheduled_start', flat=True)
     )
+    
+    data_dict = {}
+    for dt in rows:
+        month_str = timezone.localtime(dt).date().replace(day=1).isoformat()
+        data_dict[month_str] = data_dict.get(month_str, 0) + 1
+        
     results = []
-    for row in rows:
+    for month_str, count in sorted(data_dict.items()):
         results.append({
-            'date': row['month'],
-            'count': row['count'],
-            'revenue': row['count'] * 150.00
+            'date': datetime.fromisoformat(month_str).date(),
+            'count': count,
+            'revenue': count * 150.00
         })
     return results

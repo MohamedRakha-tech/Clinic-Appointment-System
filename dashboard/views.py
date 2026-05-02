@@ -68,16 +68,24 @@ class UserUpdateView(AdminRequiredMixin, View):
 	def get(self, request, pk):
 		user = get_object_or_404(User, pk=pk)
 		role = get_user_role(user)
-		employee_code = None
+		
+		initial_data = {"role": role}
 
 		if role == "receptionist" and hasattr(user, "receptionist_profile"):
-			employee_code = user.receptionist_profile.employee_code
-		if role == "admin" and hasattr(user, "admin_profile"):
-			employee_code = user.admin_profile.employee_code
+			initial_data["employee_code"] = user.receptionist_profile.employee_code
+		elif role == "admin" and hasattr(user, "admin_profile"):
+			initial_data["employee_code"] = user.admin_profile.employee_code
+		elif role == "doctor" and hasattr(user, "doctor_profile"):
+			initial_data["specialization"] = user.doctor_profile.specialization
+			initial_data["license_number"] = user.doctor_profile.license_number
+			initial_data["consultation_fee"] = user.doctor_profile.consultation_fee
+		elif role == "patient" and hasattr(user, "patient_profile"):
+			initial_data["date_of_birth"] = user.patient_profile.date_of_birth
+			initial_data["gender"] = user.patient_profile.gender
 
 		form = UserUpdateForm(
 			instance=user,
-			initial={"role": role, "employee_code": employee_code},
+			initial=initial_data,
 			original_role=role,
 		)
 		return render(request, "dashboard/user_form.html", {"form": form, "mode": "edit", "user_item": user})
