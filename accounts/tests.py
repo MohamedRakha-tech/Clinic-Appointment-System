@@ -2,6 +2,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from accounts.factories import DoctorProfileFactory, PatientProfileFactory
+from accounts.forms import DoctorProfileForm
 from accounts.models import User
 
 
@@ -82,3 +83,58 @@ class AuthRoutingTests(TestCase):
 		self.assertContains(response, "Weekly View")
 		self.assertContains(response, "Appointments")
 		self.assertNotContains(response, "New Appointment")
+
+
+class DoctorProfileFormTests(TestCase):
+	def test_saves_license_number_and_consultation_fee(self):
+		doctor = DoctorProfileFactory()
+
+		form = DoctorProfileForm(
+			data={
+				"username": doctor.user.username,
+				"email": doctor.user.email,
+				"first_name": doctor.user.first_name,
+				"last_name": doctor.user.last_name,
+				"phone": doctor.user.phone,
+				"specialization": "Cardiology",
+				"license_number": "LIC-UPDATED-001",
+				"consultation_fee": "275.50",
+				"consultation_duration_minutes": "30",
+				"buffer_before_minutes": "10",
+				"buffer_after_minutes": "5",
+				"bio": "Updated profile.",
+			},
+			instance=doctor.user,
+		)
+
+		self.assertTrue(form.is_valid(), form.errors)
+		form.save()
+		doctor.refresh_from_db()
+
+		self.assertEqual(doctor.license_number, "LIC-UPDATED-001")
+		self.assertEqual(str(doctor.consultation_fee), "275.50")
+
+	def test_rejects_duplicate_license_number(self):
+		existing = DoctorProfileFactory(license_number="LIC-DUPLICATE")
+		doctor = DoctorProfileFactory()
+
+		form = DoctorProfileForm(
+			data={
+				"username": doctor.user.username,
+				"email": doctor.user.email,
+				"first_name": doctor.user.first_name,
+				"last_name": doctor.user.last_name,
+				"phone": doctor.user.phone,
+				"specialization": doctor.specialization,
+				"license_number": existing.license_number,
+				"consultation_fee": "150.00",
+				"consultation_duration_minutes": "15",
+				"buffer_before_minutes": "5",
+				"buffer_after_minutes": "5",
+				"bio": doctor.bio,
+			},
+			instance=doctor.user,
+		)
+
+		self.assertFalse(form.is_valid())
+		self.assertIn("license_number", form.errors)

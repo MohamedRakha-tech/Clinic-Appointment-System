@@ -84,6 +84,20 @@ tailwind.config = {
     <p class="text-xs text-error mt-1">{{ form.specialization.errors.0 }}</p>
 {% endif %}
 </div>
+<div class="col-span-2 md:col-span-1">
+<label class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">license number</label>
+<input name="license_number" class="w-full bg-surface-container-high border-0 border-b-2 border-outline-variant px-4 py-3 rounded-t-lg focus:ring-0 focus:border-primary transition-colors text-on-surface font-medium" type="text" value="{{ form.license_number.value|default:'' }}"/>
+{% if form.license_number.errors %}
+    <p class="text-xs text-error mt-1">{{ form.license_number.errors.0 }}</p>
+{% endif %}
+</div>
+<div class="col-span-2 md:col-span-1">
+<label class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">consultation fee</label>
+<input name="consultation_fee" class="w-full bg-surface-container-high border-0 border-b-2 border-outline-variant px-4 py-3 rounded-t-lg focus:ring-0 focus:border-primary transition-colors text-on-surface font-medium" type="number" min="0" step="0.01" value="{{ form.consultation_fee.value|default:'150.00' }}"/>
+{% if form.consultation_fee.errors %}
+    <p class="text-xs text-error mt-1">{{ form.consultation_fee.errors.0 }}</p>
+{% endif %}
+</div>
 <div class="col-span-2">
 <label class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">Professional bio</label>
 <textarea name="bio" class="w-full bg-surface-container-high border-0 border-b-2 border-outline-variant px-4 py-3 rounded-t-lg focus:ring-0 focus:border-primary transition-colors text-on-surface font-medium resize-none" rows="6">{{ form.bio.value|default:'' }}</textarea>

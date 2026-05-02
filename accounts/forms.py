@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import AuthenticationForm
 
 from accounts.models import User
-from accounts.models import PatientProfile, validate_not_future_date, validate_logical_age
+from accounts.models import DoctorProfile, PatientProfile, validate_not_future_date, validate_logical_age
 
 
 class LoginForm(AuthenticationForm):
@@ -126,6 +126,8 @@ class PatientProfileForm(forms.ModelForm):
 
 class DoctorProfileForm(forms.ModelForm):
     specialization = forms.CharField(required=True, max_length=120)
+    license_number = forms.CharField(required=True, max_length=120)
+    consultation_fee = forms.DecimalField(max_digits=8, decimal_places=2, min_value=0, required=True)
     consultation_duration_minutes = forms.IntegerField(min_value=5, max_value=240, required=True)
     buffer_before_minutes = forms.IntegerField(min_value=0, max_value=60, required=True)
     buffer_after_minutes = forms.IntegerField(min_value=0, max_value=60, required=True)
@@ -143,16 +145,33 @@ class DoctorProfileForm(forms.ModelForm):
         if hasattr(self.instance, 'doctor_profile'):
             profile = self.instance.doctor_profile
             self.initial['specialization'] = profile.specialization
+            self.initial['license_number'] = profile.license_number
+            self.initial['consultation_fee'] = profile.consultation_fee
             self.initial['consultation_duration_minutes'] = profile.consultation_duration_minutes
             self.initial['buffer_before_minutes'] = profile.buffer_before_minutes
             self.initial['buffer_after_minutes'] = profile.buffer_after_minutes
             self.initial['bio'] = profile.bio
+
+    def clean_license_number(self):
+        license_number = self.cleaned_data.get('license_number')
+        if not license_number:
+            return license_number
+
+        existing_profiles = DoctorProfile.objects.filter(license_number=license_number)
+        if hasattr(self.instance, 'doctor_profile'):
+            existing_profiles = existing_profiles.exclude(pk=self.instance.doctor_profile.pk)
+
+        if existing_profiles.exists():
+            raise forms.ValidationError("This license number is already used.")
+        return license_number
 
     def save(self, commit=True):
         user = super().save(commit=commit)
         if hasattr(user, 'doctor_profile'):
             profile = user.doctor_profile
             profile.specialization = self.cleaned_data.get('specialization')
+            profile.license_number = self.cleaned_data.get('license_number')
+            profile.consultation_fee = self.cleaned_data.get('consultation_fee')
             profile.consultation_duration_minutes = self.cleaned_data.get('consultation_duration_minutes')
             profile.buffer_before_minutes = self.cleaned_data.get('buffer_before_minutes')
             profile.buffer_after_minutes = self.cleaned_data.get('buffer_after_minutes')

@@ -103,6 +103,22 @@ tailwind.config = {
 <p class="text-sm font-semibold text-on-surface break-words">{{ user.phone|default:"—" }}</p>
 </div>
 </div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+<div class="rounded-xl bg-surface-container-low p-4 border border-outline-variant/10">
+<div class="flex items-center gap-2 text-outline mb-2">
+<span class="material-symbols-outlined text-[18px]">badge</span>
+<span class="text-[10px] font-bold uppercase tracking-widest">License Number</span>
+</div>
+<p class="text-sm font-semibold text-on-surface break-all">{{ doctor.license_number|default:"—" }}</p>
+</div>
+<div class="rounded-xl bg-surface-container-low p-4 border border-outline-variant/10">
+<div class="flex items-center gap-2 text-outline mb-2">
+<span class="material-symbols-outlined text-[18px]">payments</span>
+<span class="text-[10px] font-bold uppercase tracking-widest">Consultation Fee</span>
+</div>
+<p class="text-sm font-semibold text-on-surface break-words">{{ doctor.consultation_fee|default:"—" }}</p>
+</div>
+</div>
 </div>
 </div>
 <div class="space-y-4 pt-8 border-t border-outline-variant/15">
