@@ -96,12 +96,12 @@ class UserCreateForm(forms.ModelForm):
             profile, _ = PatientProfile.objects.get_or_create(
                 user=user,
                 defaults=get_patient_profile_defaults(
-                    date_of_birth=date_of_birth or DEFAULT_PATIENT_PROFILE_DATA["date_of_birth"],
+                    date_of_birth=date_of_birth,
                     gender=gender,
                     address=DEFAULT_PATIENT_PROFILE_DATA["address"],
                 ),
             )
-            if date_of_birth:
+            if date_of_birth is not None:
                 profile.date_of_birth = date_of_birth
             if gender:
                 profile.gender = gender
@@ -211,12 +211,12 @@ class UserUpdateForm(forms.ModelForm):
             profile, _ = PatientProfile.objects.get_or_create(
                 user=user,
                 defaults=get_patient_profile_defaults(
-                    date_of_birth=date_of_birth or DEFAULT_PATIENT_PROFILE_DATA["date_of_birth"],
+                    date_of_birth=date_of_birth,
                     gender=gender,
                     address=DEFAULT_PATIENT_PROFILE_DATA["address"],
                 ),
             )
-            if date_of_birth:
+            if date_of_birth is not None:
                 profile.date_of_birth = date_of_birth
             if gender:
                 profile.gender = gender

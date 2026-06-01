@@ -274,13 +274,13 @@
                         </div>
                         <div class="bar-track">
                             <div class="bar-fill"
-                                 style="width:{% if today_appointments > 0 %}{% widthratio count today_appointments 100 %}{% else %}0{% endif %}%;
-                                        background:{% if status == 'COMPLETED'  %}#006877
-                                                   {% elif status == 'CONFIRMED'  %}#003f87
-                                                   {% elif status == 'REQUESTED'  %}#f59e0b
+                                 style="width:{% if total_status_appointments > 0 %}{% widthratio count total_status_appointments 100 %}{% else %}0{% endif %}%;
+                                        background:{% if status == 'COMPLETED' %}#006877
+                                                   {% elif status == 'CONFIRMED' %}#003f87
+                                                   {% elif status == 'REQUESTED' %}#f59e0b
                                                    {% elif status == 'CHECKED_IN' %}#1e7e34
-                                                   {% elif status == 'CANCELLED'  %}#b91c1c
-                                                   {% elif status == 'NO_SHOW'    %}#7c3aed
+                                                   {% elif status == 'CANCELLED' %}#b91c1c
+                                                   {% elif status == 'NO_SHOW' %}#7c3aed
                                                    {% else %}#94a3b8{% endif %};">
                             </div>
                         </div>

@@ -16,7 +16,7 @@ from accounts.utils import get_user_role
 def _redirect_by_role(user):
     role = get_user_role(user)
     if role == "patient":
-        return redirect("emr:patient_list")
+        return redirect("accounts:patient_dashboard")
     if role == "doctor":
         return redirect("dashboard:doctor")
     if role == "receptionist":
@@ -49,7 +49,7 @@ def register_view(request):
             # Persist the profile-specific fields (date_of_birth, gender, address).
             form.save_profile(user)
             login_user(request, user)
-            return redirect("emr:patient_list")
+            return redirect("accounts:patient_profile_edit")
     else:
         form = PatientRegisterForm()
 

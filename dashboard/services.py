@@ -18,6 +18,9 @@ def get_admin_dashboard_data():
     total_rev        = selectors.get_total_revenue()
     total_completed  = selectors.get_total_completed_count()
 
+    appointments_by_status = selectors.get_appointments_by_status()
+    total_status_appointments = sum(appointments_by_status.values())
+
     return {
         'today_appointments':     selectors.get_today_appointments_count(),
         'pending_count':          selectors.get_pending_appointments_count(),
@@ -32,7 +35,8 @@ def get_admin_dashboard_data():
         'noshow_rate':            noshow['rate'],
         'noshow_count':           noshow['noshows'],
         'noshow_summary':         noshow,
-        'appointments_by_status': selectors.get_appointments_by_status(),
+        'appointments_by_status': appointments_by_status,
+        'total_status_appointments': total_status_appointments,
         'appointments_last_30':   list(selectors.get_appointments_last_n_days(30)),
         'revenue_last_6_months':  list(selectors.get_revenue_last_n_months(6)),
         'peak_hours':             list(selectors.get_peak_hours()),

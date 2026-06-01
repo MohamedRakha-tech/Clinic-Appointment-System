@@ -5,13 +5,13 @@ from datetime import date, datetime, time
 from django.utils import timezone
 
 from appointments.models import Appointment
-from accounts.mixins import ClinicStaffRequiredMixin, DoctorRequiredMixin, ReceptionistRequiredMixin
+from accounts.mixins import  DoctorRequiredMixin, ReceptionistRequiredMixin
 from accounts.models import DoctorProfile
 from .models import AppointmentCheckin
 from .forms import CheckInForm
 from .services import QueueService
 
-class CheckInView(ClinicStaffRequiredMixin, View):
+class CheckInView(ReceptionistRequiredMixin, View):
 
     login_url = '/accounts/login/'
 
