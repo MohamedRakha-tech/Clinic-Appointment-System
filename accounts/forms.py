@@ -3,6 +3,7 @@ from django.contrib.auth.forms import AuthenticationForm
 
 from accounts.models import User
 from accounts.models import DoctorProfile, PatientProfile, validate_not_future_date, validate_logical_age
+from accounts.services import DEFAULT_PATIENT_PROFILE_DATA, get_patient_profile_defaults
 
 
 class LoginForm(AuthenticationForm):
@@ -63,17 +64,18 @@ class PatientRegisterForm(forms.ModelForm):
         return user
 
     def save_profile(self, user):
-
+        date_of_birth = self.cleaned_data.get("date_of_birth") or DEFAULT_PATIENT_PROFILE_DATA["date_of_birth"]
+        defaults = get_patient_profile_defaults(
+            date_of_birth=date_of_birth,
+            gender=self.cleaned_data["gender"],
+            address=self.cleaned_data["address"],
+        )
         profile, created = PatientProfile.objects.get_or_create(
             user=user,
-            defaults={
-                "date_of_birth": self.cleaned_data.get("date_of_birth"),
-                "gender": self.cleaned_data["gender"],
-                "address": self.cleaned_data["address"],
-            },
+            defaults=defaults,
         )
         if not created:
-            profile.date_of_birth = self.cleaned_data.get("date_of_birth")
+            profile.date_of_birth = date_of_birth
             profile.gender = self.cleaned_data["gender"]
             profile.address = self.cleaned_data["address"]
             profile.save()
@@ -113,8 +115,16 @@ class PatientProfileForm(forms.ModelForm):
         user = super().save(commit=commit)
         from accounts.models import PatientProfile
 
-        profile, _ = PatientProfile.objects.get_or_create(user=user)
-        profile.date_of_birth = self.cleaned_data.get('date_of_birth')
+        date_of_birth = self.cleaned_data.get('date_of_birth') or DEFAULT_PATIENT_PROFILE_DATA["date_of_birth"]
+        profile, _ = PatientProfile.objects.get_or_create(
+            user=user,
+            defaults=get_patient_profile_defaults(
+                date_of_birth=date_of_birth,
+                gender=self.cleaned_data['gender'],
+                address=self.cleaned_data['address'],
+            ),
+        )
+        profile.date_of_birth = date_of_birth
         profile.gender = self.cleaned_data['gender']
         profile.address = self.cleaned_data['address']
         profile.emergency_contact_name = self.cleaned_data.get('emergency_contact_name')

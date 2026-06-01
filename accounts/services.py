@@ -1,6 +1,21 @@
+from datetime import date
+
 from django.contrib.auth import login
 
 from accounts.utils import ROLE_NAMES, ensure_role_groups, set_user_role
+
+
+DEFAULT_PATIENT_PROFILE_DATA = {
+    "date_of_birth": date(1990, 1, 1),
+    "gender": "Unknown",
+    "address": "Not Provided",
+}
+
+
+def get_patient_profile_defaults(**overrides):
+    defaults = DEFAULT_PATIENT_PROFILE_DATA.copy()
+    defaults.update({key: value for key, value in overrides.items() if value not in (None, "")})
+    return defaults
 
 
 def assign_group(instance, target_role):
@@ -20,7 +35,10 @@ def ensure_profile_for_role(instance, target_role):
     )
 
     if target_role == "patient" and not hasattr(instance, "patient_profile"):
-        PatientProfile.objects.get_or_create(user=instance)
+        PatientProfile.objects.get_or_create(
+            user=instance,
+            defaults=get_patient_profile_defaults(),
+        )
     elif target_role == "doctor" and not hasattr(instance, "doctor_profile"):
         DoctorProfile.objects.get_or_create(
             user=instance,

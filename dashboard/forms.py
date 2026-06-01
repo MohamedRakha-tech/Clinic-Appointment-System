@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.password_validation import validate_password
 
 from accounts.models import AdminProfile, DoctorProfile, PatientProfile, ReceptionistProfile, User
+from accounts.services import DEFAULT_PATIENT_PROFILE_DATA, get_patient_profile_defaults
 from accounts.utils import ROLE_NAMES, ensure_role_groups, set_user_role
 
 
@@ -92,11 +93,20 @@ class UserCreateForm(forms.ModelForm):
         gender = self.cleaned_data.get("gender")
 
         if role == "patient":
-            profile, _ = PatientProfile.objects.get_or_create(user=user)
+            profile, _ = PatientProfile.objects.get_or_create(
+                user=user,
+                defaults=get_patient_profile_defaults(
+                    date_of_birth=date_of_birth or DEFAULT_PATIENT_PROFILE_DATA["date_of_birth"],
+                    gender=gender,
+                    address=DEFAULT_PATIENT_PROFILE_DATA["address"],
+                ),
+            )
             if date_of_birth:
                 profile.date_of_birth = date_of_birth
             if gender:
                 profile.gender = gender
+            if not profile.address:
+                profile.address = DEFAULT_PATIENT_PROFILE_DATA["address"]
             profile.save()
         elif role == "doctor":
             profile, _ = DoctorProfile.objects.get_or_create(
@@ -198,11 +208,20 @@ class UserUpdateForm(forms.ModelForm):
         gender = self.cleaned_data.get("gender")
 
         if role == "patient":
-            profile, _ = PatientProfile.objects.get_or_create(user=user)
+            profile, _ = PatientProfile.objects.get_or_create(
+                user=user,
+                defaults=get_patient_profile_defaults(
+                    date_of_birth=date_of_birth or DEFAULT_PATIENT_PROFILE_DATA["date_of_birth"],
+                    gender=gender,
+                    address=DEFAULT_PATIENT_PROFILE_DATA["address"],
+                ),
+            )
             if date_of_birth:
                 profile.date_of_birth = date_of_birth
             if gender:
                 profile.gender = gender
+            if not profile.address:
+                profile.address = DEFAULT_PATIENT_PROFILE_DATA["address"]
             profile.save()
         elif role == "doctor":
             profile, _ = DoctorProfile.objects.get_or_create(

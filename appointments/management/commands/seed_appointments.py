@@ -8,6 +8,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from accounts.models import DoctorProfile, PatientProfile
+from accounts.services import get_patient_profile_defaults
 from appointments.models import Appointment
 from scheduling.models import AppointmentSlot
 
@@ -130,7 +131,10 @@ class Command(BaseCommand):
                 user.is_active = True
                 user.set_password("clinic1234")
                 user.save()
-                PatientProfile.objects.get_or_create(user=user)
+                PatientProfile.objects.get_or_create(
+                    user=user,
+                    defaults=get_patient_profile_defaults(),
+                )
 
             patients = list(PatientProfile.objects.select_related("user").order_by("id"))
 

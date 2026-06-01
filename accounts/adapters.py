@@ -7,6 +7,7 @@ from django.shortcuts import redirect
 from django.utils.text import slugify
 
 from accounts.models import PatientProfile
+from accounts.services import get_patient_profile_defaults
 from accounts.utils import get_user_role, set_user_role
 
 
@@ -51,11 +52,7 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
             set_user_role(existing_user, "patient")
             PatientProfile.objects.get_or_create(
                 user=existing_user,
-                defaults={
-                    'date_of_birth': '1990-01-01',
-                    'gender': 'Unknown',
-                    'address': 'Not Provided',
-                }
+                defaults=get_patient_profile_defaults(),
             )
 
     def save_user(self, request, sociallogin, form=None):
@@ -64,10 +61,6 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
         set_user_role(user, "patient")
         PatientProfile.objects.get_or_create(
             user=user,
-            defaults={
-                'date_of_birth': '1990-01-01',
-                'gender': 'Unknown',
-                'address': 'Not Provided',
-            }
+            defaults=get_patient_profile_defaults(),
         )
         return user

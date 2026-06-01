@@ -3,6 +3,7 @@ from allauth.socialaccount.signals import social_account_added
 from django.dispatch import receiver
 
 from accounts.models import PatientProfile
+from accounts.services import get_patient_profile_defaults
 from accounts.utils import set_user_role
 
 
@@ -10,11 +11,7 @@ def _ensure_patient_membership(user):
     set_user_role(user, "patient")
     PatientProfile.objects.get_or_create(
         user=user,
-        defaults={
-            'date_of_birth': '1990-01-01',
-            'gender': 'Unknown',
-            'address': 'Not Provided',
-        }
+        defaults=get_patient_profile_defaults(),
     )
 
 

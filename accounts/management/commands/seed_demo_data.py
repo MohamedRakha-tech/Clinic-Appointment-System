@@ -9,7 +9,7 @@ from appointments.factories import AppointmentFactory
 from scheduling.factories import DoctorWeeklyScheduleFactory
 from scheduling.models import AppointmentSlot
 from scheduling.services import SlotGenerationService
-from accounts.services import ensure_profile_for_role
+from accounts.services import DEFAULT_PATIENT_PROFILE_DATA, ensure_profile_for_role
 
 User = get_user_model()
 
@@ -139,7 +139,10 @@ class Command(BaseCommand):
         user.save()
 
         if role == "patient":
-            PatientProfile.objects.update_or_create(user=user, defaults={})
+            PatientProfile.objects.update_or_create(
+                user=user,
+                defaults=DEFAULT_PATIENT_PROFILE_DATA,
+            )
         elif role == "doctor":
             DoctorProfile.objects.update_or_create(
                 user=user,
